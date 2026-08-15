@@ -140,8 +140,8 @@ public class ReportService {
             String currentWalletBalance = "15.08 TON";
             try {
                 FragmentApiResponse bal = fragmentStarsService.getWalletBalance().get();
-                if (bal != null && bal.getResult() != null && bal.getResult().getBalanceTon() != null) {
-                    currentWalletBalance = bal.getResult().getBalanceTon() + " TON";
+                if (bal != null && bal.isOk() && bal.getResult() instanceof java.util.Map<?, ?> map && map.containsKey("balance_ton")) {
+                    currentWalletBalance = map.get("balance_ton") + " TON";
                 }
             } catch (Exception ignored) {}
 
