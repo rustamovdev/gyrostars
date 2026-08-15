@@ -4,6 +4,10 @@ set -e
 mkdir -p /app/data ./data
 chmod -R 777 /app/data ./data 2>/dev/null || true
 
+PORT="${PORT:-10000}"
+export SERVER_PORT="$PORT"
+export PORT="$PORT"
+
 echo "=========================================================="
 echo "🚀 [1/2] Humo Payment Listener ishga tushirilmoqda..."
 echo "=========================================================="
@@ -14,21 +18,19 @@ elif [ -f "./payment_listener.py" ]; then
 fi
 
 echo "=========================================================="
-echo "🚀 [2/2] Spring Boot Java Bot ishga tushirilmoqda..."
-PORT="${PORT:-10000}"
-export SERVER_PORT="$PORT"
-export PORT="$PORT"
+echo "🚀 [2/2] Spring Boot Java Bot & WebApp ishga tushirilmoqda..."
+echo "🌐 Server PORT: $PORT"
+echo "=========================================================="
 
-if [ -f "/app/build/libs/LeykaBot-1.0-SNAPSHOT.jar" ]; then
+if [ -f "/app/app.jar" ]; then
+    JAR_PATH="/app/app.jar"
+elif [ -f "/app/build/libs/LeykaBot-1.0-SNAPSHOT.jar" ]; then
     JAR_PATH="/app/build/libs/LeykaBot-1.0-SNAPSHOT.jar"
-elif [ -f "./build/libs/LeykaBot-1.0-SNAPSHOT.jar" ]; then
-    JAR_PATH="./build/libs/LeykaBot-1.0-SNAPSHOT.jar"
 else
-    JAR_PATH=$(find /app/build/libs ./build/libs -name "*.jar" ! -name "*-plain.jar" 2>/dev/null | head -n 1)
+    JAR_PATH=$(find /app -name "*.jar" ! -name "*-plain.jar" 2>/dev/null | head -n 1)
 fi
 
-echo "🌐 Server PORT: $PORT"
 echo "📦 Executable JAR: $JAR_PATH"
 echo "=========================================================="
 
-exec java -Xmx320m -Xms128m -XX:+UseSerialGC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
+exec java -Xmx350m -Xms128m -XX:+UseG1GC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"

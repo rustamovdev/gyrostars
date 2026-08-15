@@ -1,4 +1,27 @@
-FROM eclipse-temurin:21-jdk-jammy
+# -------------------------------------------------------------
+# Stage 1: Build Java application with Gradle
+# -------------------------------------------------------------
+FROM eclipse-temurin:21-jdk-jammy AS builder
+WORKDIR /app
+
+# Copy gradle wrapper and config files first for caching
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts ./
+COPY gradle ./gradle
+
+# Grant execution rights and download dependencies
+RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon || true
+
+# Copy source code and resources
+COPY src ./src
+
+# Build production jar without tests
+RUN ./gradlew bootJar -x test --no-daemon
+
+# -------------------------------------------------------------
+# Stage 2: Production Runtime image (Ultra Fast & Lightweight)
+# -------------------------------------------------------------
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
 
 # Install Python 3, pip, curl, dos2unix
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,23 +31,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
 # Install Python dependencies
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages 2>/dev/null || pip3 install --no-cache-dir -r requirements.txt
 
-# Copy project files (respects .dockerignore)
-COPY . .
+# Copy built production JAR from builder stage
+COPY --from=builder /app/build/libs/LeykaBot-1.0-SNAPSHOT.jar /app/app.jar
 
-# Convert line endings, create data directory, build project cleanly
-RUN mkdir -p /app/data \
-    && chmod -R 777 /app/data \
-    && dos2unix /app/entrypoint.sh /app/gradlew \
-    && chmod +x /app/gradlew /app/entrypoint.sh \
-    && ./gradlew clean bootJar -x test --no-daemon
+# Copy runtime scripts and session
+COPY payment_listener.py entrypoint.sh ./
+COPY humo_payment_session.session* ./
+
+# Create data directory with full permissions and convert line endings
+RUN mkdir -p /app/data && chmod -R 777 /app/data \
+    && dos2unix /app/entrypoint.sh \
+    && chmod +x /app/entrypoint.sh
 
 EXPOSE 8085 10000
 
-# Start both Java Bot and Python Humo Listener directly
+ENV PORT=10000
+ENV SERVER_PORT=10000
+
 CMD ["/bin/bash", "/app/entrypoint.sh"]
