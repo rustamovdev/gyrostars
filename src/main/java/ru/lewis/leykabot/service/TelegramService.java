@@ -57,13 +57,17 @@ public class TelegramService {
     // ─── Парсинг формата "ТЕКСТ;путь" ────────────────────────────────────────
 
     private String[] parseTextAndPath(String raw) {
-        int idx = raw.indexOf(';');
+        if (raw == null) return new String[]{"", null};
+        int idx = raw.lastIndexOf(';');
         if (idx == -1) {
             return new String[]{raw, null};
         }
-        String text = raw.substring(0, idx).trim();
         String path = raw.substring(idx + 1).trim();
-        return new String[]{text, path.isEmpty() ? null : path};
+        if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".webp") || path.contains("/") || path.contains("\\")) {
+            String text = raw.substring(0, idx).trim();
+            return new String[]{text, path.isEmpty() ? null : path};
+        }
+        return new String[]{raw, null};
     }
 
     /**
