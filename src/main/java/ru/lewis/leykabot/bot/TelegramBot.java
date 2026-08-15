@@ -37,6 +37,7 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
     private final PremiumTransactionService premiumTransactionService;
     private final AdminService adminService;
     private final PaymentCardService paymentCardService;
+    private final AntiFloodService antiFloodService;
 
     @Override
     public void consume(Update update) {
@@ -46,6 +47,18 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             var data = callback.getData();
             var messageId = callback.getMessage().getMessageId();
             var fromId = callback.getFrom().getId();
+
+            // Flood tekshiruvi
+            if (antiFloodService.isFlooding(fromId, chatId)) {
+                try {
+                    telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
+                            .callbackQueryId(callback.getId())
+                            .text("⏳ Iltimos, juda tez bosmang!")
+                            .showAlert(false)
+                            .build());
+                } catch (Exception ignored) {}
+                return;
+            }
 
             try {
                 telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
@@ -102,6 +115,11 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
         var message = update.getMessage();
         var userId = message.getFrom().getId();
         var chatId = message.getChatId();
+
+        // Flood tekshiruvi
+        if (antiFloodService.isFlooding(userId, chatId)) {
+            return;
+        }
 
         if (message.hasPhoto() && message.getPhoto() != null && !message.getPhoto().isEmpty()) {
             screenManager.handlePhoto(chatId, message.getPhoto());

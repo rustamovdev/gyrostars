@@ -88,7 +88,8 @@ public class TransactionService {
         tx.setAmountRubles(amountRubles);
         Transaction saved = transactionRepository.save(tx);
 
-        user.setBalance(user.getBalance() + amountRubles);
+        int currentBalance = user.getBalance() != null ? user.getBalance() : 0;
+        user.setBalance(currentBalance + amountRubles);
         userRepository.save(user);
 
         // Обновляем кэши без инвалидации

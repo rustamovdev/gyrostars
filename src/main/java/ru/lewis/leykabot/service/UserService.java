@@ -69,6 +69,12 @@ public class UserService {
 
     @Transactional
     public User createUser(Long telegramId) {
+        Optional<User> existing = userRepository.findByTelegramId(telegramId);
+        if (existing.isPresent()) {
+            User user = existing.get();
+            userCache.put(telegramId, user);
+            return user;
+        }
         User user = new User();
         user.setTelegramId(telegramId);
         user.setBalance(0);
@@ -78,23 +84,31 @@ public class UserService {
     }
 
     public boolean isUserExists(Long telegramId) {
-        return loadUser(telegramId) != null;
+        if (userCache.getIfPresent(telegramId) != null) return true;
+        return userRepository.existsByTelegramId(telegramId);
     }
 
     public Optional<User> getUser(Long telegramId) {
-        return Optional.ofNullable(loadUser(telegramId));
+        User user = loadUser(telegramId);
+        if (user == null) {
+            Optional<User> dbUser = userRepository.findByTelegramId(telegramId);
+            dbUser.ifPresent(this::updateUserCache);
+            return dbUser;
+        }
+        return Optional.of(user);
     }
 
     public Optional<Integer> getBalance(Long telegramId) {
-        return getUser(telegramId).map(User::getBalance);
+        return getUser(telegramId).map(u -> u.getBalance() != null ? u.getBalance() : 0);
     }
 
     /**
-     * Обновляет пользователя в кэше без запроса в БД.
-     * Вызывается из других сервисов после изменения пользователя.
+     * Obnovlyaet polzovatelya v keshe.
      */
     public void updateUserCache(User user) {
-        userCache.put(user.getTelegramId(), user);
+        if (user != null && user.getTelegramId() != null) {
+            userCache.put(user.getTelegramId(), user);
+        }
     }
 
     // -------------------------------------------------------------------------
