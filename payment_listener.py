@@ -149,33 +149,53 @@ def is_incoming(text: str) -> bool:
 async def send_to_bot_api(amount: float, raw_text: str):
     """
     Java Botning /api/v1/payment/notify-card endpointiga ma'lumot jo'natadi.
+    Server ishga tushayotgan bo'lsa, qayta urinishlar orqali yetkazadi.
     """
     payload = {
         "amount": amount,
         "rawText": raw_text,
         "secret": "humo_bot_internal_secret_key"
     }
+    data = json.dumps(payload).encode("utf-8")
 
-    for attempt in range(1, 4):
-        try:
-            data = json.dumps(payload).encode("utf-8")
-            req = urllib.request.Request(
-                BOT_API_URL,
-                data=data,
-                headers={"Content-Type": "application/json"}
-            )
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: urllib.request.urlopen(req, timeout=4)
-            )
-            status_code = response.getcode()
-            body = response.read().decode("utf-8")
-            logger.info("✅ Bot API ga yuborildi (urinish %d): status=%s, body=%s", attempt, status_code, body)
-            return
-        except Exception as e:
-            logger.error("⚠️ Bot API ga so'rov yuborishda xatolik (urinish %d): %s", attempt, e)
-            await asyncio.sleep(1)
+    port = os.environ.get("PORT", "10000")
+    urls = []
+    if os.environ.get("BOT_API_URL"):
+        urls.append(os.environ.get("BOT_API_URL"))
+    urls.extend([
+        f"http://127.0.0.1:{port}/api/v1/payment/notify-card",
+        f"http://localhost:{port}/api/v1/payment/notify-card",
+        "http://127.0.0.1:10000/api/v1/payment/notify-card",
+        "http://127.0.0.1:8085/api/v1/payment/notify-card"
+    ])
+    # Remove duplicates while preserving order
+    urls = list(dict.fromkeys(urls))
+
+    max_attempts = 10
+    for attempt in range(1, max_attempts + 1):
+        for target_url in urls:
+            try:
+                req = urllib.request.Request(
+                    target_url,
+                    data=data,
+                    headers={"Content-Type": "application/json"}
+                )
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: urllib.request.urlopen(req, timeout=5)
+                )
+                status_code = response.getcode()
+                body = response.read().decode("utf-8")
+                logger.info("✅ Bot API ga yuborildi (urinish %d, url=%s): status=%s, body=%s", attempt, target_url, status_code, body)
+                return
+            except Exception as e:
+                pass
+
+        logger.warning("⚠️ Bot API ga ulanish kutilmoqda (urinish %d/%d)... Server ishga tushishi kutilmoqda.", attempt, max_attempts)
+        await asyncio.sleep(2)
+
+    logger.error("❌ Bot API ga to'lov xabarini yetkazib bo'lmadi (Barcha urinishlar tugadi).")
 
 
 processed_msg_ids = set()
