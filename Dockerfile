@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk-jammy
 
-# Install Python 3, pip, dos2unix and curl
+# Install Python 3, pip, curl, dos2unix
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
@@ -12,17 +12,17 @@ WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt ./
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages 2>/dev/null || pip3 install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy project files (respects .dockerignore)
 COPY . .
 
-# Convert line endings to LF, ensure data folder exists, grant execute permissions and build
+# Convert line endings, create data directory, build project cleanly
 RUN mkdir -p /app/data \
     && chmod -R 777 /app/data \
     && dos2unix /app/entrypoint.sh /app/gradlew \
     && chmod +x /app/gradlew /app/entrypoint.sh \
-    && ./gradlew build -x test --no-daemon
+    && ./gradlew clean bootJar -x test --no-daemon
 
 EXPOSE 8085 10000
 
