@@ -236,10 +236,10 @@ public class WebAppApiController {
             list.add(Map.of(
                     "id", "PB-" + pb.getId(),
                     "service", "PUBG Mobile UC",
-                    "details", pb.getAmount() + " UC",
-                    "amount", pb.getTransaction() != null ? pb.getTransaction().getAmountRubles() : 0,
+                    "details", pb.getUcAmount() + " UC",
+                    "amount", pb.getPriceRubles() != null ? pb.getPriceRubles() : 0,
                     "date", pb.getCreatedAt().toString(),
-                    "status", "COMPLETED"
+                    "status", pb.getStatus() != null ? pb.getStatus() : "COMPLETED"
             ));
         }
 
