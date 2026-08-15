@@ -40,7 +40,7 @@ public class AdminService {
     private final FragmentConfig fragmentConfig;
     private final RestTemplate restTemplate;
 
-    public static final Long PRIMARY_ADMIN = 8159265215L;
+    public static final Long PRIMARY_ADMIN = 5305539499L;
 
     public List<Long> getAdmins() {
         if (devModeConfig.getWhitelist() == null) {

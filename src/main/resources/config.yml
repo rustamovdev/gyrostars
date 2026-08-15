@@ -10,7 +10,7 @@ telegram:
 dev-mode:
   enable: false
   whitelist:
-    - 8159265215
+    - 5305539499
 
 fragment:
   api-url: 'https://fragment-api.uz/api/v1'
