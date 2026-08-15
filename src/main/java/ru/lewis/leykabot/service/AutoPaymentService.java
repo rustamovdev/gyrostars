@@ -17,6 +17,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import jakarta.annotation.PostConstruct;
+import ru.lewis.leykabot.model.database.entity.PriceSetting;
+import ru.lewis.leykabot.repository.PriceSettingRepository;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,16 @@ public class AutoPaymentService {
     private final OrderChannelService orderChannelService;
     private final TelegramClient telegramClient;
     private final DevModeConfig devModeConfig;
+    private final PriceSettingRepository priceSettingRepository;
+
+    @PostConstruct
+    public void initOrders() {
+        if (priceSettingRepository.findById("ORDERS_RESET_V1").isEmpty()) {
+            depositOrderRepository.deleteAll();
+            priceSettingRepository.save(new PriceSetting("ORDERS_RESET_V1", 1));
+            log.info("Deposit orders reset to start fresh from #1, while preserving all users and balances.");
+        }
+    }
 
     /**
      * Foydalanuvchi uchun 10 daqiqalik avto-to'lov buyurtmasini yaratadi yoki mavjud faol buyurtmani qaytaradi.
