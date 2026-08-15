@@ -41,3 +41,11 @@ dependencies {
 kotlin {
     jvmToolchain(21)
 }
+
+tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType<Jar> {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
