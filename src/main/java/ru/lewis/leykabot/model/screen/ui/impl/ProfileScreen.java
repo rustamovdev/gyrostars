@@ -58,6 +58,10 @@ public class ProfileScreen extends AbstractScreen {
                 screenManager.updateScreen(chatId, screenFactory.createDepositRublesScreen(chatId, userId));
                 break;
             }
+            case "top": {
+                screenManager.updateScreen(chatId, screenFactory.createTopSelectScreen(chatId, userId));
+                break;
+            }
             default:
                 break;
         }
@@ -67,21 +71,25 @@ public class ProfileScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        ru.lewis.leykabot.model.button.StyledInlineButton depositButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Balansni to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
                 .iconCustomEmojiId("5436171485578308032")
-                .build();
-        row1.add(depositButton);
+                .build());
+        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Reyting")
+                .callbackData("top")
+                .style("primary")
+                .iconCustomEmojiId("5436201215341930329")
+                .build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
                 .iconCustomEmojiId("5258236805890710909")
-                .build();
-        row2.add(backButton);
+                .build());
 
         keyboard.add(row1);
         keyboard.add(row2);

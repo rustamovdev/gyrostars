@@ -156,9 +156,24 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
                 return;
             }
 
+            // Referral tekshirish
+            Long referrerId = null;
+            String[] parts = message.split("\\s+");
+            if (parts.length > 1) {
+                String payload = parts[1].trim().toLowerCase();
+                if (payload.startsWith("u")) {
+                    payload = payload.substring(1);
+                } else if (payload.startsWith("ref")) {
+                    payload = payload.substring(3);
+                }
+                try {
+                    referrerId = Long.parseLong(payload);
+                } catch (NumberFormatException ignored) {}
+            }
+
             // save user id DB if not exists
             if (!userService.isUserExists(userId)) {
-                userService.createUser(userId);
+                userService.createUser(userId, referrerId);
             }
 
             CompletableFuture.allOf(

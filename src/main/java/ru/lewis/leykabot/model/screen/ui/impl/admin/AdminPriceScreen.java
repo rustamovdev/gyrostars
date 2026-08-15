@@ -95,6 +95,12 @@ public class AdminPriceScreen extends AbstractScreen {
             case "PREMIUM_3" -> "3 oylik Premium";
             case "PREMIUM_6" -> "6 oylik Premium";
             case "PREMIUM_12" -> "1 yillik Premium";
+            case "PUBG_60" -> "60 PUBG UC";
+            case "PUBG_325" -> "325 PUBG UC";
+            case "PUBG_660" -> "660 PUBG UC";
+            case "PUBG_1800" -> "1800 PUBG UC";
+            case "PUBG_3850" -> "3850 PUBG UC";
+            case "PUBG_8100" -> "8100 PUBG UC";
             default -> key;
         };
     }
@@ -130,6 +136,14 @@ public class AdminPriceScreen extends AbstractScreen {
                     .append(" so‘m\n");
         }
 
+        sb.append("\n🎮 <b>PUBG UC narxlari:</b>\n");
+        Map<Integer, Integer> pubgPrices = priceService.getAllPubgPrices();
+        for (Map.Entry<Integer, Integer> entry : pubgPrices.entrySet()) {
+            sb.append("• <b>").append(entry.getKey()).append(" UC:</b> ")
+                    .append(String.format("%,d", entry.getValue()).replace(',', ' '))
+                    .append(" so‘m\n");
+        }
+
         sb.append("\nNarxni o‘zgartirish uchun pastdagi tugmalardan birini bosing 👇");
         return sb.toString();
     }
@@ -151,13 +165,21 @@ public class AdminPriceScreen extends AbstractScreen {
         row2.add(InlineKeyboardButton.builder().text("⭐️ 1000").callbackData("edit_STAR_1000").build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();
-        row3.add(InlineKeyboardButton.builder().text("⭐️ 1 ta Star narxi").callbackData("edit_STAR_PER_UNIT").build());
+        row3.add(InlineKeyboardButton.builder().text("⭐️ 1 ta Star").callbackData("edit_STAR_PER_UNIT").build());
+        row3.add(InlineKeyboardButton.builder().text("💎 1 oy").callbackData("edit_PREMIUM_1").build());
+        row3.add(InlineKeyboardButton.builder().text("💎 3 oy").callbackData("edit_PREMIUM_3").build());
+        row3.add(InlineKeyboardButton.builder().text("💎 6 oy").callbackData("edit_PREMIUM_6").build());
+        row3.add(InlineKeyboardButton.builder().text("💎 1 yil").callbackData("edit_PREMIUM_12").build());
 
-        InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(InlineKeyboardButton.builder().text("💎 1 oy").callbackData("edit_PREMIUM_1").build());
-        row4.add(InlineKeyboardButton.builder().text("💎 3 oy").callbackData("edit_PREMIUM_3").build());
-        row4.add(InlineKeyboardButton.builder().text("💎 6 oy").callbackData("edit_PREMIUM_6").build());
-        row4.add(InlineKeyboardButton.builder().text("💎 1 yil").callbackData("edit_PREMIUM_12").build());
+        InlineKeyboardRow pubgRow1 = new InlineKeyboardRow();
+        pubgRow1.add(InlineKeyboardButton.builder().text("🎮 60 UC").callbackData("edit_PUBG_60").build());
+        pubgRow1.add(InlineKeyboardButton.builder().text("🎮 325 UC").callbackData("edit_PUBG_325").build());
+        pubgRow1.add(InlineKeyboardButton.builder().text("🎮 660 UC").callbackData("edit_PUBG_660").build());
+
+        InlineKeyboardRow pubgRow2 = new InlineKeyboardRow();
+        pubgRow2.add(InlineKeyboardButton.builder().text("🎮 1800 UC").callbackData("edit_PUBG_1800").build());
+        pubgRow2.add(InlineKeyboardButton.builder().text("🎮 3850 UC").callbackData("edit_PUBG_3850").build());
+        pubgRow2.add(InlineKeyboardButton.builder().text("🎮 8100 UC").callbackData("edit_PUBG_8100").build());
 
         InlineKeyboardRow row5 = new InlineKeyboardRow();
         row5.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
@@ -169,7 +191,8 @@ public class AdminPriceScreen extends AbstractScreen {
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
-        keyboard.add(row4);
+        keyboard.add(pubgRow1);
+        keyboard.add(pubgRow2);
         keyboard.add(row5);
 
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();

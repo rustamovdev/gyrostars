@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.lewis.leykabot.model.database.entity.PremiumTransaction;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -26,4 +27,7 @@ public interface PremiumTransactionRepository extends JpaRepository<PremiumTrans
 
     @Query("SELECT COALESCE(SUM(p.months), 0) FROM PremiumTransaction p")
     long sumAllPremiumMonths();
+
+    @Query("SELECT COUNT(p) FROM PremiumTransaction p WHERE p.createdAt BETWEEN :from AND :to")
+    long countPremiumBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

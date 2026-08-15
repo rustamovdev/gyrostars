@@ -63,7 +63,12 @@ public class OrderChannelService {
     }
 
     public synchronized String getOrderChannel() {
-        return orderChannel;
+        if (this.orderChannel == null) {
+            botSettingRepository.findById(ORDER_CHANNEL_KEY).ifPresent(setting -> {
+                this.orderChannel = normalizeChannelId(setting.getValue());
+            });
+        }
+        return this.orderChannel;
     }
 
     public synchronized void setOrderChannel(String channel) {
@@ -71,9 +76,11 @@ public class OrderChannelService {
         if (normalized != null && !normalized.isBlank()) {
             this.orderChannel = normalized;
             botSettingRepository.save(new BotSetting(ORDER_CHANNEL_KEY, this.orderChannel));
+            log.info("Order channel successfully updated to: {}", this.orderChannel);
         } else {
             this.orderChannel = null;
             botSettingRepository.deleteById(ORDER_CHANNEL_KEY);
+            log.info("Order channel cleared.");
         }
     }
 
@@ -84,7 +91,9 @@ public class OrderChannelService {
     }
 
     public void sendOrderNotification(String productType, String quantity, String recipient, int priceSoom) {
-        if (orderChannel == null || orderChannel.isBlank()) {
+        String targetChannel = getOrderChannel();
+        if (targetChannel == null || targetChannel.isBlank()) {
+            log.warn("Order notification skipped: no order channel configured.");
             return;
         }
 
@@ -103,13 +112,13 @@ public class OrderChannelService {
 
         try {
             telegramClient.execute(SendMessage.builder()
-                    .chatId(orderChannel)
+                    .chatId(targetChannel)
                     .text(message)
                     .parseMode("HTML")
                     .build());
-            log.info("Order notification sent to channel {} for order #ORD-{}", orderChannel, orderNum);
+            log.info("Order notification sent to channel {} for order #ORD-{}", targetChannel, orderNum);
         } catch (Exception e) {
-            log.warn("Failed to send order notification to channel {}: {}", orderChannel, e.getMessage());
+            log.warn("Failed to send order notification to channel {}: {}", targetChannel, e.getMessage());
         }
     }
 
@@ -120,7 +129,7 @@ public class OrderChannelService {
             String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
             telegramClient.execute(SendMessage.builder()
                     .chatId(normalized)
-                    .text("✅ <b>Test xabar!</b>\n\nOrder kanali muvaffaqiyatli ulandi.\n🕒 <b>Vaqt:</b> " + dateStr)
+                    .text("✅ <b>Buyurtmalar kanali ulandi!</b>\n\nBarcha yangi xaridlar ushbu kanalga yuboriladi.\n🕒 <b>Vaqt:</b> " + dateStr)
                     .parseMode("HTML")
                     .build());
             return true;

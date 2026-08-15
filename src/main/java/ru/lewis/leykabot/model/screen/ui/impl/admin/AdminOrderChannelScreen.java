@@ -107,7 +107,7 @@ public class AdminOrderChannelScreen extends AbstractScreen {
         row1.add(InlineKeyboardButton.builder().text("📢 Kanalni ulash / o‘zgartirish").callbackData("set_channel").build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        row2.add(InlineKeyboardButton.builder().text("🧪 Test xabar yuborish").callbackData("test_channel").build());
+        row2.add(InlineKeyboardButton.builder().text("📡 Kanalni tekshirish").callbackData("test_channel").build());
         row2.add(InlineKeyboardButton.builder().text("🗑 O‘chirish").callbackData("clear_channel").build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();

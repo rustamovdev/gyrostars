@@ -30,6 +30,9 @@ public class User {
     @Column(name = "balance", nullable = false)
     private Integer balance = 0;
 
+    @Column(name = "referrerId")
+    private Long referrerId;
+
     @CreationTimestamp
     @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;

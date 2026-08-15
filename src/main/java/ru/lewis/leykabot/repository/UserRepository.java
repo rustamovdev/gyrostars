@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query("SELECT u.balance FROM User u WHERE u.telegramId = :telegramId")
     Optional<Integer> getBalanceByTelegramId(@Param("telegramId") Long telegramId);
+
+    long countByReferrerId(Long referrerId);
 }

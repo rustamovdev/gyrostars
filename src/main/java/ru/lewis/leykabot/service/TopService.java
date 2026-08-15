@@ -13,6 +13,7 @@ import ru.lewis.leykabot.repository.TransactionRepository;
 
 import java.text.MessageFormat;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -166,5 +167,53 @@ public class TopService {
             result.add(new TopEntry(offset + i + 1, (Long) row[0], (Long) row[1]));
         }
         return result;
+    }
+
+    public record GlobalStats(
+            long turnoverRubles,
+            long totalPurchases,
+            long starsTxCount,
+            long starsTotalAmount,
+            long premiumTxCount,
+            long giftTxCount,
+            List<TopEntry> top7,
+            int userRank
+    ) {}
+
+    public GlobalStats getGlobalStats(String period, Long currentUserId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime from;
+        switch (period) {
+            case "today" -> from = now.toLocalDate().atStartOfDay();
+            case "3days" -> from = now.minusDays(3);
+            case "7days" -> from = now.minusDays(7);
+            case "30days" -> from = now.minusDays(30);
+            default -> from = LocalDateTime.of(2020, 1, 1, 0, 0); // all
+        }
+
+        long turnover = transactionRepository.sumRublesBetween(from, now);
+        long starsCount = starsRepository.countStarsBetween(from, now);
+        long starsTotal = starsRepository.sumStarsBetween(from, now);
+        long premiumCount = premiumRepository.countPremiumBetween(from, now);
+        long totalPurchases = starsCount + premiumCount;
+        long giftCount = 0;
+
+        List<Object[]> rawTop = transactionRepository.findTopByRublesBetween(from, now, PageRequest.of(0, 100));
+        List<TopEntry> top7 = new ArrayList<>();
+        int userRank = -1;
+
+        for (int i = 0; i < rawTop.size(); i++) {
+            Object[] row = rawTop.get(i);
+            Long uid = (Long) row[0];
+            long tot = ((Number) row[1]).longValue();
+            if (i < 7) {
+                top7.add(new TopEntry(i + 1, uid, tot));
+            }
+            if (currentUserId != null && uid.equals(currentUserId)) {
+                userRank = i + 1;
+            }
+        }
+
+        return new GlobalStats(turnover, totalPurchases, starsCount, starsTotal, premiumCount, giftCount, top7, userRank);
     }
 }

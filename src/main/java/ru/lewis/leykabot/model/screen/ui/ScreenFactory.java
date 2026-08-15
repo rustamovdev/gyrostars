@@ -49,9 +49,11 @@ public class ScreenFactory {
     private final PaymentCardService paymentCardService;
     private final OrderChannelService orderChannelService;
     private final AutoPaymentService autoPaymentService;
+    private final PubgService pubgService;
+    private final PubgTransactionService pubgTransactionService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
-        return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, this);
+        return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, userService, this);
     }
 
     public ProfileScreen createProfileScreen(Long chatId, Long userId) {
@@ -100,7 +102,7 @@ public class ScreenFactory {
     }
 
     public TopSelectScreen createTopSelectScreen(Long chatId, Long userId) {
-        return new TopSelectScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, this);
+        return new TopSelectScreen(chatId, userId, screenManager, this, topService, telegramService);
     }
 
     public RublesDepositSelectPaymentMethodScreen createRublesDepositSelectPaymentMethodScreen(Long chatId, Long userId, int rubles) {
@@ -138,5 +140,19 @@ public class ScreenFactory {
 
     public AdminCardScreen createAdminCardScreen(Long chatId, Long userId) {
         return new AdminCardScreen(chatId, userId, screenManager, this, adminService, paymentCardService, telegramService);
+    }
+
+    public ReferralScreen createReferralScreen(Long chatId, Long userId) {
+        return new ReferralScreen(chatId, userId, screenManager, this, userService, telegramService);
+    }
+
+    public GiftSelectScreen createGiftSelectScreen(Long chatId, Long userId) {
+        return new GiftSelectScreen(chatId, userId, screenManager, this);
+    }
+
+    public ru.lewis.leykabot.model.screen.ui.impl.pubg.PubgBuyScreen createPubgBuyScreen(Long chatId, Long userId) {
+        return new ru.lewis.leykabot.model.screen.ui.impl.pubg.PubgBuyScreen(
+                chatId, userId, screenManager, this, pubgService, pubgTransactionService, userService, telegramService
+        );
     }
 }

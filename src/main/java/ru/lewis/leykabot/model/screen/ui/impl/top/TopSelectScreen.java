@@ -4,86 +4,173 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
-import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
-import ru.lewis.leykabot.model.Top;
+import ru.lewis.leykabot.model.button.StyledInlineButton;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
+import ru.lewis.leykabot.service.TelegramService;
+import ru.lewis.leykabot.service.TopService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TopSelectScreen extends AbstractScreen {
-    private final ClientMessageConfig clientMessageConfig;
-    private final ButtonsLocConfig buttonsLocConfig;
+
     private final ScreenManager screenManager;
     private final ScreenFactory screenFactory;
+    private final TopService topService;
+    private final TelegramService telegramService;
+    private String currentPeriod;
+
+    private static final String[] RANK_EMOJIS = {
+            "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣"
+    };
 
     public TopSelectScreen(Long chatId, Long userId,
-                           ClientMessageConfig clientMessageConfig,
-                           ButtonsLocConfig buttonsLocConfig,
                            ScreenManager screenManager,
-                           ScreenFactory screenFactory) {
+                           ScreenFactory screenFactory,
+                           TopService topService,
+                           TelegramService telegramService,
+                           String period) {
         super(chatId, userId);
-        this.clientMessageConfig = clientMessageConfig;
-        this.buttonsLocConfig = buttonsLocConfig;
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
+        this.topService = topService;
+        this.telegramService = telegramService;
+        this.currentPeriod = (period != null && !period.isBlank()) ? period : "today";
+    }
+
+    public TopSelectScreen(Long chatId, Long userId,
+                           ScreenManager screenManager,
+                           ScreenFactory screenFactory,
+                           TopService topService,
+                           TelegramService telegramService) {
+        this(chatId, userId, screenManager, screenFactory, topService, telegramService, "today");
     }
 
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
         switch (callback) {
-            case "premium-top" -> screenManager.updateScreen(chatId, screenFactory.createTopShowScreen(chatId, userId, Top.PREMIUM, 0));
-            case "stars-top" -> screenManager.updateScreen(chatId, screenFactory.createTopShowScreen(chatId, userId, Top.STARS, 0));
-            case "rubles-top" -> screenManager.updateScreen(chatId, screenFactory.createTopShowScreen(chatId, userId, Top.RUBLES, 0));
+            case "period_today" -> {
+                this.currentPeriod = "today";
+                screenManager.updateScreen(chatId, this);
+            }
+            case "period_all" -> {
+                this.currentPeriod = "all";
+                screenManager.updateScreen(chatId, this);
+            }
+            case "period_3days" -> {
+                this.currentPeriod = "3days";
+                screenManager.updateScreen(chatId, this);
+            }
+            case "period_7days" -> {
+                this.currentPeriod = "7days";
+                screenManager.updateScreen(chatId, this);
+            }
+            case "period_30days" -> {
+                this.currentPeriod = "30days";
+                screenManager.updateScreen(chatId, this);
+            }
             case "back" -> screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
         }
+    }
+
+    @Override
+    public String getText() {
+        String periodTitle;
+        switch (currentPeriod) {
+            case "all" -> periodTitle = "Umumiy";
+            case "3days" -> periodTitle = "3 kun";
+            case "7days" -> periodTitle = "7 kun";
+            case "30days" -> periodTitle = "30 kun";
+            default -> periodTitle = "Bugun";
+        }
+
+        TopService.GlobalStats stats = topService.getGlobalStats(currentPeriod, userId);
+
+        String formattedTurnover = String.format("%,d", stats.turnoverRubles()).replace(',', ' ');
+        String formattedStars = String.format("%,d", stats.starsTotalAmount()).replace(',', ' ');
+
+        StringBuilder topListBuilder = new StringBuilder();
+        if (stats.top7().isEmpty()) {
+            topListBuilder.append("<i>Hozircha xaridlar mavjud emas</i>\n");
+        } else {
+            for (int i = 0; i < stats.top7().size(); i++) {
+                TopService.TopEntry entry = stats.top7().get(i);
+                String emoji = (i < RANK_EMOJIS.length) ? RANK_EMOJIS[i] : (i + 1) + ".";
+                String name = telegramService.getFullNameByUserId(entry.telegramId());
+                if (name == null || name.isBlank()) {
+                    name = telegramService.getUsernameByUserId(entry.telegramId());
+                }
+                if (name == null || name.isBlank()) {
+                    name = "Mijoz #" + entry.telegramId();
+                }
+                String formattedUserTotal = String.format("%,d", entry.total()).replace(',', ' ');
+                topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — ").append(formattedUserTotal).append(" so'm\n");
+            }
+        }
+
+        String userRankStr = (stats.userRank() > 0) ? stats.userRank() + "-o'rin" : "yo'q";
+
+        return "📊 <b>Global Statistika (" + periodTitle + ")</b>\n\n" +
+                "<blockquote>🔄 <b>Umumiy aylanma:</b> " + formattedTurnover + " so'm\n" +
+                "🛒 <b>Jami xaridlar:</b> " + stats.totalPurchases() + " ta\n" +
+                "├ ⭐ <b>Stars:</b> " + stats.starsTxCount() + " ta (" + formattedStars + " stars)\n" +
+                "├ 💎 <b>Premium:</b> " + stats.premiumTxCount() + " ta\n" +
+                "└ 🎁 <b>Gift:</b> " + stats.giftTxCount() + " ta</blockquote>\n\n" +
+                "🏆 <b>Top 7 Xaridorlar:</b>\n" +
+                "<blockquote>" + topListBuilder + "\n" +
+                "🎯 <b>Sizning o'rningiz:</b> " + userRankStr + "</blockquote>";
     }
 
     @Override
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
-        InlineKeyboardRow row1 = new InlineKeyboardRow();
-        ru.lewis.leykabot.model.button.StyledInlineButton premiumTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
-                .text(buttonsLocConfig.getPremiumTop())
-                .callbackData("premium-top")
-                .style("primary")
-                .build();
-        ru.lewis.leykabot.model.button.StyledInlineButton starsTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
-                .text(buttonsLocConfig.getStarsTop())
-                .callbackData("stars-top")
-                .style("primary")
-                .build();
-        ru.lewis.leykabot.model.button.StyledInlineButton rublesTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
-                .text(buttonsLocConfig.getRublesTop())
-                .callbackData("rubles-top")
-                .style("primary")
-                .build();
-        row1.add(premiumTopButton);
-        row1.add(starsTopButton);
-        row1.add(rublesTopButton);
+        boolean isToday = "today".equals(currentPeriod);
+        boolean isAll = "all".equals(currentPeriod);
+        boolean is3Days = "3days".equals(currentPeriod);
+        boolean is7Days = "7days".equals(currentPeriod);
+        boolean is30Days = "30days".equals(currentPeriod);
 
+        // Row 1: Bugun | Umumiy
+        InlineKeyboardRow row1 = new InlineKeyboardRow();
+        row1.add(InlineKeyboardButton.builder()
+                .text("Bugun" + (isToday ? " ◼️" : ""))
+                .callbackData("period_today")
+                .build());
+        row1.add(InlineKeyboardButton.builder()
+                .text("Umumiy" + (isAll ? " ◼️" : ""))
+                .callbackData("period_all")
+                .build());
+
+        // Row 2: 3 kun | 7 kun | 30 kun
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row2.add(InlineKeyboardButton.builder()
+                .text("3 kun" + (is3Days ? " ◼️" : ""))
+                .callbackData("period_3days")
+                .build());
+        row2.add(InlineKeyboardButton.builder()
+                .text("7 kun" + (is7Days ? " ◼️" : ""))
+                .callbackData("period_7days")
+                .build());
+        row2.add(InlineKeyboardButton.builder()
+                .text("30 kun" + (is30Days ? " ◼️" : ""))
+                .callbackData("period_30days")
+                .build());
+
+        // Row 3: Orqaga
+        InlineKeyboardRow row3 = new InlineKeyboardRow();
+        row3.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
                 .iconCustomEmojiId("5258236805890710909")
-                .build();
-        row2.add(backButton);
+                .build());
 
         keyboard.add(row1);
         keyboard.add(row2);
+        keyboard.add(row3);
 
-        return InlineKeyboardMarkup.builder()
-                .keyboard(keyboard)
-                .build();
-    }
-
-    @Override
-    public String getText() {
-        return clientMessageConfig.getTopCommand();
+        return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }
 }

@@ -31,4 +31,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     @Query("SELECT COALESCE(SUM(t.amountRubles), 0) FROM Transaction t WHERE t.amountRubles > 0")
     long sumAllDepositedRubles();
+
+    @Query("SELECT COALESCE(SUM(t.amountRubles), 0) FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to")
+    long sumRublesBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to")
+    long countBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT t.telegramId, COALESCE(SUM(t.amountRubles), 0) AS total " +
+            "FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to " +
+            "GROUP BY t.telegramId ORDER BY total DESC")
+    List<Object[]> findTopByRublesBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
 }

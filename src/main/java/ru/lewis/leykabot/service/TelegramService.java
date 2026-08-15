@@ -28,10 +28,25 @@ public class TelegramService {
 
     private final TelegramClient telegramClient;
     private final TelegramConfig telegramConfig;
+    private String botUsername = null;
 
     public TelegramService(TelegramClient telegramClient, TelegramConfig telegramConfig) {
         this.telegramClient = telegramClient;
         this.telegramConfig = telegramConfig;
+    }
+
+    public String getBotUsername() {
+        if (botUsername != null && !botUsername.isBlank()) {
+            return botUsername;
+        }
+        try {
+            var me = telegramClient.execute(new org.telegram.telegrambots.meta.api.methods.GetMe());
+            if (me != null && me.getUserName() != null) {
+                this.botUsername = me.getUserName();
+                return this.botUsername;
+            }
+        } catch (Exception ignored) {}
+        return "gyrostars_bot";
     }
 
     // ─── Парсинг формата "ТЕКСТ;путь" ────────────────────────────────────────

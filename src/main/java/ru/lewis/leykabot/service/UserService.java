@@ -68,7 +68,7 @@ public class UserService {
     // -------------------------------------------------------------------------
 
     @Transactional
-    public User createUser(Long telegramId) {
+    public User createUser(Long telegramId, Long referrerId) {
         Optional<User> existing = userRepository.findByTelegramId(telegramId);
         if (existing.isPresent()) {
             User user = existing.get();
@@ -78,9 +78,21 @@ public class UserService {
         User user = new User();
         user.setTelegramId(telegramId);
         user.setBalance(0);
+        if (referrerId != null && !referrerId.equals(telegramId) && isUserExists(referrerId)) {
+            user.setReferrerId(referrerId);
+        }
         User saved = userRepository.save(user);
         userCache.put(telegramId, saved);
         return saved;
+    }
+
+    @Transactional
+    public User createUser(Long telegramId) {
+        return createUser(telegramId, null);
+    }
+
+    public long getReferralsCount(Long telegramId) {
+        return userRepository.countByReferrerId(telegramId);
     }
 
     public boolean isUserExists(Long telegramId) {

@@ -36,6 +36,13 @@ public class PriceService {
         initDefault("PREMIUM_3", 170000);
         initDefault("PREMIUM_6", 230000);
         initDefault("PREMIUM_12", 300000);
+
+        initDefault("PUBG_60", 11000);
+        initDefault("PUBG_325", 55000);
+        initDefault("PUBG_660", 110000);
+        initDefault("PUBG_1800", 275000);
+        initDefault("PUBG_3850", 545000);
+        initDefault("PUBG_8100", 1090000);
     }
 
     private void initDefault(String key, int defaultVal) {
@@ -75,6 +82,11 @@ public class PriceService {
         });
     }
 
+    public int getPubgPrice(int uc, int fallback) {
+        String key = "PUBG_" + uc;
+        return priceCache.getOrDefault(key, fallback);
+    }
+
     public Map<Integer, Integer> getAllStarPrices() {
         Map<Integer, Integer> map = new LinkedHashMap<>();
         map.put(50, getPrice("STAR_50", 12000));
@@ -94,6 +106,17 @@ public class PriceService {
         map.put(3, getPrice("PREMIUM_3", 170000));
         map.put(6, getPrice("PREMIUM_6", 230000));
         map.put(12, getPrice("PREMIUM_12", 300000));
+        return map;
+    }
+
+    public Map<Integer, Integer> getAllPubgPrices() {
+        Map<Integer, Integer> map = new LinkedHashMap<>();
+        map.put(60, getPrice("PUBG_60", 11000));
+        map.put(325, getPrice("PUBG_325", 55000));
+        map.put(660, getPrice("PUBG_660", 110000));
+        map.put(1800, getPrice("PUBG_1800", 275000));
+        map.put(3850, getPrice("PUBG_3850", 545000));
+        map.put(8100, getPrice("PUBG_8100", 1090000));
         return map;
     }
 }
