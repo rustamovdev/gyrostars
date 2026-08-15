@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.lewis.leykabot.repository.PremiumTransactionRepository;
+import ru.lewis.leykabot.repository.PubgTransactionRepository;
 import ru.lewis.leykabot.repository.StarsTransactionRepository;
 import ru.lewis.leykabot.repository.TransactionRepository;
 
@@ -27,6 +28,7 @@ public class TopService {
     private final TransactionRepository        transactionRepository;
     private final StarsTransactionRepository   starsRepository;
     private final PremiumTransactionRepository premiumRepository;
+    private final PubgTransactionRepository    pubgRepository;
 
     @Value("${top.one-page-limit}")
     private int onePageLimit;
@@ -175,7 +177,7 @@ public class TopService {
             long starsTxCount,
             long starsTotalAmount,
             long premiumTxCount,
-            long giftTxCount,
+            long pubgTxCount,
             List<TopEntry> top7,
             int userRank
     ) {}
@@ -195,8 +197,8 @@ public class TopService {
         long starsCount = starsRepository.countStarsBetween(from, now);
         long starsTotal = starsRepository.sumStarsBetween(from, now);
         long premiumCount = premiumRepository.countPremiumBetween(from, now);
-        long totalPurchases = starsCount + premiumCount;
-        long giftCount = 0;
+        long pubgCount = pubgRepository.countBetween(from, now);
+        long totalPurchases = starsCount + premiumCount + pubgCount;
 
         List<Object[]> rawTop = transactionRepository.findTopByRublesBetween(from, now, PageRequest.of(0, 100));
         List<TopEntry> top7 = new ArrayList<>();
@@ -214,6 +216,6 @@ public class TopService {
             }
         }
 
-        return new GlobalStats(turnover, totalPurchases, starsCount, starsTotal, premiumCount, giftCount, top7, userRank);
+        return new GlobalStats(turnover, totalPurchases, starsCount, starsTotal, premiumCount, pubgCount, top7, userRank);
     }
 }

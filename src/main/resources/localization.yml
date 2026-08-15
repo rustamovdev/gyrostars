@@ -142,10 +142,10 @@ localization:
       Stars sotib olmoqchi bo‘lgan foydalanuvchini tanlang:
       (O‘zingizga yoki do‘stingizga)
 
-      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Stars miqdori:</b> <b>{0} Stars</b>
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> <b>Stars miqdori:</b> <b>{0} Stars</b>
       <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> <b>To‘lov summasi:</b> <b>{1} so‘m</b>
     buy-stars-command: |-
-      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Qancha Stars sotib olmoqchisiz?</b>
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> <b>Qancha Stars sotib olmoqchisiz?</b>
 
       Quyidagi tugmalardan birini tanlang yoki o‘z miqdoringizni kiriting:
     development-mode: |-
@@ -153,13 +153,13 @@ localization:
     successfully-created-transaction: |-
       <tg-emoji emoji-id="5436406725232074977">✅</tg-emoji> <b>Tranzaksiya muvaffaqiyatli amalga oshirildi</b>, mablag‘ hisobingizga tushirildi.
     star-buy-enter-sum: |-
-      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olmoqchi bo‘lgan Stars miqdorini kiriting:
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Sotib olmoqchi bo‘lgan Stars miqdorini kiriting:
       (Minimal: 50 Stars | Maksimal: 100 000 Stars)
     deposit-enter-sum: |-
-      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>Hisobingizni to‘ldirmoqchi bo‘lgan summani kiriting:</b>
+      <tg-emoji emoji-id="5890848474563352982">💳</tg-emoji> <b>Hisobingizni to‘ldirmoqchi bo‘lgan summani kiriting:</b>
       (Minimal: 1 000 so‘m | Maksimal: 10 000 000 so‘m)
     deposit-command: |-
-      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>Balansni to‘ldirish</b>
+      <tg-emoji emoji-id="5890848474563352982">💳</tg-emoji> <b>Balansni to‘ldirish</b>
 
       Quyidagi summalardan birini tanlang yoki o‘z miqdoringizni kiriting:
     support-command: |-
@@ -168,7 +168,7 @@ localization:
       Savol, taklif yoki to‘lovlar bo‘yicha muammolar bo‘lsa, adminga yozishingiz mumkin:
       👉 <a href="https://t.me/gyro_pm">@gyro_pm</a>
     links-command: |-
-      <tg-emoji emoji-id="5436304616679580574">💬</tg-emoji> <b>Bizning havolalar</b>
+      <tg-emoji emoji-id="5435973805413538278">📢</tg-emoji> <b>Bizning havolalar</b>
 
       🤖 Bot: <i>@your-bot</i>
       📢 Rasmiy kanal: <i>@your-channel</i>
@@ -176,26 +176,26 @@ localization:
       <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> @{5}
       <tg-emoji emoji-id="5436172829903068620">🆔</tg-emoji> <b>ID:</b> <code>{6}</code>
       
-      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> Asosiy balans: <b>{0} so‘m</b>
-      ⚡️ Jami tranzaksiyalar: <b>{1} ta</b>
-      📥 Jami to‘ldirilgan: <b>{2} so‘m</b>
-      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olingan Stars: <b>{3} Stars</b>
+      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> Asosiy balans: <b>{0} so‘m</b>
+      <tg-emoji emoji-id="5438193302778192083">⏳</tg-emoji> Jami tranzaksiyalar: <b>{1} ta</b>
+      <tg-emoji emoji-id="5436203328465838905">💳</tg-emoji> Jami to‘ldirilgan: <b>{2} so‘m</b>
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Sotib olingan Stars: <b>{3} Stars</b>
       <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> Sotib olingan Premium: <b>{4} oy</b>
     start-command: |-
       <tg-emoji emoji-id="5436173070421238756">👋</tg-emoji> <b>Assalomu alaykum!</b>
-      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Telegram Stars va Premium Do‘koni</b>ga xush kelibsiz!
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> <b>Telegram Stars, Premium va PUBG UC Do‘koni</b>ga xush kelibsiz!
 
       <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> <b>Bizning afzalliklarimiz:</b>
-      <i>• Telegram Stars va Premium eng qulay narxlarda
+      <i>• Telegram Stars, Premium va PUBG UC eng qulay narxlarda
       • Yashirin komissiyalarsiz
       • Bir lahzada hisobga yetkazib berish (Avto-yetkazish)
       • 100% ishonchli va xavfsiz</i>
 
       Kerakli xizmatni tanlang <tg-emoji emoji-id="5436307657516426102">👇</tg-emoji>
     subscribe-channel: |-
-      Botdan foydalanish uchun rasmiy kanalimizga a’zo bo‘ling:
+      <tg-emoji emoji-id="5435973805413538278">📢</tg-emoji> Botdan foydalanish uchun rasmiy kanalimizga a’zo bo‘ling:
     rubles-deposit-select-payment-method-command: |-
-      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>To‘lov usulini tanlang:</b>
+      <tg-emoji emoji-id="5890848474563352982">💳</tg-emoji> <b>To‘lov usulini tanlang:</b>
     rubles-successfully-created-payment: |-
       To‘lov hisobi muvaffaqiyatli yaratildi. To‘lov havolasi: {0}
     payment-create-limit: 'Sizda yaratilgan faol to‘lovlar cheklovi mavjud ({0})'
@@ -218,4 +218,4 @@ top:
   stars:
     format: '{0}-o‘rin, foydalanuvchi {1} - {2} Stars'
     message: |-
-      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olingan Stars bo‘yicha reyting:</b>
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Sotib olingan Stars bo‘yicha reyting:</b>

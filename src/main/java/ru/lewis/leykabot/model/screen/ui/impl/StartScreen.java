@@ -92,8 +92,7 @@ public class StartScreen extends AbstractScreen {
 
         String text = "<tg-emoji emoji-id=\"5436173070421238756\">👋</tg-emoji> Assalomu alaykum, " + username + "\n\n" +
                 "<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> <b>User ID:</b> <code>" + userId + "</code>\n" +
-                "└ <tg-emoji emoji-id=\"5436171485578308032\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm\n\n" +
-                "<tg-emoji emoji-id=\"5422736199343168249\">🔗</tg-emoji> <b>Bot:</b> <code>" + botLink + "</code>";
+                "└ <tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm";
 
         return text + ";images/welcome.png";
     }
@@ -123,16 +122,11 @@ public class StartScreen extends AbstractScreen {
                 .style("primary")
                 .build());
 
-        // Row 3: Premium & Gift
+        // Row 3: Premium (Full width)
         InlineKeyboardRow row3 = new InlineKeyboardRow();
         row3.add(StyledInlineButton.styledBuilder()
-                .text("⭐️ Premium")
+                .text("💎 Premium")
                 .callbackData("buy-premium")
-                .style("primary")
-                .build());
-        row3.add(StyledInlineButton.styledBuilder()
-                .text("🎁 Gift")
-                .callbackData("gift")
                 .style("primary")
                 .build());
 
@@ -156,10 +150,15 @@ public class StartScreen extends AbstractScreen {
                 .style("primary")
                 .build());
 
-        // Row 6: Yordam
+        // Row 6: Reyting & Yordam
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
-                .text("🌀 Yordam")
+                .text("🏆 Reyting")
+                .callbackData("top")
+                .style("primary")
+                .build());
+        row6.add(StyledInlineButton.styledBuilder()
+                .text("💬 Yordam")
                 .callbackData("support")
                 .build());
 

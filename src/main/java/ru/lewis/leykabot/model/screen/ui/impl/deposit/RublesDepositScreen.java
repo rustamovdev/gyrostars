@@ -126,7 +126,7 @@ public class RublesDepositScreen extends AbstractScreen {
                     .text(entry.getValue().getName())
                     .callbackData(entry.getKey())
                     .style(isCustom ? "primary" : "success")
-                    .iconCustomEmojiId(isCustom ? "5470060791883374114" : "5436171485578308032")
+                    .iconCustomEmojiId(isCustom ? "5470060791883374114" : "5890848474563352982")
                     .build();
 
             currentRow.add(button);

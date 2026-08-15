@@ -113,12 +113,12 @@ public class TopSelectScreen extends AbstractScreen {
         String userRankStr = (stats.userRank() > 0) ? stats.userRank() + "-o'rin" : "yo'q";
 
         return "📊 <b>Global Statistika (" + periodTitle + ")</b>\n\n" +
-                "<blockquote>🔄 <b>Umumiy aylanma:</b> " + formattedTurnover + " so'm\n" +
+                "<blockquote><tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Umumiy aylanma:</b> " + formattedTurnover + " so'm\n" +
                 "🛒 <b>Jami xaridlar:</b> " + stats.totalPurchases() + " ta\n" +
-                "├ ⭐ <b>Stars:</b> " + stats.starsTxCount() + " ta (" + formattedStars + " stars)\n" +
-                "├ 💎 <b>Premium:</b> " + stats.premiumTxCount() + " ta\n" +
-                "└ 🎁 <b>Gift:</b> " + stats.giftTxCount() + " ta</blockquote>\n\n" +
-                "🏆 <b>Top 7 Xaridorlar:</b>\n" +
+                "├ <tg-emoji emoji-id=\"5985826831591281620\">⭐️</tg-emoji> <b>Stars:</b> " + stats.starsTxCount() + " ta (" + formattedStars + " stars)\n" +
+                "├ <tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Premium:</b> " + stats.premiumTxCount() + " ta\n" +
+                "└ <tg-emoji emoji-id=\"5204252919565657978\">🎮</tg-emoji> <b>PUBG UC:</b> " + stats.pubgTxCount() + " ta</blockquote>\n\n" +
+                "<tg-emoji emoji-id=\"5436201215341930329\">🏆</tg-emoji> <b>Top 7 Xaridorlar:</b>\n" +
                 "<blockquote>" + topListBuilder + "\n" +
                 "🎯 <b>Sizning o'rningiz:</b> " + userRankStr + "</blockquote>";
     }
