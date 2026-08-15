@@ -1,8 +1,8 @@
 package ru.lewis.leykabot.service;
 
-import com.lowagie.text.*;
-import com.lowagie.text.Font;
-import com.lowagie.text.pdf.*;
+import com.itextpdf.text.*;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,7 +13,6 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.model.dto.fragment.FragmentApiResponse;
 import ru.lewis.leykabot.repository.*;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
@@ -95,12 +94,12 @@ public class ReportService {
             document.open();
 
             // Fontlar
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, new Color(30, 41, 59));
-            Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA, 11, new Color(100, 116, 139));
-            Font sectionTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, new Color(15, 23, 42));
-            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
-            Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 10, new Color(30, 41, 59));
-            Font boldCellFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(30, 41, 59));
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, new BaseColor(30, 41, 59));
+            Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA, 11, new BaseColor(100, 116, 139));
+            Font sectionTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, new BaseColor(15, 23, 42));
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE);
+            Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 10, new BaseColor(30, 41, 59));
+            Font boldCellFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new BaseColor(30, 41, 59));
 
             // Sarlavha
             Paragraph title = new Paragraph("GYRO SERVICE BOT - OYLIK MOLIYAVIY HISOBOT", titleFont);
@@ -174,11 +173,11 @@ public class ReportService {
             srvTable.setWidthPercentage(100);
             srvTable.setWidths(new float[]{2.5f, 1.5f, 2f, 2.5f, 2f});
 
-            addHeaderCell(srvTable, "Xizmat Turi", headerFont, new Color(59, 130, 246));
-            addHeaderCell(srvTable, "Sotuvlar Soni", headerFont, new Color(59, 130, 246));
-            addHeaderCell(srvTable, "Hajmi (Birlik)", headerFont, new Color(59, 130, 246));
-            addHeaderCell(srvTable, "Tushum (So'm)", headerFont, new Color(59, 130, 246));
-            addHeaderCell(srvTable, "Sarflangan TON", headerFont, new Color(59, 130, 246));
+            addHeaderCell(srvTable, "Xizmat Turi", headerFont, new BaseColor(59, 130, 246));
+            addHeaderCell(srvTable, "Sotuvlar Soni", headerFont, new BaseColor(59, 130, 246));
+            addHeaderCell(srvTable, "Hajmi (Birlik)", headerFont, new BaseColor(59, 130, 246));
+            addHeaderCell(srvTable, "Tushum (So'm)", headerFont, new BaseColor(59, 130, 246));
+            addHeaderCell(srvTable, "Sarflangan TON", headerFont, new BaseColor(59, 130, 246));
 
             // Stars
             srvTable.addCell(new Phrase("Telegram Stars", cellFont));
@@ -203,23 +202,23 @@ public class ReportService {
 
             // Jami
             PdfPCell totalLabel = new PdfPCell(new Phrase("JAMI XARIDLAR", boldCellFont));
-            totalLabel.setBackgroundColor(new Color(241, 245, 249));
+            totalLabel.setBackgroundColor(new BaseColor(241, 245, 249));
             srvTable.addCell(totalLabel);
 
             PdfPCell c1 = new PdfPCell(new Phrase((starsCount + premCount + pubgCount) + " ta", boldCellFont));
-            c1.setBackgroundColor(new Color(241, 245, 249));
+            c1.setBackgroundColor(new BaseColor(241, 245, 249));
             srvTable.addCell(c1);
 
             PdfPCell c2 = new PdfPCell(new Phrase("-", boldCellFont));
-            c2.setBackgroundColor(new Color(241, 245, 249));
+            c2.setBackgroundColor(new BaseColor(241, 245, 249));
             srvTable.addCell(c2);
 
             PdfPCell c3 = new PdfPCell(new Phrase(formatMoney(totalRevenue) + " so'm", boldCellFont));
-            c3.setBackgroundColor(new Color(241, 245, 249));
+            c3.setBackgroundColor(new BaseColor(241, 245, 249));
             srvTable.addCell(c3);
 
             PdfPCell c4 = new PdfPCell(new Phrase(String.format("%.2f TON", totalTonSpent), boldCellFont));
-            c4.setBackgroundColor(new Color(241, 245, 249));
+            c4.setBackgroundColor(new BaseColor(241, 245, 249));
             srvTable.addCell(c4);
 
             document.add(srvTable);
@@ -234,10 +233,10 @@ public class ReportService {
             topTable.setWidthPercentage(100);
             topTable.setWidths(new float[]{1f, 3.5f, 2.5f, 3.5f});
 
-            addHeaderCell(topTable, "O'rin", headerFont, new Color(16, 185, 129));
-            addHeaderCell(topTable, "Mijoz (Ism / Username)", headerFont, new Color(16, 185, 129));
-            addHeaderCell(topTable, "Xarid Summasi", headerFont, new Color(16, 185, 129));
-            addHeaderCell(topTable, "Xaridlar Tarkibi", headerFont, new Color(16, 185, 129));
+            addHeaderCell(topTable, "O'rin", headerFont, new BaseColor(16, 185, 129));
+            addHeaderCell(topTable, "Mijoz (Ism / Username)", headerFont, new BaseColor(16, 185, 129));
+            addHeaderCell(topTable, "Xarid Summasi", headerFont, new BaseColor(16, 185, 129));
+            addHeaderCell(topTable, "Xaridlar Tarkibi", headerFont, new BaseColor(16, 185, 129));
 
             List<Object[]> rawTop = transactionRepository.findTopByRublesBetween(from, to, org.springframework.data.domain.PageRequest.of(0, 10));
             if (rawTop.isEmpty()) {
@@ -289,7 +288,7 @@ public class ReportService {
     private void addKpiRow(PdfPTable table, String label, String value, Font labelFont, Font valFont) {
         PdfPCell c1 = new PdfPCell(new Phrase(label, labelFont));
         c1.setPadding(6);
-        c1.setBackgroundColor(new Color(248, 250, 252));
+        c1.setBackgroundColor(new BaseColor(248, 250, 252));
         PdfPCell c2 = new PdfPCell(new Phrase(value, valFont));
         c2.setPadding(6);
         c2.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -297,7 +296,7 @@ public class ReportService {
         table.addCell(c2);
     }
 
-    private void addHeaderCell(PdfPTable table, String text, Font font, Color bgColor) {
+    private void addHeaderCell(PdfPTable table, String text, Font font, BaseColor bgColor) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setBackgroundColor(bgColor);
         cell.setPadding(6);

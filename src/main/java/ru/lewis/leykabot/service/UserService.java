@@ -159,4 +159,13 @@ public class UserService {
 
         return true;
     }
+
+    @Transactional
+    public void changeBalance(Long telegramId, int delta) {
+        User user = getUser(telegramId).orElseGet(() -> createUser(telegramId));
+        int current = user.getBalance() != null ? user.getBalance() : 0;
+        user.setBalance(Math.max(0, current + delta));
+        userRepository.save(user);
+        userCache.put(telegramId, user);
+    }
 }

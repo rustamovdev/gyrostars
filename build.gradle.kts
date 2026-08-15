@@ -35,7 +35,7 @@ dependencies {
     implementation("org.ton.ton4j:smartcontract:1.3.5")
 
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
-    implementation("com.github.librepdf:openpdf:2.0.3")
+    implementation("com.itextpdf:itextpdf:5.5.13.3")
     implementation(kotlin("stdlib-jdk8"))
 }
 kotlin {

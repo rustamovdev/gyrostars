@@ -14,6 +14,7 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
 
     List<Transaction> findByTelegramIdOrderByCreatedAtDesc(Long telegramId);
+    List<Transaction> findTop10ByOrderByCreatedAtDesc();
 
     @Query("SELECT COALESCE(SUM(t.amountRubles), 0) FROM Transaction t WHERE t.telegramId = :telegramId")
     long sumRublesByTelegramId(@Param("telegramId") Long telegramId);

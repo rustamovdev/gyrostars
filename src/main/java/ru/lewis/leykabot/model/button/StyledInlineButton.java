@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo;
 
 @Getter
 @Setter
@@ -33,6 +34,7 @@ public class StyledInlineButton extends InlineKeyboardButton {
         private String text;
         private String callbackData;
         private String url;
+        private WebAppInfo webApp;
         private String style;
         private String iconCustomEmojiId;
 
@@ -51,6 +53,11 @@ public class StyledInlineButton extends InlineKeyboardButton {
             return this;
         }
 
+        public StyledBuilder webApp(WebAppInfo webApp) {
+            this.webApp = webApp;
+            return this;
+        }
+
         public StyledBuilder style(String style) {
             this.style = style;
             return this;
@@ -66,6 +73,7 @@ public class StyledInlineButton extends InlineKeyboardButton {
             button.setText(text);
             button.setCallbackData(callbackData);
             button.setUrl(url);
+            button.setWebApp(webApp);
             button.setStyle(style);
             button.setIconCustomEmojiId(iconCustomEmojiId);
             return button;
