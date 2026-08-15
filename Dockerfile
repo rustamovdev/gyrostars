@@ -23,7 +23,7 @@ RUN chmod +x ./gradlew && ./gradlew build -x test --no-daemon
 # Copy supervisor config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 8085
+EXPOSE 8085 10000
 
 # Start both Java Bot and Python Humo Listener 24/7
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

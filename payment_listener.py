@@ -25,7 +25,8 @@ API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 
 # Spring Boot Java botining to'lov qabul qilish endpoint manzili
-BOT_API_URL = os.environ.get("BOT_API_URL", "http://127.0.0.1:8085/api/v1/payment/notify-card")
+BOT_API_PORT = os.environ.get("PORT", "8085")
+BOT_API_URL = os.environ.get("BOT_API_URL", f"http://127.0.0.1:{BOT_API_PORT}/api/v1/payment/notify-card")
 
 # Faqat @HUMOcardbot va Humo rasmiy botlari
 LISTEN_BOTS = [
