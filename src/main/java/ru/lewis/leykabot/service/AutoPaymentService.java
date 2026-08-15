@@ -37,14 +37,6 @@ public class AutoPaymentService {
     public DepositOrder createDepositOrder(Long userId, Long chatId, int baseAmount, PaymentCard card) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Agar foydalanuvchida ayni shu summaga 10 daqiqa ichida yaratilgan faol buyurtma bo'lsa, o'shani qaytaramiz
-        Optional<DepositOrder> existingOpt = depositOrderRepository
-                .findTopByUserIdAndStatusAndExpiresAtAfterOrderByIdDesc(userId, "PENDING", now);
-
-        if (existingOpt.isPresent() && existingOpt.get().getBaseAmount().equals(baseAmount)) {
-            return existingOpt.get();
-        }
-
         // Aniq yaxlit summa (qo'shimcha so'mlarsiz)
         int exactAmount = baseAmount;
 
@@ -67,12 +59,8 @@ public class AutoPaymentService {
     }
 
     private String generateOrderCode() {
-        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 10; i++) {
-            sb.append(chars.charAt(ThreadLocalRandom.current().nextInt(chars.length())));
-        }
-        return sb.toString();
+        long count = depositOrderRepository.count() + 1;
+        return String.valueOf(count);
     }
 
     public Optional<DepositOrder> getOrder(Long orderId) {

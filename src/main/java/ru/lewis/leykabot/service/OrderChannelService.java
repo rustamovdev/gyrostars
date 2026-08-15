@@ -24,7 +24,7 @@ public class OrderChannelService {
     private static final String ORDER_CHANNEL_KEY = "order_channel";
     private static final String ORDER_COUNTER_KEY = "order_counter";
 
-    private final AtomicLong orderCounter = new AtomicLong(100);
+    private final AtomicLong orderCounter = new AtomicLong(0);
     private String orderChannel = null;
 
     @PostConstruct
