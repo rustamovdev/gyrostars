@@ -1,21 +1,27 @@
 // Telegram WebApp Initialization
 const tg = window.Telegram?.WebApp;
 if (tg) {
-  tg.ready();
-  tg.expand();
-  if (tg.setHeaderColor) tg.setHeaderColor('#0a0e17');
-  if (tg.setBackgroundColor) tg.setBackgroundColor('#0a0e17');
+  try {
+    tg.ready();
+    tg.expand();
+    if (tg.setHeaderColor) tg.setHeaderColor('#090d16');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#090d16');
+  } catch (e) {
+    console.log('TG init err:', e);
+  }
 }
 
 // Telegram Haptic Feedback Helper
 function triggerHaptic(type = 'light') {
-  if (tg?.HapticFeedback) {
-    if (type === 'success' || type === 'error' || type === 'warning') {
-      tg.HapticFeedback.notificationOccurred(type);
-    } else {
-      tg.HapticFeedback.impactOccurred(type);
+  try {
+    if (tg?.HapticFeedback) {
+      if (type === 'success' || type === 'error' || type === 'warning') {
+        tg.HapticFeedback.notificationOccurred(type);
+      } else {
+        tg.HapticFeedback.impactOccurred(type);
+      }
     }
-  }
+  } catch (e) {}
 }
 
 // Global State
@@ -23,8 +29,9 @@ let state = {
   user: {
     userId: 8159265215,
     username: 'user',
-    fullName: 'S R',
+    fullName: 'Mijoz',
     balance: 0,
+    photoUrl: null,
     verified: true
   },
   prices: {
@@ -45,7 +52,7 @@ let state = {
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-  // Extract user info from Telegram if available
+  // Extract user info from Telegram
   if (tg?.initDataUnsafe?.user) {
     const u = tg.initDataUnsafe.user;
     state.user.userId = u.id;
@@ -76,7 +83,7 @@ function updateUserUI() {
   if (idEl) idEl.innerText = state.user.userId;
   if (avatarEl) {
     if (state.user.photoUrl) {
-      avatarEl.innerHTML = `<img src="${state.user.photoUrl}" class="avatar-photo" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      avatarEl.innerHTML = `<img src="${state.user.photoUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     } else {
       const initials = (state.user.fullName || 'SR').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
       avatarEl.innerText = initials || 'SR';
@@ -131,33 +138,49 @@ async function fetchInitData() {
       calculateStarsPrice();
     }
   } catch (e) {
-    console.log('Offline mock state', e);
+    console.log('Using offline state', e);
   }
 }
 
 // Screen Switcher
 function switchScreen(screenName) {
-  triggerHaptic('selection');
-  document.querySelectorAll('.screen-view').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  triggerHaptic('light');
 
-  const targetScreen = document.getElementById(`screen-${screenName}`);
-  if (targetScreen) targetScreen.classList.add('active');
+  // Hide all screens
+  const screens = document.querySelectorAll('.screen-view');
+  screens.forEach(s => s.classList.remove('active'));
 
-  const navItem = document.querySelector(`.nav-item[data-screen="${screenName}"]`);
-  if (navItem) navItem.classList.add('active');
+  // Deactivate all nav items
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => n.classList.remove('active'));
+
+  // Show target screen
+  const target = document.getElementById('screen-' + screenName);
+  if (target) {
+    target.classList.add('active');
+  }
+
+  // Activate nav button
+  const activeNav = document.querySelector(`.nav-item[data-screen="${screenName}"]`);
+  if (activeNav) {
+    activeNav.classList.add('active');
+  }
 
   if (screenName === 'top') fetchTopData('today');
   if (screenName === 'history') fetchHistoryData();
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo(0, 0);
 }
 
 // Category Tabs on Home Screen
 function switchHomeTab(catName) {
   triggerHaptic('light');
-  document.querySelectorAll('.cat-tab').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-content-view').forEach(el => el.classList.remove('active'));
+
+  const tabs = document.querySelectorAll('.cat-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+
+  const views = document.querySelectorAll('.tab-content-view');
+  views.forEach(v => v.classList.remove('active'));
 
   const activeTabBtn = document.querySelector(`.cat-tab[data-cat="${catName}"]`);
   if (activeTabBtn) activeTabBtn.classList.add('active');
@@ -231,20 +254,20 @@ function selectPayMethod(method) {
 }
 
 // Premium & PUBG Package Pickers
-function selectPremPackage(months, price) {
+function selectPremPackage(months, price, el) {
   triggerHaptic('light');
   state.selectedPremMonths = months;
   state.selectedPremPrice = price;
-  document.querySelectorAll('.prem-card').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.prem-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
-function selectPubgPackage(uc, price) {
+function selectPubgPackage(uc, price, el) {
   triggerHaptic('light');
   state.selectedPubgUc = uc;
   state.selectedPubgPrice = price;
-  document.querySelectorAll('.pubg-card').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.pubg-card').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
 }
 
 // SUBMIT ORDERS
@@ -395,7 +418,6 @@ function showInvoiceScreen(data) {
   document.getElementById('invoiceHolderName').innerText = holder;
   document.getElementById('invoiceAmount').innerText = amount;
   document.getElementById('warningAmountText').innerText = amount;
-  document.getElementById('instAmountText').innerText = amount;
 
   const now = new Date();
   const timeStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -467,12 +489,16 @@ async function fetchTopData(period) {
     if (res.ok) {
       const data = await res.json();
       renderTopList(data.top || []);
+      if (data.recentBuyers && data.recentBuyers.length > 0) {
+        document.getElementById('recentBuyersMarquee').innerHTML = data.recentBuyers.map((b, i) => `👤 <span class="highlight">${escapeHtml(b)}</span>`).join(' · ');
+      } else {
+        document.getElementById('recentBuyersMarquee').innerText = "Hozircha xaridlar mavjud emas";
+      }
     }
   } catch (e) {}
 }
 
 function switchTopPeriod(period) {
-  triggerHaptic('light');
   fetchTopData(period);
 }
 
@@ -485,7 +511,7 @@ function renderTopList(items) {
 
   const medals = ['🥇', '🥈', '🥉'];
   container.innerHTML = items.map((item, idx) => {
-    const medalOrNum = idx < 3 ? `<div class="medal anim-pulse">${medals[idx]}</div>` : `<div class="rank-num">${idx + 1}</div>`;
+    const medalOrNum = idx < 3 ? `<div class="medal">${medals[idx]}</div>` : `<div class="rank-num">${idx + 1}</div>`;
     return `
       <div class="top-item ${idx < 3 ? 'rank-' + (idx + 1) : ''}">
         ${medalOrNum}
@@ -511,8 +537,8 @@ function renderHistoryList(items) {
   const container = document.getElementById('historyListContainer');
   if (!items || items.length === 0) {
     container.innerHTML = `
-      <div class="empty-state-box glass-panel" style="margin-top: 10px;">
-        <div class="t-emoji-xl anim-float">📜</div>
+      <div class="empty-state-box" style="margin-top: 10px;">
+        <div class="sticker-emoji-xl">📜</div>
         <div class="empty-text">Tranzaksiyalar mavjud emas</div>
       </div>
     `;
@@ -520,7 +546,7 @@ function renderHistoryList(items) {
   }
 
   container.innerHTML = items.map(item => `
-    <div class="history-item-card glass-panel">
+    <div class="history-item-card">
       <div>
         <div class="history-service-title">${escapeHtml(item.service)} — ${escapeHtml(item.details)}</div>
         <div class="history-date">${item.date ? item.date.substring(0, 16).replace('T', ' ') : ''}</div>
@@ -533,10 +559,10 @@ function renderHistoryList(items) {
   `).join('');
 }
 
-function filterHistory(status) {
+function filterHistory(status, el) {
   triggerHaptic('light');
-  document.querySelectorAll('.h-tab').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.h-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
   fetchHistoryData();
 }
 
@@ -561,7 +587,7 @@ function showToast(msg) {
   if (!toast) return;
   toast.innerText = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+  setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
 function formatMoney(num) {

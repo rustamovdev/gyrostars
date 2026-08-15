@@ -3,57 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Gyro Stars & Services</title>
+  <title>Gyro Stars</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
   <div class="app-container">
 
-    <!-- TOP USER HEADER CARD -->
-    <header class="top-header-card glass-panel">
+    <!-- TOP HEADER -->
+    <header class="top-header-card">
       <div class="user-profile-left">
         <div class="avatar-wrap">
           <div class="avatar-img" id="userAvatar">SR</div>
-          <div class="online-indicator"></div>
         </div>
         <div class="user-meta">
           <div class="user-name-row">
-            <span class="user-name" id="userName">S R</span>
+            <span class="user-name" id="userName">Mijoz</span>
             <span class="verified-badge-wrap">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="#38bdf8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
             </span>
           </div>
-          <div class="user-id-row tap-active" onclick="copyText(document.getElementById('userIdVal').innerText, 'ID nusxalandi!')">
+          <div class="user-id-row" onclick="copyText(document.getElementById('userIdVal').innerText, 'ID nusxalandi!')">
             <span>ID: <span id="userIdVal">8159265215</span></span>
             <svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </div>
         </div>
       </div>
-      <div class="user-balance-btn tap-active" onclick="switchScreen('deposit')">
+      <div class="user-balance-btn" onclick="switchScreen('deposit')">
         <span id="userBalanceTop">0 so'm</span>
         <div class="plus-circle">+</div>
       </div>
     </header>
 
-    <!-- SCREEN 1: BOSH SAHIFA (HOME) -->
+    <!-- 1. BOSH SAHIFA (HOME) -->
     <main id="screen-home" class="screen-view active">
-      <!-- Horizontal Category Tabs with Premium Emojis -->
+      <!-- Category Tabs with Large Stickers -->
       <div class="category-tabs-row">
-        <button class="cat-tab active tap-active" data-cat="stars" onclick="switchHomeTab('stars')">
-          <span class="t-emoji anim-float">⭐</span> Stars
+        <button type="button" class="cat-tab active" data-cat="stars" onclick="switchHomeTab('stars')">
+          <span class="sticker-emoji">⭐</span> Stars
         </button>
-        <button class="cat-tab tap-active" data-cat="premium" onclick="switchHomeTab('premium')">
-          <span class="t-emoji anim-pulse">💎</span> Premium
+        <button type="button" class="cat-tab" data-cat="premium" onclick="switchHomeTab('premium')">
+          <span class="sticker-emoji">💎</span> Premium
         </button>
-        <button class="cat-tab tap-active" data-cat="pubg" onclick="switchHomeTab('pubg')">
-          <span class="t-emoji anim-wiggle">🎮</span> O'yinlar
+        <button type="button" class="cat-tab" data-cat="pubg" onclick="switchHomeTab('pubg')">
+          <span class="sticker-emoji">🎮</span> PUBG UC
         </button>
-        <button class="cat-tab tap-active" data-cat="gift" onclick="switchHomeTab('gift')">
-          <span class="t-emoji anim-float">🎁</span> Gift
+        <button type="button" class="cat-tab" data-cat="gift" onclick="switchHomeTab('gift')">
+          <span class="sticker-emoji">🎁</span> Gift
         </button>
       </div>
 
@@ -61,39 +60,39 @@
       <div id="home-stars-view" class="tab-content-view active">
         <div class="section-title-row">
           <div class="section-title">
-            <span class="t-emoji-lg anim-float">⭐</span> Telegram Stars
+            <span class="sticker-emoji-lg">⭐</span> Telegram Stars
           </div>
-          <button class="pill-badge-btn tap-active" id="postModeBtn" onclick="togglePostMode()">Postga Stars</button>
+          <button type="button" class="pill-badge-btn" id="postModeBtn" onclick="togglePostMode()">Postga Stars</button>
         </div>
 
-        <div class="card-box form-card glass-panel">
+        <div class="card-box form-card">
           <!-- Stars Amount Input -->
           <div class="form-group">
             <div class="form-label-row">
-              <label><span class="hash">#</span> Stars miqdori (50-2500)</label>
+              <label><span class="hash">#</span> Stars miqdori (50-25000)</label>
               <span class="calculated-price" id="starsCalculatedPrice">0 so'm</span>
             </div>
             <div class="input-wrap">
-              <input type="number" id="starsAmountInput" placeholder="Miqdorni kiriting (masalan: 100)" min="50" max="25000" oninput="calculateStarsPrice()">
+              <input type="number" id="starsAmountInput" placeholder="Masalan: 100" min="50" max="25000" oninput="calculateStarsPrice()">
             </div>
           </div>
 
           <!-- Quick Stars Packages -->
           <div class="quick-packages-grid">
-            <button type="button" class="pkg-chip tap-active" onclick="setStarsAmount(50)">50 ⭐</button>
-            <button type="button" class="pkg-chip tap-active" onclick="setStarsAmount(100)">100 ⭐</button>
-            <button type="button" class="pkg-chip tap-active" onclick="setStarsAmount(250)">250 ⭐</button>
-            <button type="button" class="pkg-chip tap-active" onclick="setStarsAmount(500)">500 ⭐</button>
-            <button type="button" class="pkg-chip tap-active" onclick="setStarsAmount(1000)">1000 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(50)">50 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(100)">100 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(250)">250 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(500)">500 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(1000)">1000 ⭐</button>
           </div>
 
-          <!-- Target Username or Post Link -->
+          <!-- Target Username with 👤 Quick Auto-Fill -->
           <div class="form-group">
             <label id="targetLabel">👤 Foydalanuvchi</label>
             <div class="input-wrap icon-right">
               <input type="text" id="targetUsernameInput" placeholder="@username">
-              <div class="input-right-icon tap-active" title="O'zingizning username'ni kiritish" onclick="fillOwnUsername('targetUsernameInput')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <div class="input-right-icon" title="O'zingizning username'ni kiritish" onclick="fillOwnUsername('targetUsernameInput')">
+                👤
               </div>
             </div>
           </div>
@@ -102,21 +101,20 @@
           <div class="form-group">
             <label>💳 To'lov turi</label>
             <div class="toggle-buttons-group">
-              <button type="button" class="toggle-btn active tap-active" id="payMethodCard" onclick="selectPayMethod('card')">
+              <button type="button" class="toggle-btn active" id="payMethodCard" onclick="selectPayMethod('card')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                 Karta orqali
               </button>
-              <button type="button" class="toggle-btn tap-active" id="payMethodBalance" onclick="selectPayMethod('balance')">
+              <button type="button" class="toggle-btn" id="payMethodBalance" onclick="selectPayMethod('balance')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><circle cx="16" cy="14" r="2"></circle></svg>
-                Balans orqali to'lash
+                Balansdan to'lash
               </button>
             </div>
           </div>
 
           <!-- Submit Button -->
-          <button type="button" class="btn-primary-glow tap-active" id="createStarsOrderBtn" onclick="submitStarsOrder()">
-            <span class="t-emoji anim-float">⭐</span>
-            Buyurtma yaratish
+          <button type="button" class="btn-primary-glow" id="createStarsOrderBtn" onclick="submitStarsOrder()">
+            <span class="sticker-emoji">⭐</span> Buyurtma yaratish
           </button>
         </div>
       </div>
@@ -124,27 +122,27 @@
       <!-- PREMIUM SECTION -->
       <div id="home-premium-view" class="tab-content-view">
         <div class="section-title-row">
-          <div class="section-title"><span class="t-emoji-lg anim-pulse">💎</span> Telegram Premium</div>
+          <div class="section-title"><span class="sticker-emoji-lg">💎</span> Telegram Premium</div>
         </div>
-        <div class="card-box form-card glass-panel">
+        <div class="card-box form-card">
           <div class="premium-grid">
-            <div class="prem-card tap-active" onclick="selectPremPackage(1, 50000)">
-              <div class="prem-months"><span class="t-emoji">💎</span> 1 Oylik</div>
+            <div class="prem-card" onclick="selectPremPackage(1, 50000, this)">
+              <div class="prem-months"><span class="sticker-emoji">💎</span> 1 Oylik</div>
               <div class="prem-price">50 000 so'm</div>
               <div class="prem-badge">Tezkor</div>
             </div>
-            <div class="prem-card active tap-active" onclick="selectPremPackage(3, 170000)">
-              <div class="prem-months"><span class="t-emoji">💎</span> 3 Oylik</div>
+            <div class="prem-card active" onclick="selectPremPackage(3, 170000, this)">
+              <div class="prem-months"><span class="sticker-emoji">💎</span> 3 Oylik</div>
               <div class="prem-price">170 000 so'm</div>
               <div class="prem-badge popular">Mashhur</div>
             </div>
-            <div class="prem-card tap-active" onclick="selectPremPackage(6, 230000)">
-              <div class="prem-months"><span class="t-emoji">💎</span> 6 Oylik</div>
+            <div class="prem-card" onclick="selectPremPackage(6, 230000, this)">
+              <div class="prem-months"><span class="sticker-emoji">💎</span> 6 Oylik</div>
               <div class="prem-price">230 000 so'm</div>
               <div class="prem-badge">-15%</div>
             </div>
-            <div class="prem-card tap-active" onclick="selectPremPackage(12, 300000)">
-              <div class="prem-months"><span class="t-emoji">👑</span> 1 Yillik</div>
+            <div class="prem-card" onclick="selectPremPackage(12, 300000, this)">
+              <div class="prem-months"><span class="sticker-emoji">👑</span> 1 Yillik</div>
               <div class="prem-price">300 000 so'm</div>
               <div class="prem-badge vip">VIP</div>
             </div>
@@ -153,13 +151,13 @@
             <label>👤 Qabul qiluvchi @username</label>
             <div class="input-wrap icon-right">
               <input type="text" id="premTargetUsername" placeholder="@username">
-              <div class="input-right-icon tap-active" title="O'zingizning username'ni kiritish" onclick="fillOwnUsername('premTargetUsername')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <div class="input-right-icon" title="O'zingizning username'ni kiritish" onclick="fillOwnUsername('premTargetUsername')">
+                👤
               </div>
             </div>
           </div>
-          <button type="button" class="btn-primary-glow tap-active" onclick="submitPremiumOrder()">
-            <span class="t-emoji anim-pulse">💎</span> Premium xarid qilish
+          <button type="button" class="btn-primary-glow" onclick="submitPremiumOrder()">
+            <span class="sticker-emoji">💎</span> Premium xarid qilish
           </button>
         </div>
       </div>
@@ -167,23 +165,23 @@
       <!-- PUBG SECTION -->
       <div id="home-pubg-view" class="tab-content-view">
         <div class="section-title-row">
-          <div class="section-title"><span class="t-emoji-lg anim-wiggle">🎮</span> PUBG Mobile UC</div>
+          <div class="section-title"><span class="sticker-emoji-lg">🎮</span> PUBG Mobile UC</div>
         </div>
-        <div class="card-box form-card glass-panel">
+        <div class="card-box form-card">
           <div class="pubg-grid">
-            <div class="pubg-card tap-active" onclick="selectPubgPackage(60, 11000)"><div class="pubg-uc">60 UC</div><div class="pubg-price">11 000 so'm</div></div>
-            <div class="pubg-card active tap-active" onclick="selectPubgPackage(325, 55000)"><div class="pubg-uc">325 UC</div><div class="pubg-price">55 000 so'm</div></div>
-            <div class="pubg-card tap-active" onclick="selectPubgPackage(660, 110000)"><div class="pubg-uc">660 UC</div><div class="pubg-price">110 000 so'm</div></div>
-            <div class="pubg-card tap-active" onclick="selectPubgPackage(1800, 275000)"><div class="pubg-uc">1800 UC</div><div class="pubg-price">275 000 so'm</div></div>
-            <div class="pubg-card tap-active" onclick="selectPubgPackage(3850, 545000)"><div class="pubg-uc">3850 UC</div><div class="pubg-price">545 000 so'm</div></div>
-            <div class="pubg-card tap-active" onclick="selectPubgPackage(8100, 1090000)"><div class="pubg-uc">8100 UC</div><div class="pubg-price">1 090 000 so'm</div></div>
+            <div class="pubg-card" onclick="selectPubgPackage(60, 11000, this)"><div class="pubg-uc">60 UC</div><div class="pubg-price">11 000 so'm</div></div>
+            <div class="pubg-card active" onclick="selectPubgPackage(325, 55000, this)"><div class="pubg-uc">325 UC</div><div class="pubg-price">55 000 so'm</div></div>
+            <div class="pubg-card" onclick="selectPubgPackage(660, 110000, this)"><div class="pubg-uc">660 UC</div><div class="pubg-price">110 000 so'm</div></div>
+            <div class="pubg-card" onclick="selectPubgPackage(1800, 275000, this)"><div class="pubg-uc">1800 UC</div><div class="pubg-price">275 000 so'm</div></div>
+            <div class="pubg-card" onclick="selectPubgPackage(3850, 545000, this)"><div class="pubg-uc">3850 UC</div><div class="pubg-price">545 000 so'm</div></div>
+            <div class="pubg-card" onclick="selectPubgPackage(8100, 1090000, this)"><div class="pubg-uc">8100 UC</div><div class="pubg-price">1 090 000 so'm</div></div>
           </div>
           <div class="form-group" style="margin-top:14px;">
             <label>🆔 PUBG Player ID (Raqamli ID)</label>
             <input type="text" id="pubgPlayerIdInput" placeholder="Masalan: 5123456789">
           </div>
-          <button type="button" class="btn-primary-glow tap-active" onclick="submitPubgOrder()">
-            <span class="t-emoji anim-wiggle">🎮</span> UC sotib olish
+          <button type="button" class="btn-primary-glow" onclick="submitPubgOrder()">
+            <span class="sticker-emoji">🎮</span> UC sotib olish
           </button>
         </div>
       </div>
@@ -191,67 +189,65 @@
       <!-- GIFT SECTION -->
       <div id="home-gift-view" class="tab-content-view">
         <div class="section-title-row">
-          <div class="section-title"><span class="t-emoji-lg anim-float">🎁</span> Telegram Sovg'alari</div>
+          <div class="section-title"><span class="sticker-emoji-lg">🎁</span> Telegram Sovg'alari</div>
         </div>
-        <div class="card-box form-card glass-panel" style="text-align: center; padding: 30px 20px;">
-          <div class="t-emoji-xl anim-float" style="margin-bottom: 12px;">🎁</div>
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px;">Telegram Sovg'alari (Gift)</div>
-          <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px;">Tez orada Telegram orqali istalgan do'stingizga maxsus sovg'alar yuborish imkoniyati qo'shiladi!</div>
-          <button type="button" class="pill-badge-btn tap-active" onclick="switchHomeTab('stars')">⭐ Stars xaridiga qaytish</button>
+        <div class="card-box form-card" style="text-align: center; padding: 36px 20px;">
+          <div class="sticker-emoji-xl" style="margin-bottom: 12px;">🎁</div>
+          <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">Telegram Sovg'alari</div>
+          <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 18px;">Tez orada Telegram orqali maxsus sovg'alar yuborish imkoniyati qo'shiladi!</div>
+          <button type="button" class="pill-badge-btn" onclick="switchHomeTab('stars')">⭐ Stars xaridiga o'tish</button>
         </div>
       </div>
     </main>
 
-    <!-- SCREEN 2: TOP REYTING (LEADERBOARD) -->
+    <!-- 2. TOP REYTING (LEADERBOARD) -->
     <main id="screen-top" class="screen-view">
       <div class="screen-header-title">
-        <span class="t-emoji-lg anim-pulse">🏆</span> Foydalanuvchilar reytingi
+        <span class="sticker-emoji-lg">🏆</span> Foydalanuvchilar reytingi
       </div>
-      <div class="period-tabs-group glass-panel">
-        <button class="period-tab active tap-active" data-period="today" onclick="switchTopPeriod('today')">📅 Bugun</button>
-        <button class="period-tab tap-active" data-period="week" onclick="switchTopPeriod('week')">📅 Hafta</button>
-        <button class="period-tab tap-active" data-period="month" onclick="switchTopPeriod('month')">📅 Oy</button>
+      <div class="period-tabs-group">
+        <button type="button" class="period-tab active" data-period="today" onclick="switchTopPeriod('today')">Bugun</button>
+        <button type="button" class="period-tab" data-period="week" onclick="switchTopPeriod('week')">Hafta</button>
+        <button type="button" class="period-tab" data-period="month" onclick="switchTopPeriod('month')">Oy</button>
       </div>
 
-      <div class="card-box leaderboard-card glass-panel" id="topListContainer">
-        <!-- Dynamically rendered top list -->
+      <div class="card-box leaderboard-card" id="topListContainer">
+        <!-- Dynamically loaded list -->
       </div>
 
       <!-- Recent Active Buyers Marquee -->
-      <div class="card-box recent-buyers-card glass-panel">
+      <div class="card-box recent-buyers-card">
         <div class="recent-header">
-          <span class="t-emoji anim-float">🔥</span> So'nggi faol xaridorlar:
+          <span class="sticker-emoji">🔥</span> So'nggi faol xaridorlar:
         </div>
         <div class="marquee-track">
-          <div class="marquee-content">
-            🥇 <span class="highlight">BOYAKA</span> · 🥈 <span class="highlight">Aloriya</span> · 🥉 <span class="highlight">Bobur</span> · 👤 <span class="highlight">Ayza</span> · 👤 <span class="highlight">SUNNAT</span> · 👤 <span class="highlight">Xak1mbek</span>
+          <div class="marquee-content" id="recentBuyersMarquee">
+            Yuklanmoqda...
           </div>
         </div>
       </div>
     </main>
 
-    <!-- SCREEN 3: XIZMATLAR (SERVICES) -->
+    <!-- 3. XIZMATLAR (SERVICES) -->
     <main id="screen-services" class="screen-view">
       <div class="screen-header-title">
-        <span class="t-emoji-lg anim-wiggle">⚡</span> Barcha Xizmatlar
+        <span class="sticker-emoji-lg">⚡</span> Xizmatlar
       </div>
       <div class="services-list">
-        <!-- Games Service -->
-        <div class="service-item-card glass-panel tap-active" onclick="openServicesTab('pubg')">
+        <div class="service-item-card" onclick="openServicesTab('pubg')">
           <div class="service-icon-box orange">
-            <span class="t-emoji anim-wiggle">🎮</span>
+            <span class="sticker-emoji-lg">🎮</span>
           </div>
           <div class="service-info">
-            <div class="title">O'yinlar (PUBG Mobile UC & FreeFire)</div>
-            <div class="subtitle">Tezkor va arzon o'yin valyutalari</div>
+            <div class="title">O'yinlar (PUBG UC & FreeFire)</div>
+            <div class="subtitle">Tezkor va arzon o'yin donatlari</div>
           </div>
           <div class="chevron">›</div>
         </div>
 
-        <!-- Telegram Stars Service -->
-        <div class="service-item-card glass-panel tap-active" onclick="openServicesTab('stars')">
+        <div class="service-item-card" onclick="openServicesTab('stars')">
           <div class="service-icon-box blue">
-            <span class="t-emoji anim-float">⭐</span>
+            <span class="sticker-emoji-lg">⭐</span>
           </div>
           <div class="service-info">
             <div class="title">Telegram Stars</div>
@@ -260,10 +256,9 @@
           <div class="chevron">›</div>
         </div>
 
-        <!-- Telegram Premium Service -->
-        <div class="service-item-card glass-panel tap-active" onclick="openServicesTab('premium')">
+        <div class="service-item-card" onclick="openServicesTab('premium')">
           <div class="service-icon-box cyan">
-            <span class="t-emoji anim-pulse">💎</span>
+            <span class="sticker-emoji-lg">💎</span>
           </div>
           <div class="service-info">
             <div class="title">Telegram Premium</div>
@@ -274,45 +269,44 @@
       </div>
     </main>
 
-    <!-- SCREEN 4: SHAXSIY KABINET (PROFILE) -->
+    <!-- 4. SHAXSIY KABINET (PROFILE) -->
     <main id="screen-account" class="screen-view">
       <div class="screen-header-title">
-        <span class="t-emoji-lg anim-float">👤</span> Shaxsiy Kabinet
+        <span class="sticker-emoji-lg">👤</span> Shaxsiy Kabinet
       </div>
 
       <!-- 2x2 Stats Grid -->
       <div class="stats-grid-2x2" style="margin-bottom: 12px;">
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrap blue"><span class="t-emoji">💳</span></div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap blue"><span class="sticker-emoji">💳</span></div>
           <div class="stat-label">Joriy balans</div>
           <div class="stat-value" id="accountBalVal">0 so'm</div>
         </div>
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrap yellow"><span class="t-emoji anim-float">⭐</span></div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap yellow"><span class="sticker-emoji">⭐</span></div>
           <div class="stat-label">Jami Stars</div>
           <div class="stat-value" id="accountStarsVal">0</div>
         </div>
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrap green"><span class="t-emoji">💰</span></div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap green"><span class="sticker-emoji">💰</span></div>
           <div class="stat-label">Jami sarflangan</div>
           <div class="stat-value" id="accountSpentVal">0 so'm</div>
         </div>
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrap purple"><span class="t-emoji">🛍️</span></div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap purple"><span class="sticker-emoji">🛍️</span></div>
           <div class="stat-label">Xaridlar soni</div>
           <div class="stat-value" id="accountPurchasesVal">0</div>
         </div>
       </div>
 
-      <!-- + Hisob to'ldirish Button -->
-      <button type="button" class="btn-primary-glow tap-active" style="margin-bottom: 14px;" onclick="switchScreen('deposit')">
-        <span class="t-emoji">💳</span> + Hisobni to'ldirish
+      <button type="button" class="btn-primary-glow" style="margin-bottom: 14px;" onclick="switchScreen('deposit')">
+        <span class="sticker-emoji">💳</span> + Hisobni to'ldirish
       </button>
 
       <!-- Goal Progress Card -->
-      <div class="card-box goal-card glass-panel">
+      <div class="card-box goal-card">
         <div class="goal-header">
-          <div class="goal-trophy t-emoji-lg anim-pulse">🏆</div>
+          <div class="goal-trophy sticker-emoji-lg">🏆</div>
           <div class="goal-info">
             <div class="goal-title">Sizning maqsadingiz (VIP Status)</div>
             <div class="progress-bar-bg">
@@ -324,52 +318,52 @@
       </div>
 
       <!-- Boost Card -->
-      <div class="card-box boost-card glass-panel">
+      <div class="card-box boost-card">
         <div class="boost-content">
-          <div class="boost-icon"><span class="t-emoji anim-float">🚀</span></div>
+          <div class="boost-icon"><span class="sticker-emoji">🚀</span></div>
           <div class="boost-text">
             <div class="title">Kanalimiz uchun ovoz bering!</div>
-            <div class="desc">Kanalimizga boost berib, yutuqli o'yinlar va chegirmalarga ega bo'ling.</div>
+            <div class="desc">Kanalimizga boost berib, chegirmalarga ega bo'ling.</div>
           </div>
         </div>
-        <button type="button" class="btn-boost tap-active" onclick="window.open('https://t.me/boost', '_blank')">
-          <span class="t-emoji">⚡</span> Ovoz berish (Boost)
+        <button type="button" class="btn-boost" onclick="window.open('https://t.me/boost', '_blank')">
+          <span class="sticker-emoji">⚡</span> Ovoz berish (Boost)
         </button>
       </div>
     </main>
 
-    <!-- SCREEN 5: TRANZAKSIYALAR TARIXI (HISTORY) -->
+    <!-- 5. TRANZAKSIYALAR TARIXI (HISTORY) -->
     <main id="screen-history" class="screen-view">
       <div class="screen-header-title">
-        <span class="t-emoji-lg anim-float">📜</span> Tranzaksiyalar Tarixi
+        <span class="sticker-emoji-lg">📜</span> Tranzaksiyalar Tarixi
       </div>
-      <div class="history-filter-tabs glass-panel">
-        <button class="h-tab active tap-active" onclick="filterHistory('all')">Barchasi</button>
-        <button class="h-tab tap-active" onclick="filterHistory('completed')">Bajarildi</button>
-        <button class="h-tab tap-active" onclick="filterHistory('pending')">Kutilmoqda</button>
-        <button class="h-tab tap-active" onclick="filterHistory('cancelled')">Bekor qilindi</button>
+      <div class="history-filter-tabs">
+        <button type="button" class="h-tab active" onclick="filterHistory('all', this)">Barchasi</button>
+        <button type="button" class="h-tab" onclick="filterHistory('completed', this)">Bajarildi</button>
+        <button type="button" class="h-tab" onclick="filterHistory('pending', this)">Kutilmoqda</button>
+        <button type="button" class="h-tab" onclick="filterHistory('cancelled', this)">Bekor qilindi</button>
       </div>
 
       <div id="historyListContainer">
-        <!-- History Items or Empty state -->
+        <!-- History Items -->
       </div>
     </main>
 
-    <!-- SCREEN 6: BALANS VA TO'LOVLAR (DEPOSIT) -->
+    <!-- 6. BALANS VA TO'LOVLAR (DEPOSIT) -->
     <main id="screen-deposit" class="screen-view">
       <div class="screen-header-title">
-        <span class="t-emoji-lg">💳</span> Balans va to'lovlar
+        <span class="sticker-emoji-lg">💳</span> Hisobni to'ldirish
       </div>
 
       <!-- Big Balance Display -->
-      <div class="card-box big-balance-card glass-panel" style="margin-bottom: 14px;">
+      <div class="card-box big-balance-card" style="margin-bottom: 14px;">
         <div class="sub-label">Asosiy hisob balansi</div>
         <div class="balance-big-num" id="depositBigBal">0 so'm</div>
-        <div class="binary-tag">n w n u c s | 1 0 1 0 1 0</div>
+        <div class="binary-tag">GYROSTARS · SECURE WALLET</div>
       </div>
 
       <!-- Deposit Form -->
-      <div class="card-box form-card glass-panel" style="margin-bottom: 14px;">
+      <div class="card-box form-card" style="margin-bottom: 14px;">
         <div class="form-group">
           <label><span class="hash">#</span> To'ldirish summasi (Min: 5 000 so'm, Max: 1 000 000 so'm)</label>
           <div class="input-wrap">
@@ -378,29 +372,29 @@
         </div>
 
         <div class="quick-packages-grid">
-          <button type="button" class="pkg-chip tap-active" onclick="setDepositAmount(10000)">10 000</button>
-          <button type="button" class="pkg-chip tap-active" onclick="setDepositAmount(25000)">25 000</button>
-          <button type="button" class="pkg-chip tap-active" onclick="setDepositAmount(50000)">50 000</button>
-          <button type="button" class="pkg-chip tap-active" onclick="setDepositAmount(100000)">100 000</button>
-          <button type="button" class="pkg-chip tap-active" onclick="setDepositAmount(250000)">250 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(10000)">10 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(25000)">25 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(50000)">50 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(100000)">100 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(250000)">250 000</button>
         </div>
 
-        <button type="button" class="btn-primary-glow tap-active" onclick="submitDepositOrder()">
-          <span class="t-emoji">💳</span> Transfer (Hisobni to'ldirish)
+        <button type="button" class="btn-primary-glow" onclick="submitDepositOrder()">
+          <span class="sticker-emoji">💳</span> Transfer (Hisobni to'ldirish)
         </button>
       </div>
 
-      <div class="card-box glass-panel">
+      <div class="card-box">
         <div class="section-title-sm">
-          <span class="t-emoji">📋</span> So'nggi to'ldirishlar:
+          <span class="sticker-emoji">📋</span> To'ldirishlar tarixi:
         </div>
-        <div class="empty-text-sm">Oxirgi 24 soatda to'ldirishlar mavjud emas</div>
+        <div class="empty-text-sm" id="depositHistoryPreview">Oxirgi to'lovlar mavjud emas</div>
       </div>
     </main>
 
-    <!-- SCREEN 7: TO'LOV INVOYSI (CARD INVOICE WITH COUNTDOWN) -->
+    <!-- 7. TO'LOV INVOYSI (CARD INVOICE WITH COUNTDOWN) -->
     <main id="screen-invoice" class="screen-view">
-      <!-- Realistic Plastic Debit Card with Chip and Copy Buttons -->
+      <!-- Minimalist Realistic Plastic Debit Card -->
       <div class="plastic-card-wrapper">
         <div class="card-chip-row">
           <div class="gold-chip"></div>
@@ -410,8 +404,8 @@
         <div class="card-number-label">KARTA RAQAMI</div>
         <div class="card-number-row">
           <div class="card-num-mono" id="invoiceCardNumber">9860 1678 4421 7684</div>
-          <button type="button" class="icon-btn-copy tap-active" onclick="copyText(document.getElementById('invoiceCardNumber').innerText.replace(/\s+/g, ''), 'Karta raqami nusxalandi!')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <button type="button" class="icon-btn-copy" onclick="copyText(document.getElementById('invoiceCardNumber').innerText.replace(/\s+/g, ''), 'Karta raqami nusxalandi!')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
 
@@ -424,7 +418,7 @@
             <div class="amount-label">TO'LANADIGAN SUMMA</div>
             <div class="amount-val-row">
               <div class="amount-mono-lime" id="invoiceAmount">5 000 UZS</div>
-              <button type="button" class="icon-btn-copy small tap-active" onclick="copyText(document.getElementById('invoiceAmount').innerText.replace(/[^\d]/g, ''), 'Summa nusxalandi!')">
+              <button type="button" class="icon-btn-copy small" onclick="copyText(document.getElementById('invoiceAmount').innerText.replace(/[^\d]/g, ''), 'Summa nusxalandi!')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
             </div>
@@ -433,89 +427,82 @@
       </div>
 
       <!-- Created Time Pill Card -->
-      <div class="card-box meta-pill-card glass-panel">
+      <div class="card-box meta-pill-card">
         <div class="meta-row">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span>Yaratilgan vaqti: <strong id="invoiceCreatedTime">16.08.2026 00:01</strong></span>
         </div>
       </div>
 
-      <!-- Real-time Digital Countdown Timer with Milliseconds -->
-      <div class="card-box timer-card glass-panel">
+      <!-- Real-time Digital Countdown Timer -->
+      <div class="card-box timer-card">
         <div class="timer-top-row">
           <div class="timer-label">
-            <span class="t-emoji anim-float">⏳</span> To'lov uchun qolgan vaqt:
+            <span class="sticker-emoji">⏳</span> To'lov uchun qolgan vaqt:
           </div>
           <div class="timer-digital" id="invoiceTimerDigital">10:00<span class="ms">.00</span></div>
         </div>
         <div class="timer-bar-bg">
           <div class="timer-bar-fill" id="invoiceTimerBar" style="width: 100%;"></div>
         </div>
-        <div class="timer-caption">To'lovni amalga oshirishingiz bilan balans avtomatik to'ldiriladi</div>
+        <div class="timer-caption">To'lov amalga oshirilgach, balans avtomatik to'ldiriladi</div>
       </div>
 
       <!-- Amber Warning Card -->
       <div class="card-box warning-card">
-        <div class="warning-icon"><span class="t-emoji">⚠️</span></div>
+        <div class="warning-icon"><span class="sticker-emoji">⚠️</span></div>
         <div class="warning-text">
-          Diqqat! Ko'rsatilgan summadan kam yoki ko'p to'lamang. Aynan <strong id="warningAmountText">5 000 UZS</strong> miqdorida to'lang!
+          Diqqat! Aynan <strong id="warningAmountText">5 000 UZS</strong> miqdorida to'lang!
         </div>
       </div>
 
-      <!-- Step by Step Instructions -->
-      <div class="card-box instructions-card glass-panel">
+      <!-- Instructions -->
+      <div class="card-box instructions-card">
         <div class="inst-title">
-          <span class="t-emoji">ℹ️</span> To'lov qilish bo'yicha ko'rsatma:
+          <span class="sticker-emoji">ℹ️</span> To'lov ko'rsatmasi:
         </div>
         <div class="inst-step">
-          <span class="step-num">1</span> Karta raqamini nusxalab oling va bank ilovangizni oching (Click, Payme, Uzum va h.k.).
+          <span class="step-num">1</span> Karta raqamini nusxalab, bank ilovangizdan o'tkazing.
         </div>
         <div class="inst-step">
-          <span class="step-num">2</span> Aynan <strong id="instAmountText">5 000 UZS</strong> summani ko'rsatilgan kartaga o'tkazing.
-        </div>
-        <div class="inst-step">
-          <span class="step-num">3</span> To'lov amalga oshirilgach, tizim avtomatik tarzda buyurtmani yakunlaydi.
-        </div>
-        <div class="inst-step">
-          <span class="step-num">4</span> Chek yoki tasdiq talab etilmaydi — barchasi avtomatlashtirilgan!
+          <span class="step-num">2</span> To'lov qilingach, tizim avtomatik buyurtmani yakunlaydi.
         </div>
       </div>
 
-      <!-- Cancel Button -->
-      <button type="button" class="btn-cancel tap-active" onclick="switchScreen('home')">
+      <button type="button" class="btn-cancel" onclick="switchScreen('home')">
         ✕ Bekor qilish va Bosh sahifaga qaytish
       </button>
     </main>
 
     <!-- FLOATING BOTTOM DOCK NAVIGATION BAR -->
-    <nav class="bottom-dock-nav glass-dock">
-      <button class="nav-item active tap-active" data-screen="home" onclick="switchScreen('home')">
+    <nav class="bottom-dock-nav">
+      <button type="button" class="nav-item active" data-screen="home" onclick="switchScreen('home')">
         <div class="nav-icon-wrap">
-          <span class="t-emoji">⭐</span>
+          <span class="sticker-emoji">⭐</span>
         </div>
         <span>Bosh sahifa</span>
       </button>
-      <button class="nav-item tap-active" data-screen="top" onclick="switchScreen('top')">
+      <button type="button" class="nav-item" data-screen="top" onclick="switchScreen('top')">
         <div class="nav-icon-wrap">
-          <span class="t-emoji anim-pulse">🏆</span>
+          <span class="sticker-emoji">🏆</span>
         </div>
         <span>Top</span>
       </button>
-      <button class="nav-item tap-active" data-screen="services" onclick="switchScreen('services')">
+      <button type="button" class="nav-item" data-screen="services" onclick="switchScreen('services')">
         <div class="nav-icon-wrap">
-          <span class="t-emoji anim-wiggle">⚡</span>
+          <span class="sticker-emoji">⚡</span>
         </div>
         <span>Xizmatlar</span>
       </button>
-      <button class="nav-item tap-active" data-screen="account" onclick="switchScreen('account')">
+      <button type="button" class="nav-item" data-screen="account" onclick="switchScreen('account')">
         <div class="nav-icon-wrap">
-          <span class="t-emoji">👤</span>
+          <span class="sticker-emoji">👤</span>
         </div>
         <span>Kabinet</span>
       </button>
-      <button class="nav-item tap-active" data-screen="history" onclick="switchScreen('history')">
+      <button type="button" class="nav-item" data-screen="history" onclick="switchScreen('history')">
         <div class="nav-icon-wrap">
-          <span class="t-emoji">📜</span>
+          <span class="sticker-emoji">📜</span>
         </div>
         <span>Tarix</span>
       </button>

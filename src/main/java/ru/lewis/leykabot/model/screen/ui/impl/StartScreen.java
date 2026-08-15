@@ -109,10 +109,10 @@ public class StartScreen extends AbstractScreen {
         // Row 0: Mini App (WebApp)
         InlineKeyboardRow row0 = new InlineKeyboardRow();
         row0.add(StyledInlineButton.styledBuilder()
-                .text("📱 WebApp ochish")
+                .text("WebApp ochish")
                 .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars.onrender.com"))
                 .style("success")
-                .iconCustomEmojiId("5890848474563352982")
+                .iconCustomEmojiId("5219672182870785225")
                 .build());
 
         // Row 1: STARS (Full width)
