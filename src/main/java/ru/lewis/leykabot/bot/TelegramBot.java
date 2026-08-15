@@ -142,49 +142,41 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             return;
         }
 
-        start(text, userId, chatId);
+        if (text.startsWith("/start")) {
+            start(text, userId, chatId);
+            return;
+        }
 
         screenManager.handleMessage(chatId, text);
     }
 
     private void start(String message, Long userId, Long chatId) {
-        // command check
-        if (message.startsWith("/start")) {
-            // check sub
-            if (!telegramService.isUserSubscribed(userId)) {
-                screenManager.createScreen(chatId, screenFactory.createSubscribeChannelScreen(chatId, userId));
-                return;
-            }
-
-            // Referral tekshirish
-            Long referrerId = null;
-            String[] parts = message.split("\\s+");
-            if (parts.length > 1) {
-                String payload = parts[1].trim().toLowerCase();
-                if (payload.startsWith("u")) {
-                    payload = payload.substring(1);
-                } else if (payload.startsWith("ref")) {
-                    payload = payload.substring(3);
-                }
-                try {
-                    referrerId = Long.parseLong(payload);
-                } catch (NumberFormatException ignored) {}
-            }
-
-            // save user id DB if not exists
-            if (!userService.isUserExists(userId)) {
-                userService.createUser(userId, referrerId);
-            }
-
-            CompletableFuture.allOf(
-                    premiumTransactionService.preload(userId),
-                    starsTransactionService.preload(userId),
-                    userService.warmUpAll(userId),
-                    transactionService.preload(userId),
-                    codeService.warmUpAll(userId)
-            ).thenRun(() ->
-                    screenManager.createScreen(chatId, screenFactory.createStartScreen(chatId, userId))
-            );
+        // check sub
+        if (!telegramService.isUserSubscribed(userId)) {
+            screenManager.createScreen(chatId, screenFactory.createSubscribeChannelScreen(chatId, userId));
+            return;
         }
+
+        // Referral tekshirish
+        Long referrerId = null;
+        String[] parts = message.split("\\s+");
+        if (parts.length > 1) {
+            String payload = parts[1].trim().toLowerCase();
+            if (payload.startsWith("u")) {
+                payload = payload.substring(1);
+            } else if (payload.startsWith("ref")) {
+                payload = payload.substring(3);
+            }
+            try {
+                referrerId = Long.parseLong(payload);
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // save user in DB if not exists
+        if (!userService.isUserExists(userId)) {
+            userService.createUser(userId, referrerId);
+        }
+
+        screenManager.createScreen(chatId, screenFactory.createStartScreen(chatId, userId));
     }
 }

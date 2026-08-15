@@ -17,4 +17,4 @@ echo "🌐 Server PORT: $PORT"
 echo "📦 Executable JAR: $JAR_PATH"
 echo "=========================================================="
 
-exec java -Xmx400m -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
+exec java -Xmx280m -Xms128m -XX:+UseSerialGC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
