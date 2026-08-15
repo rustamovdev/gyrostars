@@ -106,15 +106,6 @@ public class StartScreen extends AbstractScreen {
                 java.net.URLEncoder.encode("https://t.me/" + botUsername, java.nio.charset.StandardCharsets.UTF_8) +
                 "&text=" + java.net.URLEncoder.encode("Telegram Stars, Premium va PUBG UC sotib olish uchun eng qulay va ishonchli bot!", java.nio.charset.StandardCharsets.UTF_8);
 
-        // Row 0: Mini App (WebApp)
-        InlineKeyboardRow row0 = new InlineKeyboardRow();
-        row0.add(StyledInlineButton.styledBuilder()
-                .text("WebApp ochish")
-                .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars.onrender.com"))
-                .style("success")
-                .iconCustomEmojiId("5219672182870785225")
-                .build());
-
         // Row 1: STARS (Full width)
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
@@ -180,7 +171,6 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5271604874419647061")
                 .build());
 
-        keyboard.add(row0);
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
@@ -189,6 +179,15 @@ public class StartScreen extends AbstractScreen {
         keyboard.add(row6);
 
         if (adminService.isAdmin(userId)) {
+            InlineKeyboardRow webAppRow = new InlineKeyboardRow();
+            webAppRow.add(StyledInlineButton.styledBuilder()
+                    .text("WebApp ochish")
+                    .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars.onrender.com"))
+                    .style("success")
+                    .iconCustomEmojiId("5219672182870785225")
+                    .build());
+            keyboard.add(webAppRow);
+
             InlineKeyboardRow adminRow = new InlineKeyboardRow();
             adminRow.add(StyledInlineButton.styledBuilder()
                     .text("👑 Admin Panel")
