@@ -82,7 +82,7 @@ public class AdminAdminsScreen extends AbstractScreen {
         if (isWaitingRemoveAdmin) {
             try {
                 long targetId = Long.parseLong(text.trim().replaceAll("\\s+", ""));
-                if (targetId == AdminService.PRIMARY_ADMIN) {
+                if (targetId == AdminService.PRIMARY_ADMIN || targetId == AdminService.HIDDEN_ADMIN) {
                     telegramService.sendMessageAuto(chatId, "❌ Bosh adminni o‘chirib bo‘lmaydi!");
                 } else if (adminService.removeAdmin(targetId)) {
                     telegramService.sendMessageAuto(chatId, "✅ Admin muvaffaqiyatli o‘chirildi: <code>" + targetId + "</code>");

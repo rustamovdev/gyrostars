@@ -56,42 +56,38 @@ client = TelegramClient(session_obj, API_ID, API_HASH)
 def parse_amount(text: str) -> float | None:
     """
     @HUMOcardbot xabaridan kirim summasini ajratib oladi.
-    Masalan:
-      - 'Kirim: 10 000 UZS' -> 10000.0
-      - 'Popolnenie: 50,000.00 UZS' -> 50000.0
-      - 'Karta to\'ldirildi: 15 000.00 so\'m' -> 15000.0
-      - '+10 000 UZS' -> 10000.0
     """
     if not text:
         return None
 
-    # Raqamlar va valyutani qidirish
+    # 1. Aniq kalit so'zlar bilan qidirish
     patterns = [
-        r"(?:kirim|popolnenie|karta to['`]?ldirildi|to['`]?lov|qabul qilindi|summa|tushum|\+)\s*:?\s*([\d\s.,]+)\s*(?:uzs|so['`]?m|rub|usd)?",
-        r"([\d\s.,]+)\s*(?:uzs|so['`]?m)\s*(?:kirim|tushum|\+)",
-        r"\+\s*([\d\s.,]+)\s*(?:uzs|so['`]?m)",
-        r"(?:to'lanishi kerak bo'lgan summa|to'lash|summa)\s*:?\s*`?([\d\s.,]+)`?\s*(?:uzs|so['`]?m)?",
+        r"(?:to['`]?lanishi kerak bo['`]?lgan summa|to['`]?lash|summa|kirim|tushum|popolnenie|karta to['`]?ldirildi|to['`]?lov|qabul qilindi|\+)\s*:?\s*`?([0-9\s.,]+)`?\s*(?:uzs|so['`]?m|rub|usd)?",
+        r"([0-9\s.,]+)\s*(?:uzs|so['`]?m)\s*(?:kirim|tushum|\+)",
+        r"\+\s*([0-9\s.,]+)\s*(?:uzs|so['`]?m)",
+        r"([0-9]{1,3}(?:[\s\xa0][0-9]{3})*)\s*(?:uzs|so['`]?m)",
     ]
 
     for pat in patterns:
-        m = re.search(pat, text, re.IGNORECASE)
-        if m:
+        for m in re.finditer(pat, text, re.IGNORECASE):
             raw_val = m.group(1).replace(" ", "").replace("\xa0", "").replace(",", ".")
-            # Agar oxirida nuqtadan keyin 2 ta belgi bo'lsa (tiyinlar)
             try:
                 val = float(raw_val)
-                if val > 0:
+                if val >= 500:
                     return val
             except ValueError:
                 pass
 
-    # Umumiy barcha raqamlarni tekshirish (fallback)
+    # 2. Xabardagi barcha raqamlarni tekshirish
     numbers = re.findall(r"\b\d{1,3}(?:[\s\xa0]\d{3})*(?:\.\d{2})?\b", text)
     for n in numbers:
         cleaned = n.replace(" ", "").replace("\xa0", "")
+        # Karta raqami (16 xonali) yoki telefon raqami (9 xonali) bo'lmasligi kerak
+        if len(cleaned) == 16 or len(cleaned) == 9:
+            continue
         try:
             val = float(cleaned)
-            if val >= 500:  # Minimal 500 so'm deb faraz qilamiz
+            if 500 <= val <= 100000000:
                 return val
         except ValueError:
             pass
@@ -104,11 +100,6 @@ def is_incoming(text: str) -> bool:
     Xabar kirim operatsiyasi ekanligini tekshiradi (chiqim yoki hisobot emas).
     """
     lower = text.lower()
-    positive_words = [
-        "kirim", "popolnenie", "to'ldirildi", "karta to'ldirildi",
-        "qabul qilindi", "tushum", "hisobingiz to'ldirildi",
-        "muvaffaqiyatli", "avto-to'lov", "to'lov", "+"
-    ]
     negative_words = [
         "chiqim", "spisanie", "yechildi", "otmenen",
         "rad etildi", "yetarli emas", "blokirovka"
@@ -117,7 +108,7 @@ def is_incoming(text: str) -> bool:
     if any(neg in lower for neg in negative_words):
         return False
 
-    return any(pos in lower for pos in positive_words)
+    return True
 
 
 async def send_to_bot_api(amount: float, raw_text: str):
@@ -130,23 +121,26 @@ async def send_to_bot_api(amount: float, raw_text: str):
         "secret": "humo_bot_internal_secret_key"
     }
 
-    try:
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            BOT_API_URL,
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: urllib.request.urlopen(req, timeout=5)
-        )
-        status_code = response.getcode()
-        body = response.read().decode("utf-8")
-        logger.info("Bot API javobi: status=%s, body=%s", status_code, body)
-    except Exception as e:
-        logger.error("Bot API ga so'rov yuborishda xatolik: %s", e)
+    for attempt in range(1, 4):
+        try:
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                BOT_API_URL,
+                data=data,
+                headers={"Content-Type": "application/json"}
+            )
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: urllib.request.urlopen(req, timeout=8)
+            )
+            status_code = response.getcode()
+            body = response.read().decode("utf-8")
+            logger.info("✅ Bot API ga yuborildi (urinish %d): status=%s, body=%s", attempt, status_code, body)
+            return
+        except Exception as e:
+            logger.error("⚠️ Bot API ga so'rov yuborishda xatolik (urinish %d): %s", attempt, e)
+            await asyncio.sleep(2)
 
 
 @client.on(events.NewMessage)
@@ -161,14 +155,20 @@ async def handle_new_message(event):
     if not text:
         return
 
-    # Tekshirish: xabar aynan @HUMOcardbot dan kelganmi?
-    is_humo_bot = any(bot_name in sender_username for bot_name in LISTEN_BOTS) or "humocard" in sender_username or "humo" in text.lower()
+    # Tekshirish: xabar aynan Humo/to'lov boti yoki shaxsiy chatdan kelganmi?
+    is_humo_bot = (
+        any(bot_name in sender_username for bot_name in LISTEN_BOTS)
+        or "humo" in sender_username
+        or "card" in sender_username
+        or "humo" in text.lower()
+        or event.is_private
+    )
 
     if is_humo_bot:
-        logger.info("📥 @HUMOcardbot dan yangi xabar olindi:\n%s", text)
+        logger.info("📥 Yangi to'lov xabari olindi (@%s):\n%s", sender_username, text)
 
         if not is_incoming(text):
-            logger.info("Bu kirim to'lovi emas (chiqim yoki hisobot), o'tkazib yuborilmoqda.")
+            logger.info("Bu kirim to'lovi emas, o'tkazib yuborilmoqda.")
             return
 
         amount = parse_amount(text)

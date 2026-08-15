@@ -129,16 +129,39 @@ public class AutoPaymentService {
         log.info("Processing incoming card payment: {} UZS. Raw text: {}", amount, rawText);
 
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime recentThreshold = now.minusHours(2);
         Map<String, Object> response = new HashMap<>();
 
-        // 1. Exact amount bo'yicha qidirish
+        // 1. Exact amount bo'yicha faol (PENDING) buyurtmani qidirish
         Optional<DepositOrder> orderOpt = depositOrderRepository
                 .findTopByExactAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
 
-        // 2. Agar topilmasa, Base amount bo'yicha qidirish
+        // 2. Base amount bo'yicha faol (PENDING) buyurtmani qidirish
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
                     .findTopByBaseAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
+        }
+
+        // 3. Vaqti o'tgan bo'lsa ham PENDING holatdagi buyurtmani qidirish
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByExactAmountAndStatusOrderByIdDesc(amount, "PENDING");
+        }
+
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByBaseAmountAndStatusOrderByIdDesc(amount, "PENDING");
+        }
+
+        // 4. Oxirgi 2 soat ichida EXPIRED bo'lib qolgan bo'lsa ham foydalanuvchi balansini to'ldirish
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
+        }
+
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
         }
 
         if (orderOpt.isPresent()) {
