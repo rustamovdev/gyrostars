@@ -26,7 +26,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$(pwd)
-ExecStart=/usr/bin/java -Xmx512m -jar $(pwd)/build/libs/leykabot-4.1.0-M1.jar
+ExecStart=/usr/bin/java -Xmx512m -jar $(pwd)/build/libs/LeykaBot-1.0-SNAPSHOT.jar
 Restart=always
 RestartSec=5
 
