@@ -109,7 +109,7 @@ public class StartScreen extends AbstractScreen {
         // Row 1: STARS (Full width)
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
-                .text("⭐ STARS")
+                .text("STARS")
                 .callbackData("buy-stars")
                 .style("primary")
                 .iconCustomEmojiId("5985826831591281620")
@@ -118,7 +118,7 @@ public class StartScreen extends AbstractScreen {
         // Row 2: PUBG UC DONAT QILISH
         InlineKeyboardRow row2 = new InlineKeyboardRow();
         row2.add(StyledInlineButton.styledBuilder()
-                .text("🎮 PUBG UC DONAT QILISH")
+                .text("PUBG UC DONAT QILISH")
                 .callbackData("buy-pubg")
                 .style("primary")
                 .iconCustomEmojiId("5204252919565657978")
@@ -127,7 +127,7 @@ public class StartScreen extends AbstractScreen {
         // Row 3: Premium (Full width)
         InlineKeyboardRow row3 = new InlineKeyboardRow();
         row3.add(StyledInlineButton.styledBuilder()
-                .text("💎 Premium")
+                .text("Premium")
                 .callbackData("buy-premium")
                 .style("primary")
                 .iconCustomEmojiId("5938420017665152105")
@@ -136,13 +136,13 @@ public class StartScreen extends AbstractScreen {
         // Row 4: Hisob to'ldirish & Kabinet
         InlineKeyboardRow row4 = new InlineKeyboardRow();
         row4.add(StyledInlineButton.styledBuilder()
-                .text("💳 Hisob to‘ldirish")
+                .text("Hisob to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
                 .iconCustomEmojiId("5890848474563352982")
                 .build());
         row4.add(StyledInlineButton.styledBuilder()
-                .text("👤 Kabinet")
+                .text("Kabinet")
                 .callbackData("profile")
                 .style("primary")
                 .iconCustomEmojiId("5256143829672672750")
@@ -151,21 +151,22 @@ public class StartScreen extends AbstractScreen {
         // Row 5: Reyting & Yordam
         InlineKeyboardRow row5 = new InlineKeyboardRow();
         row5.add(StyledInlineButton.styledBuilder()
-                .text("🏆 Reyting")
+                .text("Reyting")
                 .callbackData("top")
                 .style("primary")
                 .iconCustomEmojiId("5436201215341930329")
                 .build());
         row5.add(StyledInlineButton.styledBuilder()
-                .text("💬 Yordam")
+                .text("Yordam")
                 .callbackData("support")
+                .style("primary")
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
 
         // Row 6: Do'stlarga ulashish (Eng pastda)
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
-                .text("🔗 Do‘stlarga ulashish")
+                .text("Do‘stlarga ulashish")
                 .url(shareUrl)
                 .iconCustomEmojiId("5271604874419647061")
                 .build());

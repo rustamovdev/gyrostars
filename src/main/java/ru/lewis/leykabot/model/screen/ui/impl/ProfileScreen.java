@@ -75,7 +75,7 @@ public class ProfileScreen extends AbstractScreen {
                 .text("Balansni to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
-                .iconCustomEmojiId("5436171485578308032")
+                .iconCustomEmojiId("5890848474563352982")
                 .build());
         row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Reyting")
