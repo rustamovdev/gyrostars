@@ -4,9 +4,6 @@ asosiy Java botdagi foydalanuvchi balansini 10 daqiqa ichida avtomatik to'ldirad
 
 O'rnatilgan kutubxona:
     telethon
-
-Ishga tushirish:
-    python payment_listener.py
 """
 
 import asyncio
@@ -16,6 +13,7 @@ import os
 import re
 import urllib.request
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 
 # -------------------------------------------------------------
 # SOZLAMALAR
@@ -23,6 +21,12 @@ from telethon import TelegramClient, events
 # Telegram API ma'lumotlari
 API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
+
+# StringSession orqali bulutda barqaror ishlash
+SESSION_STRING = os.environ.get(
+    "TG_SESSION_STRING",
+    "1ApWapzMBu0Xo8FaGEbO3YVwaIYPe5T-ZdJtBn1b5L4fglvBdmnIEpSonKHFEKa8-5USa9vTUL6iUtANs6G43bLMBOuxvv8DylVkiX8LNzFtQw3iaUH2XkwnKzrEvQDgXJV0e6Wj_-eBcP7n5-Um6I_8dflAV4qdR46RS9GyYcuU5N5c0WiF3DnqSwhtlmi_TGaSeWKketYQxocLO3C8OjZ1kvALeNlatU96vEixEf0LiBQ8P3UEIjxz_M3ZkVLV6vJZZUQDz5XUf0cciM9pQEkmBuG_xGdrUO6q7xTLLuUiLBA7WINwVZJw4mxG-pnNQ-MoYJ4fIeONINWnMSn1cGTq3uLL-lAg="
+)
 
 # Spring Boot Java botining to'lov qabul qilish endpoint manzili
 BOT_API_PORT = os.environ.get("PORT", "8085")
@@ -41,122 +45,115 @@ logging.basicConfig(
 )
 logger = logging.getLogger("HumoPaymentListener")
 
-client = TelegramClient("humo_payment_session", API_ID, API_HASH)
+if SESSION_STRING:
+    session_obj = StringSession(SESSION_STRING)
+else:
+    session_obj = "humo_payment_session"
 
-
-def clean_uz_number(s: str) -> float:
-    """O'zbekiston bank formatidagi sonlarni float ga o'tkazadi (masalan: '103.883,00' -> 103883.0 yoki '50 012' -> 50012.0)."""
-    s = s.strip()
-    if ',' in s and '.' in s:
-        s = s.replace('.', '').replace(',', '.')
-    elif ',' in s:
-        s = s.replace(' ', '').replace(',', '.')
-    elif '.' in s:
-        parts = s.split('.')
-        if len(parts[-1]) == 3:
-            s = s.replace('.', '')
-        else:
-            s = s.replace(' ', '')
-    else:
-        s = s.replace(' ', '')
-    return float(s)
-
-
-def is_incoming(text: str) -> bool:
-    """Xabar haqiqatan ham To'ldirish/Kirim ekanligini tekshiradi."""
-    lower = text.lower()
-
-    # Chiqim/xarid/to'lov bo'lsa rad etish
-    outgoing = ["oplata", "spisanie", "xarid", "yechildi", "yechish", "snatie"]
-    for out_kw in outgoing:
-        if out_kw in lower and "to'ldirish" not in lower and "to‘ldirish" not in lower and "kirim" not in lower:
-            return False
-
-    # Kirim / To'ldirish kalit so'zlari
-    incoming = [
-        "to'ldirish",
-        "to‘ldirish",
-        "toldirish",
-        "kirim",
-        "tushum",
-        "cash to card",
-        "perevod na kartu",
-        "popolnenie",
-        "kartaga",
-        "hisob to'ldirildi",
-        "zachislenie",
-        "+"
-    ]
-    return any(kw in lower for kw in incoming)
+client = TelegramClient(session_obj, API_ID, API_HASH)
 
 
 def parse_amount(text: str) -> float | None:
     """
-    @HUMOcardbot xabaridan birinchi to'lov summasini ajratib oladi:
+    @HUMOcardbot xabaridan kirim summasini ajratib oladi.
     Masalan:
-    To'ldirish
-     103.883,00 UZS  <-- Ushbu summani oladi (103883.0)
-     CASH TO CARD 3 PAYNE
-     HUMOCARD *7042
-     20:14 14.08.2026
-     153.668,59 UZS  <-- Pastdagi qoldiqni olmaydi!
+      - 'Kirim: 10 000 UZS' -> 10000.0
+      - 'Popolnenie: 50,000.00 UZS' -> 50000.0
+      - 'Karta to\'ldirildi: 15 000.00 so\'m' -> 15000.0
+      - '+10 000 UZS' -> 10000.0
     """
-    lines = text.split('\n')
-    for line in lines:
-        line_clean = line.strip()
-        # Qoldiq yoki Ostatok qatorini o'tkazib yuboramiz
-        if "qoldiq" in line_clean.lower() or "ostatok" in line_clean.lower() or "balans" in line_clean.lower():
-            continue
+    if not text:
+        return None
 
-        match = re.search(r"([0-9][0-9\s\.,]*?)\s*(?:UZS|so['‘`]?m|sum|сум)", line_clean, re.IGNORECASE)
-        if match:
+    # Raqamlar va valyutani qidirish
+    patterns = [
+        r"(?:kirim|popolnenie|karta to['`]?ldirildi|to['`]?lov|qabul qilindi|summa|tushum|\+)\s*:?\s*([\d\s.,]+)\s*(?:uzs|so['`]?m|rub|usd)?",
+        r"([\d\s.,]+)\s*(?:uzs|so['`]?m)\s*(?:kirim|tushum|\+)",
+        r"\+\s*([\d\s.,]+)\s*(?:uzs|so['`]?m)",
+        r"(?:to'lanishi kerak bo'lgan summa|to'lash|summa)\s*:?\s*`?([\d\s.,]+)`?\s*(?:uzs|so['`]?m)?",
+    ]
+
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            raw_val = m.group(1).replace(" ", "").replace("\xa0", "").replace(",", ".")
+            # Agar oxirida nuqtadan keyin 2 ta belgi bo'lsa (tiyinlar)
             try:
-                amt = clean_uz_number(match.group(1))
-                if amt > 0:
-                    return amt
-            except Exception:
+                val = float(raw_val)
+                if val > 0:
+                    return val
+            except ValueError:
                 pass
 
-    # Agar line bo'yicha topilmasa, umumiy regex
-    match = re.search(r"([0-9][0-9\s\.,]*?)\s*(?:UZS|so['‘`]?m|sum|сум)", text, re.IGNORECASE)
-    if match:
+    # Umumiy barcha raqamlarni tekshirish (fallback)
+    numbers = re.findall(r"\b\d{1,3}(?:[\s\xa0]\d{3})*(?:\.\d{2})?\b", text)
+    for n in numbers:
+        cleaned = n.replace(" ", "").replace("\xa0", "")
         try:
-            return clean_uz_number(match.group(1))
-        except Exception:
+            val = float(cleaned)
+            if val >= 500:  # Minimal 500 so'm deb faraz qilamiz
+                return val
+        except ValueError:
             pass
+
     return None
 
 
-def _sync_post(url: str, payload: dict) -> dict | None:
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            resp_body = resp.read().decode("utf-8")
-            return json.loads(resp_body)
-    except Exception as e:
-        logger.exception("Bot API ga so'rov yuborishda xatolik: %s", e)
-        return None
+def is_incoming(text: str) -> bool:
+    """
+    Xabar kirim operatsiyasi ekanligini tekshiradi (chiqim yoki hisobot emas).
+    """
+    lower = text.lower()
+    positive_words = [
+        "kirim", "popolnenie", "to'ldirildi", "karta to'ldirildi",
+        "qabul qilindi", "tushum", "hisobingiz to'ldirildi",
+        "muvaffaqiyatli", "avto-to'lov", "to'lov", "+"
+    ]
+    negative_words = [
+        "chiqim", "spisanie", "yechildi", "otmenen",
+        "rad etildi", "yetarli emas", "blokirovka"
+    ]
+
+    if any(neg in lower for neg in negative_words):
+        return False
+
+    return any(pos in lower for pos in positive_words)
 
 
 async def send_to_bot_api(amount: float, raw_text: str):
-    """To'lov ma'lumotini Spring Boot botiga POST request qilib yuboradi."""
+    """
+    Java Botning /api/v1/payment/notify-card endpointiga ma'lumot jo'natadi.
+    """
     payload = {
         "amount": amount,
-        "rawText": raw_text
+        "rawText": raw_text,
+        "secret": "humo_bot_internal_secret_key"
     }
 
-    resp = await asyncio.to_thread(_sync_post, BOT_API_URL, payload)
-    if resp:
-        logger.info("Bot API javobi: %s", resp)
-        if resp.get("matched"):
-            logger.info("✅ To'lov muvaffaqiyatli foydalanuvchiga biriktirildi va balans to'ldirildi! (Buyurtma #%s)", resp.get("orderId"))
-        else:
-            logger.warning("⚠️ To'lov qabul qilindi, lekin botda mos keluvchi faol buyurtma topilmadi.")
+    try:
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            BOT_API_URL,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: urllib.request.urlopen(req, timeout=5)
+        )
+        status_code = response.getcode()
+        body = response.read().decode("utf-8")
+        logger.info("Bot API javobi: status=%s, body=%s", status_code, body)
+    except Exception as e:
+        logger.error("Bot API ga so'rov yuborishda xatolik: %s", e)
 
 
 @client.on(events.NewMessage)
-async def handle_notification(event):
+async def handle_new_message(event):
+    """
+    Har qanday yangi xabar kelganda ishlaydi.
+    """
     sender = await event.get_sender()
     sender_username = (getattr(sender, "username", "") or "").lower()
 
@@ -185,11 +182,20 @@ async def handle_notification(event):
 
 async def main():
     logger.info("🚀 @HUMOcardbot Payment Listener ishga tushmoqda...")
-    await client.start()
-    me = await client.get_me()
-    logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", me.first_name, me.username)
-    logger.info("🎯 Faqat @HUMOcardbot xabarlari tinglanmoqda...")
-    await client.run_until_disconnected()
+    while True:
+        try:
+            await client.connect()
+            if not await client.is_user_authorized():
+                logger.error("❌ Foydalanuvchi avtorizatsiyadan o'tmagan!")
+                await asyncio.sleep(10)
+                continue
+            me = await client.get_me()
+            logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", me.first_name, me.username)
+            logger.info("🎯 Faqat @HUMOcardbot xabarlari tinglanmoqda...")
+            await client.run_until_disconnected()
+        except Exception as e:
+            logger.error("Xatolik: %s. 5 soniyadan so'ng qayta ulanadi...", e)
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
