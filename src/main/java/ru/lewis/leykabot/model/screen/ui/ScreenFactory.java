@@ -51,6 +51,7 @@ public class ScreenFactory {
     private final AutoPaymentService autoPaymentService;
     private final PubgService pubgService;
     private final PubgTransactionService pubgTransactionService;
+    private final ReportService reportService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
         return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, userService, this);
@@ -119,7 +120,7 @@ public class ScreenFactory {
     }
 
     public AdminStatsScreen createAdminStatsScreen(Long chatId, Long userId) {
-        return new AdminStatsScreen(chatId, userId, screenManager, this, adminService);
+        return new AdminStatsScreen(chatId, userId, screenManager, this, adminService, reportService);
     }
 
     public AdminBroadcastScreen createAdminBroadcastScreen(Long chatId, Long userId) {

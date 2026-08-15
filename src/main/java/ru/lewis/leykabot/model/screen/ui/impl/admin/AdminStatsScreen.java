@@ -4,11 +4,15 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import ru.lewis.leykabot.model.button.StyledInlineButton;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
 import ru.lewis.leykabot.service.AdminService;
+import ru.lewis.leykabot.service.ReportService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,15 +21,18 @@ public class AdminStatsScreen extends AbstractScreen {
     private final ScreenManager screenManager;
     private final ScreenFactory screenFactory;
     private final AdminService adminService;
+    private final ReportService reportService;
 
     public AdminStatsScreen(Long chatId, Long userId,
                             ScreenManager screenManager,
                             ScreenFactory screenFactory,
-                            AdminService adminService) {
+                            AdminService adminService,
+                            ReportService reportService) {
         super(chatId, userId);
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
         this.adminService = adminService;
+        this.reportService = reportService;
     }
 
     @Override
@@ -34,6 +41,12 @@ public class AdminStatsScreen extends AbstractScreen {
 
         switch (callback) {
             case "refresh" -> screenManager.updateScreen(chatId, this);
+            case "download_pdf" -> {
+                LocalDate now = LocalDate.now();
+                LocalDateTime from = now.withDayOfMonth(1).atStartOfDay();
+                LocalDateTime to = now.atTime(23, 59, 59);
+                reportService.generateAndSendMonthlyReport(chatId, from, to, now.getMonth().name() + " " + now.getYear());
+            }
             case "back_admin" -> screenManager.updateScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
         }
     }
@@ -44,15 +57,20 @@ public class AdminStatsScreen extends AbstractScreen {
 
         String formattedDeposited = String.format("%,d", stats.totalDeposited()).replace(',', ' ');
         String formattedStars = String.format("%,d", stats.totalStars()).replace(',', ' ');
+        String formattedStarsRubles = String.format("%,d", stats.totalStarsRubles()).replace(',', ' ');
         String formattedPremium = String.format("%,d", stats.totalPremiumMonths()).replace(',', ' ');
+        String formattedPremiumRubles = String.format("%,d", stats.totalPremiumRubles()).replace(',', ' ');
+        String formattedPubgUc = String.format("%,d", stats.totalPubgUc()).replace(',', ' ');
+        String formattedPubgRubles = String.format("%,d", stats.totalPubgRubles()).replace(',', ' ');
         String formattedTx = String.format("%,d", stats.totalTransactions()).replace(',', ' ');
         String formattedUsers = String.format("%,d", stats.totalUsers()).replace(',', ' ');
 
         return "📊 <b>Bot To‘liq Statistikasi:</b>\n\n" +
                 "👥 <b>Jami foydalanuvchilar:</b> " + formattedUsers + " ta\n" +
                 "📥 <b>Jami to‘ldirilgan summa:</b> " + formattedDeposited + " so‘m\n" +
-                "<tg-emoji emoji-id=\"5436050603723760533\">⭐️</tg-emoji> <b>Jami sotilgan Stars:</b> " + formattedStars + " Stars\n" +
-                "<tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Jami sotilgan Premium:</b> " + formattedPremium + " oy\n" +
+                "<tg-emoji emoji-id=\"5985826831591281620\">⭐️</tg-emoji> <b>Jami Stars:</b> " + formattedStars + " Stars (<b>" + formattedStarsRubles + " so‘m</b>)\n" +
+                "<tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Jami Premium:</b> " + formattedPremium + " oy (<b>" + formattedPremiumRubles + " so‘m</b>)\n" +
+                "<tg-emoji emoji-id=\"5204252919565657978\">🎮</tg-emoji> <b>Jami PUBG UC:</b> " + formattedPubgUc + " UC (<b>" + formattedPubgRubles + " so‘m</b>)\n" +
                 "⚡️ <b>Jami tranzaksiyalar:</b> " + formattedTx + " ta\n\n" +
                 "<i>Ma’lumotlar real vaqt rejimida yangilanadi.</i>";
     }
@@ -61,14 +79,22 @@ public class AdminStatsScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
+        InlineKeyboardRow rowPdf = new InlineKeyboardRow();
+        rowPdf.add(StyledInlineButton.styledBuilder()
+                .text("📄 Oylik PDF Hisobotni Yuklab Olish")
+                .callbackData("download_pdf")
+                .style("success")
+                .build());
+
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(InlineKeyboardButton.builder().text("🔄 Yangilash").callbackData("refresh").build());
-        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back_admin")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 
+        keyboard.add(rowPdf);
         keyboard.add(row1);
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }

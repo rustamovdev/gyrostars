@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import ru.lewis.leykabot.repository.PubgTransactionRepository;
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class AdminService {
     private final TransactionRepository transactionRepository;
     private final StarsTransactionRepository starsTransactionRepository;
     private final PremiumTransactionRepository premiumTransactionRepository;
+    private final PubgTransactionRepository pubgTransactionRepository;
     private final CodeRepository codeRepository;
     private final CodeService codeService;
     private final TransactionService transactionService;
@@ -79,7 +83,11 @@ public class AdminService {
             long totalUsers,
             long totalDeposited,
             long totalStars,
+            long totalStarsRubles,
             long totalPremiumMonths,
+            long totalPremiumRubles,
+            long totalPubgUc,
+            long totalPubgRubles,
             long totalTransactions
     ) {}
 
@@ -87,10 +95,14 @@ public class AdminService {
         long totalUsers = userRepository.count();
         long totalDeposited = transactionRepository.sumAllDepositedRubles();
         long totalStars = starsTransactionRepository.sumAllStars();
+        long totalStarsRubles = starsTransactionRepository.sumAllStarsRubles();
         long totalPremiumMonths = premiumTransactionRepository.sumAllPremiumMonths();
+        long totalPremiumRubles = premiumTransactionRepository.sumAllPremiumRubles();
+        long totalPubgUc = pubgTransactionRepository.sumUcBetween(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.now());
+        long totalPubgRubles = pubgTransactionRepository.sumPriceBetween(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.now());
         long totalTransactions = transactionRepository.count();
 
-        return new AdminStats(totalUsers, totalDeposited, totalStars, totalPremiumMonths, totalTransactions);
+        return new AdminStats(totalUsers, totalDeposited, totalStars, totalStarsRubles, totalPremiumMonths, totalPremiumRubles, totalPubgUc, totalPubgRubles, totalTransactions);
     }
 
     public CompletableFuture<BroadcastResult> broadcast(String message) {
