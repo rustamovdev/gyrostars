@@ -131,7 +131,10 @@ public class TelegramService {
         if (path != null) {
             File photo = resolveFile(path);
             if (photo != null) {
-                return sendPhoto(chatId, photo, text, markup);
+                Message photoMsg = sendPhoto(chatId, photo, text, markup);
+                if (photoMsg != null) {
+                    return photoMsg;
+                }
             }
         }
         return sendMessage(chatId, text, markup);
@@ -429,8 +432,18 @@ public class TelegramService {
         try {
             return telegramClient.execute(builder.build());
         } catch (TelegramApiException e) {
-            e.printStackTrace();
-            return null;
+            log.warn("SendMessage HTML failed: {}. Falling back to plain text.", e.getMessage());
+            try {
+                String plain = text.replaceAll("<[^>]*>", "");
+                return telegramClient.execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .text(plain)
+                        .replyMarkup(inlineKeyboardMarkup)
+                        .build());
+            } catch (Exception ex) {
+                log.error("SendMessage plain text failed: ", ex);
+                return null;
+            }
         }
     }
 

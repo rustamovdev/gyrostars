@@ -41,6 +41,14 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
 
     @Override
     public void consume(Update update) {
+        try {
+            processUpdate(update);
+        } catch (Exception e) {
+            log.error("Unhandled error processing update: ", e);
+        }
+    }
+
+    private void processUpdate(Update update) {
         if (update.hasCallbackQuery()) {
             var callback = update.getCallbackQuery();
             var chatId = callback.getMessage().getChatId();
