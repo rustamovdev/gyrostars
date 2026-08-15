@@ -60,6 +60,15 @@ public class PriceService {
     public void setPrice(String key, int price) {
         priceCache.put(key, price);
         repository.save(new PriceSetting(key, price));
+
+        if ("STAR_PER_UNIT".equals(key)) {
+            int[] amounts = {50, 100, 150, 250, 350, 500, 750, 1000};
+            for (int a : amounts) {
+                int pkgPrice = (int) (Math.round((a * price) / 100.0) * 100);
+                priceCache.put("STAR_" + a, pkgPrice);
+                repository.save(new PriceSetting("STAR_" + a, pkgPrice));
+            }
+        }
     }
 
     public int getStarsPrice(int amount) {

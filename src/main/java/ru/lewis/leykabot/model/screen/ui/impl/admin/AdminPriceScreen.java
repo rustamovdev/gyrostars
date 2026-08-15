@@ -69,7 +69,11 @@ public class AdminPriceScreen extends AbstractScreen {
                 priceService.setPrice(selectedKey, newPrice);
                 String name = getSettingDisplayName(selectedKey);
                 String formatted = String.format("%,d", newPrice).replace(',', ' ');
-                telegramService.sendMessageAuto(chatId, "✅ <b>" + name + "</b> narxi <b>" + formatted + " so‘m</b>ga o‘zgartirildi!");
+                if ("STAR_PER_UNIT".equals(selectedKey)) {
+                    telegramService.sendMessageAuto(chatId, "✅ <b>1 ta Star</b> narxi <b>" + formatted + " so‘m</b>ga o‘rnatildi va barcha Stars paketlari narxi avtomatik shunga moslab yangilandi!");
+                } else {
+                    telegramService.sendMessageAuto(chatId, "✅ <b>" + name + "</b> narxi <b>" + formatted + " so‘m</b>ga o‘zgartirildi!");
+                }
                 isWaitingNewPrice = false;
                 selectedKey = null;
                 screenManager.updateScreen(chatId, this);
@@ -152,6 +156,12 @@ public class AdminPriceScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
+        InlineKeyboardRow unitRow = new InlineKeyboardRow();
+        unitRow.add(InlineKeyboardButton.builder()
+                .text("⭐️ 1 ta Star narxi (Barchasini avto-yangilash)")
+                .callbackData("edit_STAR_PER_UNIT")
+                .build());
+
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(InlineKeyboardButton.builder().text("⭐️ 50").callbackData("edit_STAR_50").build());
         row1.add(InlineKeyboardButton.builder().text("⭐️ 100").callbackData("edit_STAR_100").build());
@@ -165,7 +175,6 @@ public class AdminPriceScreen extends AbstractScreen {
         row2.add(InlineKeyboardButton.builder().text("⭐️ 1000").callbackData("edit_STAR_1000").build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();
-        row3.add(InlineKeyboardButton.builder().text("⭐️ 1 ta Star").callbackData("edit_STAR_PER_UNIT").build());
         row3.add(InlineKeyboardButton.builder().text("💎 1 oy").callbackData("edit_PREMIUM_1").build());
         row3.add(InlineKeyboardButton.builder().text("💎 3 oy").callbackData("edit_PREMIUM_3").build());
         row3.add(InlineKeyboardButton.builder().text("💎 6 oy").callbackData("edit_PREMIUM_6").build());

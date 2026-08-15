@@ -167,7 +167,7 @@ async def send_to_bot_api(amount: float, raw_text: str):
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: urllib.request.urlopen(req, timeout=8)
+                lambda: urllib.request.urlopen(req, timeout=4)
             )
             status_code = response.getcode()
             body = response.read().decode("utf-8")
@@ -175,13 +175,31 @@ async def send_to_bot_api(amount: float, raw_text: str):
             return
         except Exception as e:
             logger.error("⚠️ Bot API ga so'rov yuborishda xatolik (urinish %d): %s", attempt, e)
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
+
+
+processed_msg_ids = set()
+
+async def process_msg_text(msg_id, text, sender_username=""):
+    if msg_id in processed_msg_ids:
+        return
+    processed_msg_ids.add(msg_id)
+
+    if not is_incoming(text):
+        return
+
+    amount = parse_amount(text)
+    if amount is None:
+        return
+
+    logger.info("💰 Aniqlangan kirim summasi: %s UZS. Tezkor Bot API ga yuborilmoqda...", amount)
+    await send_to_bot_api(amount, text)
 
 
 @client.on(events.NewMessage)
 async def handle_new_message(event):
     """
-    Har qanday yangi xabar kelganda ishlaydi.
+    Har qanday yangi xabar kelganda tezkor ishlaydi.
     """
     sender = await event.get_sender()
     sender_username = (getattr(sender, "username", "") or "").lower()
@@ -190,7 +208,6 @@ async def handle_new_message(event):
     if not text:
         return
 
-    # Tekshirish: xabar aynan Humo/to'lov boti yoki shaxsiy chatdan kelganmi?
     is_humo_bot = (
         any(bot_name in sender_username for bot_name in LISTEN_BOTS)
         or "humo" in sender_username
@@ -200,23 +217,30 @@ async def handle_new_message(event):
     )
 
     if is_humo_bot:
-        logger.info("📥 Yangi to'lov xabari olindi (@%s):\n%s", sender_username, text)
+        logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username, event.message.id)
+        await process_msg_text(event.message.id, text, sender_username)
 
-        if not is_incoming(text):
-            logger.info("Bu kirim to'lovi emas, o'tkazib yuborilmoqda.")
-            return
 
-        amount = parse_amount(text)
-        if amount is None:
-            logger.warning("Xabardan summa ajratib bo'lmadi: %s", text)
-            return
-
-        logger.info("💰 Aniqlangan kirim summasi: %s UZS. Bot API ga yuborilmoqda...", amount)
-        await send_to_bot_api(amount, text)
+async def poll_recent_humo_messages():
+    """
+    Telegram push voqealari kechikmasligi uchun har 5 soniyada HUMOcardbot dan so'nggi xabarlarni tekshirib turadi.
+    """
+    while True:
+        try:
+            async for dialog in client.iter_dialogs(limit=15):
+                name = dialog.name.lower()
+                username = (dialog.entity.username or "").lower() if hasattr(dialog.entity, "username") else ""
+                if "humo" in name or "humo" in username:
+                    async for msg in client.iter_messages(dialog.entity, limit=3):
+                        if msg.text and msg.id not in processed_msg_ids:
+                            await process_msg_text(msg.id, msg.text, username)
+        except Exception as e:
+            logger.debug("Poll check error: %s", e)
+        await asyncio.sleep(5)
 
 
 async def main():
-    logger.info("🚀 @HUMOcardbot Payment Listener ishga tushmoqda...")
+    logger.info("🚀 @HUMOcardbot Tezkor Payment Listener ishga tushmoqda...")
     while True:
         try:
             await client.connect()
@@ -226,7 +250,8 @@ async def main():
                 continue
             me = await client.get_me()
             logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", me.first_name, me.username)
-            logger.info("🎯 Faqat @HUMOcardbot xabarlari tinglanmoqda...")
+            logger.info("🎯 Faqat @HUMOcardbot xabarlari tezkor tinglanmoqda...")
+            asyncio.create_task(poll_recent_humo_messages())
             await client.run_until_disconnected()
         except Exception as e:
             logger.error("Xatolik: %s. 5 soniyadan so'ng qayta ulanadi...", e)

@@ -33,7 +33,11 @@ public class TopService {
     @Value("${top.one-page-limit}")
     private int onePageLimit;
 
-    public record TopEntry(int rank, Long telegramId, long total) {}
+    public record TopEntry(int rank, Long telegramId, long total, long stars, long premiumMonths, long pubgUc) {
+        public TopEntry(int rank, Long telegramId, long total) {
+            this(rank, telegramId, total, 0, 0, 0);
+        }
+    }
 
     private Cache<String, List<TopEntry>> rulesCache;
     private Cache<String, List<TopEntry>> starsCache;
@@ -209,7 +213,10 @@ public class TopService {
             Long uid = (Long) row[0];
             long tot = ((Number) row[1]).longValue();
             if (i < 7) {
-                top7.add(new TopEntry(i + 1, uid, tot));
+                long uStars = starsRepository.sumStarsByTelegramIdBetween(uid, from, now);
+                long uPrem = premiumRepository.sumMonthsByTelegramIdBetween(uid, from, now);
+                long uPubg = pubgRepository.sumUcByTelegramIdBetween(uid, from, now);
+                top7.add(new TopEntry(i + 1, uid, tot, uStars, uPrem, uPubg));
             }
             if (currentUserId != null && uid.equals(currentUserId)) {
                 userRank = i + 1;

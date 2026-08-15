@@ -94,7 +94,7 @@ public class StartScreen extends AbstractScreen {
                 "<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> <b>User ID:</b> <code>" + userId + "</code>\n" +
                 "└ <tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm";
 
-        return text;
+        return text + ";images/image.png";
     }
 
     @Override

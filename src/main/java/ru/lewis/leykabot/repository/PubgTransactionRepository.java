@@ -29,4 +29,7 @@ public interface PubgTransactionRepository extends JpaRepository<PubgTransaction
 
     @Query("SELECT COALESCE(SUM(p.priceRubles), 0) FROM PubgTransaction p WHERE p.createdAt BETWEEN :from AND :to")
     long sumPriceBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    @Query("SELECT COALESCE(SUM(p.ucAmount), 0) FROM PubgTransaction p WHERE p.telegramId = :telegramId AND p.createdAt BETWEEN :from AND :to")
+    long sumUcByTelegramIdBetween(@Param("telegramId") Long telegramId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

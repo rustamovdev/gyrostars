@@ -106,7 +106,18 @@ public class TopSelectScreen extends AbstractScreen {
                     name = "Mijoz #" + entry.telegramId();
                 }
                 String formattedUserTotal = String.format("%,d", entry.total()).replace(',', ' ');
-                topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — ").append(formattedUserTotal).append(" so'm\n");
+                List<String> details = new ArrayList<>();
+                if (entry.stars() > 0) {
+                    details.add("⭐️ " + String.format("%,d", entry.stars()).replace(',', ' '));
+                }
+                if (entry.premiumMonths() > 0) {
+                    details.add("💎 " + entry.premiumMonths() + " oy");
+                }
+                if (entry.pubgUc() > 0) {
+                    details.add("🎮 " + String.format("%,d", entry.pubgUc()).replace(',', ' ') + " UC");
+                }
+                String detailsStr = details.isEmpty() ? "" : " <i>(" + String.join(", ", details) + ")</i>";
+                topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — <b>").append(formattedUserTotal).append(" so'm</b>").append(detailsStr).append("\n");
             }
         }
 
@@ -135,28 +146,33 @@ public class TopSelectScreen extends AbstractScreen {
 
         // Row 1: Bugun | Umumiy
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(InlineKeyboardButton.builder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("Bugun" + (isToday ? " ◼️" : ""))
                 .callbackData("period_today")
+                .style(isToday ? "primary" : null)
                 .build());
-        row1.add(InlineKeyboardButton.builder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("Umumiy" + (isAll ? " ◼️" : ""))
                 .callbackData("period_all")
+                .style(isAll ? "primary" : null)
                 .build());
 
         // Row 2: 3 kun | 7 kun | 30 kun
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        row2.add(InlineKeyboardButton.builder()
+        row2.add(StyledInlineButton.styledBuilder()
                 .text("3 kun" + (is3Days ? " ◼️" : ""))
                 .callbackData("period_3days")
+                .style(is3Days ? "primary" : null)
                 .build());
-        row2.add(InlineKeyboardButton.builder()
+        row2.add(StyledInlineButton.styledBuilder()
                 .text("7 kun" + (is7Days ? " ◼️" : ""))
                 .callbackData("period_7days")
+                .style(is7Days ? "primary" : null)
                 .build());
-        row2.add(InlineKeyboardButton.builder()
+        row2.add(StyledInlineButton.styledBuilder()
                 .text("30 kun" + (is30Days ? " ◼️" : ""))
                 .callbackData("period_30days")
+                .style(is30Days ? "primary" : null)
                 .build());
 
         // Row 3: Orqaga
