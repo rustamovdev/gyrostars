@@ -17,11 +17,16 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import lombok.extern.slf4j.Slf4j;
 import ru.lewis.leykabot.configuration.telegram.TelegramConfig;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 
+@Slf4j
 @Service
 public class TelegramService {
     public static final int MAX_MESSAGE_LENGTH = 4000;
@@ -67,20 +72,43 @@ public class TelegramService {
      *
      * В yaml пиши путь относительно resources, например: images/welcome.png
      */
+    private final java.util.Map<String, File> resourceCache = new java.util.concurrent.ConcurrentHashMap<>();
+
     private File resolveFile(String path) {
-        // 1. Абсолютный или относительный путь на диске
+        if (path == null || path.isBlank()) return null;
+
+        // 1. Fayl diskda mavjud bo'lsa
         File file = new File(path);
-        if (file.exists()) {
+        if (file.exists() && file.isFile()) {
             return file;
         }
-        // 2. Classpath (resources/images/welcome.png → "images/welcome.png")
-        URL resource = getClass().getClassLoader().getResource(path);
-        if (resource != null) {
-            try {
-                return new File(resource.toURI());
-            } catch (Exception e) {
-                e.printStackTrace();
+
+        // 2. Keshdan tekshirish
+        if (resourceCache.containsKey(path)) {
+            File cached = resourceCache.get(path);
+            if (cached != null && cached.exists()) {
+                return cached;
             }
+        }
+
+        // 3. Classpath (JAR ichidan resursni vaqtinchalik faylga o'qib olish)
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            if (is != null) {
+                String cleanName = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
+                String suffix = cleanName.contains(".") ? cleanName.substring(cleanName.lastIndexOf(".")) : ".png";
+                String prefix = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf(".")) : cleanName;
+                if (prefix.length() < 3) prefix = "tg_res_" + prefix;
+
+                File tempFile = File.createTempFile(prefix + "_", suffix);
+                tempFile.deleteOnExit();
+                try (OutputStream os = new FileOutputStream(tempFile)) {
+                    is.transferTo(os);
+                }
+                resourceCache.put(path, tempFile);
+                return tempFile;
+            }
+        } catch (Exception e) {
+            log.error("Could not load resource from classpath: {}", path, e);
         }
         return null;
     }

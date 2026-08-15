@@ -110,34 +110,30 @@ public class StartScreen extends AbstractScreen {
         // Row 1: STARS (Full width)
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
-                .text("STARS")
+                .text("⭐ STARS")
                 .callbackData("buy-stars")
                 .style("primary")
-                .iconCustomEmojiId("5985826831591281620")
                 .build());
 
         // Row 2: PUBG UC DONAT QILISH
         InlineKeyboardRow row2 = new InlineKeyboardRow();
         row2.add(StyledInlineButton.styledBuilder()
-                .text("PUBG UC DONAT QILISH")
+                .text("🎮 PUBG UC DONAT QILISH")
                 .callbackData("buy-pubg")
                 .style("primary")
-                .iconCustomEmojiId("5204252919565657978")
                 .build());
 
         // Row 3: Premium & Gift
         InlineKeyboardRow row3 = new InlineKeyboardRow();
         row3.add(StyledInlineButton.styledBuilder()
-                .text("Premium")
+                .text("⭐️ Premium")
                 .callbackData("buy-premium")
                 .style("primary")
-                .iconCustomEmojiId("5938420017665152105")
                 .build());
         row3.add(StyledInlineButton.styledBuilder()
-                .text("Gift")
+                .text("🎁 Gift")
                 .callbackData("gift")
                 .style("primary")
-                .iconCustomEmojiId("5938420017665152105")
                 .build());
 
         // Row 4: Do'stlarga ulashish (URL button to share bot)
@@ -150,24 +146,21 @@ public class StartScreen extends AbstractScreen {
         // Row 5: Hisob to'ldirish & Kabinet
         InlineKeyboardRow row5 = new InlineKeyboardRow();
         row5.add(StyledInlineButton.styledBuilder()
-                .text("Hisob to‘ldirish")
+                .text("💳 Hisob to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
-                .iconCustomEmojiId("5436171485578308032")
                 .build());
         row5.add(StyledInlineButton.styledBuilder()
-                .text("Kabinet")
+                .text("👤 Kabinet")
                 .callbackData("profile")
                 .style("primary")
-                .iconCustomEmojiId("5436201215341930329")
                 .build());
 
         // Row 6: Yordam
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
-                .text("Yordam")
+                .text("🌀 Yordam")
                 .callbackData("support")
-                .iconCustomEmojiId("5386411545649536830")
                 .build());
 
         keyboard.add(row1);
@@ -180,10 +173,9 @@ public class StartScreen extends AbstractScreen {
         if (adminService.isAdmin(userId)) {
             InlineKeyboardRow adminRow = new InlineKeyboardRow();
             adminRow.add(StyledInlineButton.styledBuilder()
-                    .text("Admin Panel")
+                    .text("👑 Admin Panel")
                     .callbackData("admin")
                     .style("danger")
-                    .iconCustomEmojiId("5382945281488785089")
                     .build());
             keyboard.add(adminRow);
         }

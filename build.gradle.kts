@@ -17,7 +17,7 @@ dependencies {
     // Spring
     implementation(libs.spring.boot.starter)
     implementation(libs.spring.boot.starter.data.jpa)
-    implementation(libs.spring.boot.starter.webmvc)
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-restclient")
     implementation("org.springframework.boot:spring-boot-starter-cache")
 

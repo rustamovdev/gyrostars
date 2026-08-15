@@ -62,11 +62,11 @@ public class StyledInlineButton extends InlineKeyboardButton {
         }
 
         public StyledInlineButton build() {
-            StyledInlineButton button = new StyledInlineButton(text != null ? text : "");
+            StyledInlineButton button = new StyledInlineButton();
+            button.setText(text);
             button.setCallbackData(callbackData);
             button.setUrl(url);
             button.setStyle(style);
-            button.setIconCustomEmojiId(iconCustomEmojiId);
             return button;
         }
     }
