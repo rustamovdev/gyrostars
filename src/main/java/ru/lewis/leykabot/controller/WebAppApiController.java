@@ -8,17 +8,19 @@ import org.springframework.web.bind.annotation.*;
 import ru.lewis.leykabot.model.database.entity.DepositOrder;
 import ru.lewis.leykabot.model.database.entity.PaymentCard;
 import ru.lewis.leykabot.model.database.entity.User;
-import ru.lewis.leykabot.repository.*;
+import ru.lewis.leykabot.repository.DepositOrderRepository;
+import ru.lewis.leykabot.repository.PremiumTransactionRepository;
+import ru.lewis.leykabot.repository.PubgTransactionRepository;
+import ru.lewis.leykabot.repository.StarsTransactionRepository;
+import ru.lewis.leykabot.repository.TransactionRepository;
 import ru.lewis.leykabot.service.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/webapp")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class WebAppApiController {
 
     private final UserService userService;
@@ -26,7 +28,6 @@ public class WebAppApiController {
     private final PaymentCardService paymentCardService;
     private final AutoPaymentService autoPaymentService;
     private final StarsTransactionService starsTransactionService;
-    private final PremiumTransactionService premiumTransactionService;
     private final PubgTransactionService pubgTransactionService;
     private final FragmentStarsService fragmentStarsService;
     private final TopService topService;
@@ -37,10 +38,49 @@ public class WebAppApiController {
     private final DepositOrderRepository depositOrderRepository;
     private final TelegramService telegramService;
 
+    private PaymentCard resolveActiveCard() {
+        return paymentCardService.getActiveCards().stream().findFirst()
+                .or(() -> paymentCardService.getAllCards().stream().findFirst())
+                .orElse(null);
+    }
+
     @GetMapping("/init")
-    public ResponseEntity<?> getInitData(@RequestParam(value = "userId", required = false) Long userId) {
+    public ResponseEntity<?> getInitData(@RequestParam(value = "userId", required = false) Long userId,
+                                        @RequestParam(value = "username", required = false) String username,
+                                        @RequestParam(value = "fullName", required = false) String fullName) {
         if (userId == null || userId <= 0) {
-            userId = 8159265215L;
+            // Guest / demo view
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("user", Map.of(
+                    "userId", 0,
+                    "username", "Mijoz",
+                    "fullName", "Mehmon",
+                    "balance", 0,
+                    "verified", false
+            ));
+            resp.put("stats", Map.of(
+                    "balance", 0,
+                    "totalStars", 0,
+                    "totalSpent", 0,
+                    "totalPurchases", 0,
+                    "goalTarget", 1200000,
+                    "goalProgress", 0
+            ));
+            resp.put("prices", Map.of(
+                    "starUnitPrice", priceService.getPrice("STAR_PER_UNIT", 230),
+                    "starPackages", priceService.getAllStarPrices(),
+                    "premiumPackages", priceService.getAllPremiumPrices(),
+                    "pubgPackages", priceService.getAllPubgPrices()
+            ));
+            PaymentCard card = resolveActiveCard();
+            if (card != null) {
+                resp.put("card", Map.of(
+                        "cardNumber", card.getCardNumber(),
+                        "holderName", card.getHolderName(),
+                        "methodName", card.getMethodName()
+                ));
+            }
+            return ResponseEntity.ok(resp);
         }
 
         final Long currentId = userId;
@@ -53,14 +93,27 @@ public class WebAppApiController {
         long pubgCount = pubgRepository.countByTelegramId(currentId);
         long totalPurchases = starsCount + premiumCount + pubgCount;
 
-        PaymentCard card = paymentCardService.getActiveCards().stream().findFirst().orElse(null);
+        PaymentCard card = resolveActiveCard();
+
+        String displayName = fullName;
+        if (displayName == null || displayName.isBlank()) {
+            displayName = telegramService.getFullNameByUserId(currentId);
+        }
+        if (displayName == null || displayName.isBlank()) {
+            displayName = username != null && !username.isBlank() ? "@" + username : "Mijoz #" + currentId;
+        }
+
+        String displayUsername = username;
+        if (displayUsername == null || displayUsername.isBlank()) {
+            displayUsername = telegramService.getUsernameByUserId(currentId);
+        }
+        if (displayUsername == null) displayUsername = "";
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("user", Map.of(
                 "userId", user.getTelegramId(),
-                "username", telegramService.getUsernameByUserId(user.getTelegramId()) != null ? telegramService.getUsernameByUserId(user.getTelegramId()) : "User",
-                "fullName", telegramService.getFullNameByUserId(user.getTelegramId()) != null ?
-                        telegramService.getFullNameByUserId(user.getTelegramId()) : "S R",
+                "username", displayUsername,
+                "fullName", displayName,
                 "balance", balance,
                 "verified", true
         ));
@@ -101,7 +154,8 @@ public class WebAppApiController {
             default -> "today";
         };
 
-        TopService.GlobalStats stats = topService.getGlobalStats(periodKey, userId != null ? userId : 8159265215L);
+        long queryId = userId != null && userId > 0 ? userId : 0L;
+        TopService.GlobalStats stats = topService.getGlobalStats(periodKey, queryId);
 
         List<Map<String, Object>> topList = new ArrayList<>();
         for (TopService.TopEntry entry : stats.top7()) {
@@ -145,8 +199,12 @@ public class WebAppApiController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<?> getHistory(@RequestParam(value = "userId", defaultValue = "8159265215") Long userId,
+    public ResponseEntity<?> getHistory(@RequestParam(value = "userId", required = false) Long userId,
                                         @RequestParam(value = "status", defaultValue = "all") String status) {
+        if (userId == null || userId <= 0) {
+            return ResponseEntity.ok(List.of());
+        }
+
         List<Map<String, Object>> list = new ArrayList<>();
 
         var stars = starsRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
@@ -178,26 +236,15 @@ public class WebAppApiController {
             list.add(Map.of(
                     "id", "PB-" + pb.getId(),
                     "service", "PUBG Mobile UC",
-                    "details", pb.getUcAmount() + " UC (ID: " + pb.getPlayerId() + ")",
-                    "amount", pb.getPriceRubles(),
+                    "details", pb.getAmount() + " UC",
+                    "amount", pb.getTransaction() != null ? pb.getTransaction().getAmountRubles() : 0,
                     "date", pb.getCreatedAt().toString(),
                     "status", "COMPLETED"
             ));
         }
 
-        var deposits = depositOrderRepository.findAll();
-        for (var d : deposits) {
-            if (userId.equals(d.getUserId())) {
-                list.add(Map.of(
-                        "id", "DP-" + d.getId(),
-                        "service", "Balans To'ldirish",
-                        "details", d.getExactAmount() + " so'm",
-                        "amount", d.getExactAmount(),
-                        "date", d.getCreatedAt().toString(),
-                        "status", d.getStatus()
-                ));
-            }
-        }
+        // Sort by date descending
+        list.sort((a, b) -> String.valueOf(b.get("date")).compareTo(String.valueOf(a.get("date"))));
 
         return ResponseEntity.ok(list);
     }
@@ -213,20 +260,27 @@ public class WebAppApiController {
         if (req.getAmount() == null || req.getAmount() < 1000) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Minimal summa 1 000 so'm"));
         }
+        if (req.getUserId() == null || req.getUserId() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
+        }
 
-        Long uid = req.getUserId() != null ? req.getUserId() : 8159265215L;
-        PaymentCard card = paymentCardService.getActiveCards().stream().findFirst().orElse(null);
+        Long uid = req.getUserId();
+        PaymentCard card = resolveActiveCard();
 
         DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, req.getAmount(), card);
+
+        String cardNum = card != null ? card.getCardNumber() : "8600 0000 0000 0000";
+        String holder = card != null ? card.getHolderName() : "Admin";
+        String method = card != null ? card.getMethodName() : "HUMO";
 
         return ResponseEntity.ok(Map.of(
                 "ok", true,
                 "orderId", order.getId(),
                 "orderCode", order.getOrderCode(),
                 "amount", order.getExactAmount(),
-                "cardNumber", card != null ? card.getCardNumber() : "9860 1678 4421 7684",
-                "holderName", card != null ? card.getHolderName() : "SUNNAT C.",
-                "methodName", card != null ? card.getMethodName() : "HUMOCARD",
+                "cardNumber", cardNum,
+                "holderName", holder,
+                "methodName", method,
                 "createdAt", order.getCreatedAt().toString(),
                 "expiresAt", order.getExpiresAt().toString()
         ));
@@ -256,7 +310,10 @@ public class WebAppApiController {
 
     @PostMapping("/buy/stars")
     public ResponseEntity<?> buyStars(@RequestBody BuyStarsRequest req) {
-        Long uid = req.getUserId() != null ? req.getUserId() : 8159265215L;
+        if (req.getUserId() == null || req.getUserId() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
+        }
+        Long uid = req.getUserId();
         int stars = req.getAmount() != null ? req.getAmount() : 50;
         int price = priceService.getStarsPrice(stars);
 
@@ -279,16 +336,16 @@ public class WebAppApiController {
             ));
         } else {
             // Direct card invoice
-            PaymentCard card = paymentCardService.getActiveCards().stream().findFirst().orElse(null);
+            PaymentCard card = resolveActiveCard();
             DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
             return ResponseEntity.ok(Map.of(
                     "ok", true,
                     "invoice", true,
                     "orderId", order.getId(),
                     "amount", order.getExactAmount(),
-                    "cardNumber", card != null ? card.getCardNumber() : "9860 1678 4421 7684",
-                    "holderName", card != null ? card.getHolderName() : "SUNNAT C.",
-                    "methodName", card != null ? card.getMethodName() : "HUMOCARD"
+                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
+                    "holderName", card != null ? card.getHolderName() : "Admin",
+                    "methodName", card != null ? card.getMethodName() : "HUMO"
             ));
         }
     }
@@ -303,7 +360,10 @@ public class WebAppApiController {
 
     @PostMapping("/buy/pubg")
     public ResponseEntity<?> buyPubg(@RequestBody BuyPubgRequest req) {
-        Long uid = req.getUserId() != null ? req.getUserId() : 8159265215L;
+        if (req.getUserId() == null || req.getUserId() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
+        }
+        Long uid = req.getUserId();
         int uc = req.getUcAmount() != null ? req.getUcAmount() : 60;
         int price = priceService.getPubgPrice(uc, 11000);
 
@@ -322,18 +382,17 @@ public class WebAppApiController {
                     "newBalance", currentBalance - price
             ));
         } else {
-            PaymentCard card = paymentCardService.getActiveCards().stream().findFirst().orElse(null);
+            PaymentCard card = resolveActiveCard();
             DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
             return ResponseEntity.ok(Map.of(
                     "ok", true,
                     "invoice", true,
                     "orderId", order.getId(),
                     "amount", order.getExactAmount(),
-                    "cardNumber", card != null ? card.getCardNumber() : "9860 1678 4421 7684",
-                    "holderName", card != null ? card.getHolderName() : "SUNNAT C.",
-                    "methodName", card != null ? card.getMethodName() : "HUMOCARD"
+                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
+                    "holderName", card != null ? card.getHolderName() : "Admin",
+                    "methodName", card != null ? card.getMethodName() : "HUMO"
             ));
         }
     }
 }
-

@@ -17,7 +17,7 @@
     <header class="top-header-card">
       <div class="user-profile-left">
         <div class="avatar-wrap">
-          <div class="avatar-img" id="userAvatar">SR</div>
+          <div class="avatar-img" id="userAvatar">M</div>
         </div>
         <div class="user-meta">
           <div class="user-name-row">
@@ -27,7 +27,7 @@
             </span>
           </div>
           <div class="user-id-row" onclick="copyText(document.getElementById('userIdVal').innerText, 'ID nusxalandi!')">
-            <span>ID: <span id="userIdVal">8159265215</span></span>
+            <span>ID: <span id="userIdVal">---</span></span>
             <svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </div>
         </div>
@@ -403,7 +403,7 @@
 
         <div class="card-number-label">KARTA RAQAMI</div>
         <div class="card-number-row">
-          <div class="card-num-mono" id="invoiceCardNumber">9860 1678 4421 7684</div>
+          <div class="card-num-mono" id="invoiceCardNumber">---- ---- ---- ----</div>
           <button type="button" class="icon-btn-copy" onclick="copyText(document.getElementById('invoiceCardNumber').innerText.replace(/\s+/g, ''), 'Karta raqami nusxalandi!')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
@@ -412,12 +412,12 @@
         <div class="card-bottom-row">
           <div class="card-holder-col">
             <div class="holder-label">KARTA EGASI</div>
-            <div class="holder-name" id="invoiceHolderName">SUNNAT C.</div>
+            <div class="holder-name" id="invoiceHolderName">---</div>
           </div>
           <div class="card-amount-col">
             <div class="amount-label">TO'LANADIGAN SUMMA</div>
             <div class="amount-val-row">
-              <div class="amount-mono-lime" id="invoiceAmount">5 000 UZS</div>
+              <div class="amount-mono-lime" id="invoiceAmount">0 UZS</div>
               <button type="button" class="icon-btn-copy small" onclick="copyText(document.getElementById('invoiceAmount').innerText.replace(/[^\d]/g, ''), 'Summa nusxalandi!')">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
@@ -430,7 +430,7 @@
       <div class="card-box meta-pill-card">
         <div class="meta-row">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          <span>Yaratilgan vaqti: <strong id="invoiceCreatedTime">16.08.2026 00:01</strong></span>
+          <span>Yaratilgan vaqti: <strong id="invoiceCreatedTime">--.--.---- --:--</strong></span>
         </div>
       </div>
 
@@ -452,7 +452,7 @@
       <div class="card-box warning-card">
         <div class="warning-icon"><span class="sticker-emoji">⚠️</span></div>
         <div class="warning-text">
-          Diqqat! Aynan <strong id="warningAmountText">5 000 UZS</strong> miqdorida to'lang!
+          Diqqat! Aynan <strong id="warningAmountText">0 UZS</strong> miqdorida to'lang!
         </div>
       </div>
 

@@ -7,7 +7,7 @@ if (tg) {
     if (tg.setHeaderColor) tg.setHeaderColor('#090d16');
     if (tg.setBackgroundColor) tg.setBackgroundColor('#090d16');
   } catch (e) {
-    console.log('TG init err:', e);
+    console.log('TG init error:', e);
   }
 }
 
@@ -27,12 +27,17 @@ function triggerHaptic(type = 'light') {
 // Global State
 let state = {
   user: {
-    userId: 8159265215,
-    username: 'user',
+    userId: null,
+    username: '',
     fullName: 'Mijoz',
     balance: 0,
     photoUrl: null,
-    verified: true
+    verified: false
+  },
+  card: {
+    cardNumber: '---- ---- ---- ----',
+    holderName: 'Admin',
+    bankName: 'HUMO'
   },
   prices: {
     starUnitPrice: 230,
@@ -52,15 +57,23 @@ let state = {
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-  // Extract user info from Telegram
+  // 1. Extract real user info from Telegram WebApp
   if (tg?.initDataUnsafe?.user) {
     const u = tg.initDataUnsafe.user;
     state.user.userId = u.id;
-    state.user.username = u.username || 'user';
-    state.user.fullName = (u.first_name || '') + ' ' + (u.last_name || '');
-    if (!state.user.fullName.trim()) state.user.fullName = u.username || 'Mijoz';
+    state.user.username = u.username || '';
+    state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (u.username ? '@' + u.username : 'Mijoz');
     if (u.photo_url) {
       state.user.photoUrl = u.photo_url;
+    }
+  } else {
+    // 2. Fallback to URL search parameters if opened in browser
+    const params = new URLSearchParams(window.location.search);
+    const pId = params.get('userId') || params.get('user_id') || params.get('id');
+    if (pId) {
+      state.user.userId = parseInt(pId);
+      state.user.username = params.get('username') || '';
+      state.user.fullName = params.get('name') || (state.user.username ? '@' + state.user.username : 'Mijoz');
     }
   }
 
@@ -79,14 +92,15 @@ function updateUserUI() {
   const accBal = document.getElementById('accountBalVal');
   const depBigBal = document.getElementById('depositBigBal');
 
-  if (nameEl) nameEl.innerText = state.user.fullName || state.user.username;
-  if (idEl) idEl.innerText = state.user.userId;
+  if (nameEl) nameEl.innerText = state.user.fullName || (state.user.username ? '@' + state.user.username : 'Mijoz');
+  if (idEl) idEl.innerText = state.user.userId ? state.user.userId : '---';
   if (avatarEl) {
     if (state.user.photoUrl) {
       avatarEl.innerHTML = `<img src="${state.user.photoUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     } else {
-      const initials = (state.user.fullName || 'SR').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-      avatarEl.innerText = initials || 'SR';
+      const name = state.user.fullName || state.user.username || 'M';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'M';
+      avatarEl.innerText = initials;
     }
   }
 
@@ -102,26 +116,40 @@ function fillOwnUsername(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
   let un = state.user.username;
-  if (un && un !== 'user') {
+  if (un) {
     if (!un.startsWith('@')) un = '@' + un;
     input.value = un;
     showToast("O'zingizning " + un + " kiritildi! 👤");
   } else {
-    input.value = "@" + (state.user.username || "username");
-    showToast("Username kiritildi! 👤");
+    showToast("Telegram username topilmadi");
   }
 }
 
 // Fetch Backend Init
 async function fetchInitData() {
   try {
-    const res = await fetch(`/api/webapp/init?userId=${state.user.userId}`);
+    const query = state.user.userId ? `?userId=${state.user.userId}&username=${encodeURIComponent(state.user.username || '')}&fullName=${encodeURIComponent(state.user.fullName || '')}` : '';
+    const res = await fetch(`/api/webapp/init${query}`);
     if (res.ok) {
       const data = await res.json();
       if (data.user) {
         state.user.balance = data.user.balance || 0;
-        if (data.user.fullName) state.user.fullName = data.user.fullName;
-        if (data.user.username) state.user.username = data.user.username;
+        if (data.user.fullName && !state.user.fullName) state.user.fullName = data.user.fullName;
+        if (data.user.username && !state.user.username) state.user.username = data.user.username;
+        if (data.user.userId && !state.user.userId) state.user.userId = data.user.userId;
+      }
+      if (data.card) {
+        state.card = {
+          cardNumber: data.card.cardNumber,
+          holderName: data.card.holderName,
+          bankName: data.card.methodName || 'HUMO'
+        };
+        const invoiceCardNum = document.getElementById('invoiceCardNumber');
+        const invoiceHolder = document.getElementById('invoiceHolderName');
+        const invoiceBrand = document.getElementById('invoiceCardBrand');
+        if (invoiceCardNum) invoiceCardNum.innerText = data.card.cardNumber.replace(/(\d{4})/g, '$1 ').trim();
+        if (invoiceHolder) invoiceHolder.innerText = data.card.holderName;
+        if (invoiceBrand) invoiceBrand.innerText = data.card.methodName || 'HUMOCARD';
       }
       if (data.prices) {
         state.prices = data.prices;
@@ -138,7 +166,7 @@ async function fetchInitData() {
       calculateStarsPrice();
     }
   } catch (e) {
-    console.log('Using offline state', e);
+    console.log('Init error:', e);
   }
 }
 
@@ -273,6 +301,11 @@ function selectPubgPackage(uc, price, el) {
 // SUBMIT ORDERS
 async function submitStarsOrder() {
   triggerHaptic('medium');
+  if (!state.user.userId) {
+    showToast("Telegramdan kiring!");
+    return;
+  }
+
   const amount = parseInt(document.getElementById('starsAmountInput').value) || 0;
   const target = document.getElementById('targetUsernameInput').value.trim();
 
@@ -322,6 +355,11 @@ async function submitStarsOrder() {
 
 async function submitPremiumOrder() {
   triggerHaptic('medium');
+  if (!state.user.userId) {
+    showToast("Telegramdan kiring!");
+    return;
+  }
+
   const target = document.getElementById('premTargetUsername').value.trim();
   if (!target) {
     showToast("Username kiriting!");
@@ -342,6 +380,11 @@ async function submitPremiumOrder() {
 
 async function submitPubgOrder() {
   triggerHaptic('medium');
+  if (!state.user.userId) {
+    showToast("Telegramdan kiring!");
+    return;
+  }
+
   const playerId = document.getElementById('pubgPlayerIdInput').value.trim();
   if (!playerId) {
     showToast("PUBG Player ID kiriting!");
@@ -379,6 +422,12 @@ function setDepositAmount(amount) {
 
 async function submitDepositOrder() {
   triggerHaptic('medium');
+  if (!state.user.userId) {
+    showToast("Telegram orqali kiring!");
+    triggerHaptic('warning');
+    return;
+  }
+
   const amount = parseInt(document.getElementById('depositAmountInput').value) || 0;
   if (amount < 5000) {
     showToast("Minimal to'ldirish summasi 5 000 so'm!");
@@ -409,15 +458,16 @@ function showInvoiceScreen(data) {
   triggerHaptic('success');
   state.activeInvoice = data;
 
-  const cardNum = data.cardNumber || '9860 1678 4421 7684';
-  const spacedNum = cardNum.replace(/(\d{4})/g, '$1 ').trim();
-  const holder = data.holderName || 'SUNNAT C.';
+  const cardNum = data.cardNumber || state.card.cardNumber || '8600 0000 0000 0000';
+  const spacedNum = cardNum.replace(/\s+/g, '').replace(/(\d{4})/g, '$1 ').trim();
+  const holder = data.holderName || state.card.holderName || 'Admin';
   const amount = formatMoney(data.amount) + ' UZS';
 
   document.getElementById('invoiceCardNumber').innerText = spacedNum;
   document.getElementById('invoiceHolderName').innerText = holder;
   document.getElementById('invoiceAmount').innerText = amount;
   document.getElementById('warningAmountText').innerText = amount;
+  document.getElementById('invoiceCardBrand').innerText = data.methodName || state.card.bankName || 'HUMOCARD';
 
   const now = new Date();
   const timeStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -485,12 +535,13 @@ async function fetchTopData(period) {
   if (activeBtn) activeBtn.classList.add('active');
 
   try {
-    const res = await fetch(`/api/webapp/top?period=${period}&userId=${state.user.userId}`);
+    const query = state.user.userId ? `&userId=${state.user.userId}` : '';
+    const res = await fetch(`/api/webapp/top?period=${period}${query}`);
     if (res.ok) {
       const data = await res.json();
       renderTopList(data.top || []);
       if (data.recentBuyers && data.recentBuyers.length > 0) {
-        document.getElementById('recentBuyersMarquee').innerHTML = data.recentBuyers.map((b, i) => `👤 <span class="highlight">${escapeHtml(b)}</span>`).join(' · ');
+        document.getElementById('recentBuyersMarquee').innerHTML = data.recentBuyers.map((b) => `👤 <span class="highlight">${escapeHtml(b)}</span>`).join(' · ');
       } else {
         document.getElementById('recentBuyersMarquee').innerText = "Hozircha xaridlar mavjud emas";
       }
@@ -524,6 +575,7 @@ function renderTopList(items) {
 
 // HISTORY
 async function fetchHistoryData() {
+  if (!state.user.userId) return;
   try {
     const res = await fetch(`/api/webapp/history?userId=${state.user.userId}`);
     if (res.ok) {
