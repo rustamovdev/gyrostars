@@ -43,11 +43,5 @@ public class User {
     private List<Transaction> transactions = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Referral> referrals = new ArrayList<>();
-
-    @OneToMany(mappedBy = "activatedByUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ActivatedReferral> activatedReferrals = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActivatedCode> activatedCodes = new ArrayList<>();
 }

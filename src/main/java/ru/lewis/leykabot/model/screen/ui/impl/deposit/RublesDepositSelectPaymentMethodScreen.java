@@ -6,127 +6,92 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
 import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
-import ru.lewis.leykabot.configuration.loc.ErrorMessageConfig;
-import ru.lewis.leykabot.configuration.loc.KeyboardLocConfig;
-import ru.lewis.leykabot.model.dto.platega.PaymentCreateResponse;
-import ru.lewis.leykabot.model.dto.platega.PaymentMethod;
-import ru.lewis.leykabot.model.dto.platega.PaymentStatus;
+import ru.lewis.leykabot.model.database.entity.PaymentCard;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
-import ru.lewis.leykabot.service.PlategaService;
-import ru.lewis.leykabot.service.TelegramService;
+import ru.lewis.leykabot.service.PaymentCardService;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 public class RublesDepositSelectPaymentMethodScreen extends AbstractScreen {
     private final int rubles;
-
-    private final TelegramService telegramService;
     private final ButtonsLocConfig buttonsLocConfig;
     private final ClientMessageConfig clientMessageConfig;
-    private final KeyboardLocConfig keyboardLocConfig;
-    private final PlategaService plategaService;
-    private final ErrorMessageConfig errorMessageConfig;
+    private final PaymentCardService paymentCardService;
     private final ScreenManager screenManager;
     private final ScreenFactory screenFactory;
 
     public RublesDepositSelectPaymentMethodScreen(Long chatId, Long userId, int rubles,
-                                                  TelegramService telegramService,
                                                   ButtonsLocConfig buttonsLocConfig,
                                                   ClientMessageConfig clientMessageConfig,
-                                                  KeyboardLocConfig keyboardLocConfig,
-                                                  PlategaService plategaService,
-                                                  ErrorMessageConfig errorMessageConfig,
+                                                  PaymentCardService paymentCardService,
                                                   ScreenManager screenManager,
                                                   ScreenFactory screenFactory) {
         super(chatId, userId);
         this.rubles = rubles;
-        this.telegramService = telegramService;
         this.buttonsLocConfig = buttonsLocConfig;
         this.clientMessageConfig = clientMessageConfig;
-        this.keyboardLocConfig = keyboardLocConfig;
-        this.plategaService = plategaService;
-        this.errorMessageConfig = errorMessageConfig;
+        this.paymentCardService = paymentCardService;
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
     }
 
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
-        // проверка что этот еблан не спамит транзакциями
-        var transactions = plategaService.getTransactions(userId);
-        if (transactions != null && transactions.size() >= 5) {
-            var links = transactions.stream()
-                    .map(plategaService::getPaymentCreateResponse)
-                    .filter(Objects::nonNull)
-                    .filter(r -> r.getStatus() == PaymentStatus.PENDING)
-                    .map(PaymentCreateResponse::getRedirect)
-                    .collect(java.util.stream.Collectors.joining("\n"));
-
-            telegramService.sendMessageAuto(chatId, MessageFormat.format(clientMessageConfig.getPaymentCreateLimit(), links));
-            screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
+        if ("back".equals(callback)) {
+            screenManager.updateScreen(chatId, screenFactory.createDepositRublesScreen(chatId, userId));
             return;
         }
-        PaymentMethod paymentMethod = null;
 
-        switch (callback) {
-            case "sbpqr" -> paymentMethod = PaymentMethod.SBPQR;
-            case "card" -> paymentMethod = PaymentMethod.CARD_ACQUIRING;
-            case "crypto" -> paymentMethod = PaymentMethod.CRYPTO;
+        if (callback.startsWith("card_")) {
+            try {
+                long cardId = Long.parseLong(callback.substring(5));
+                Optional<PaymentCard> cardOpt = paymentCardService.getAllCards().stream()
+                        .filter(c -> c.getId().equals(cardId))
+                        .findFirst();
+
+                if (cardOpt.isPresent()) {
+                    screenManager.updateScreen(chatId, screenFactory.createRublesDepositOrderScreen(chatId, userId, rubles, cardOpt.get()));
+                    return;
+                }
+            } catch (NumberFormatException ignored) {}
         }
-
-        plategaService.createPayment(paymentMethod, rubles, userId).thenAccept(response -> {
-            if (response.getData() != null && !response.getData().isEmpty()) {
-                var data = response.getData().getFirst();
-                telegramService.sendMessageAuto(chatId, MessageFormat.format(errorMessageConfig.getProviderCode(), data.getMessage()));
-                return;
-            }
-            var link = response.getRedirect();
-            telegramService.sendMessageAuto(chatId, MessageFormat.format(clientMessageConfig.getRublesSuccessfullyCreatedPayment(), link));
-        });
-
-        screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
     }
 
     @Override
     public String getText() {
-        return clientMessageConfig.getRublesDepositSelectPaymentMethodCommand();
+        String formattedSum = String.format("%,d", rubles).replace(',', ' ');
+        return "<tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>To‘lov usulini tanlang:</b>\n\n" +
+                "Tanlangan summa: <b>" + formattedSum + " so‘m</b>\n\n" +
+                "Quyidagi to‘lov usullaridan birini tanlang <tg-emoji emoji-id=\"5436307657516426102\">👇</tg-emoji>";
     }
 
     @Override
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
+        List<PaymentCard> cards = paymentCardService.getActiveCards();
 
-        InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton sbpqrButton = InlineKeyboardButton.builder()
-                .text(keyboardLocConfig.getPaymentMethods().getSbpqr())
-                .callbackData("sbpqr")
-                .build();
-        InlineKeyboardButton cardButton = InlineKeyboardButton.builder()
-                .text(keyboardLocConfig.getPaymentMethods().getCard())
-                .callbackData("card")
-                .build();
-        InlineKeyboardButton cryptoButton = InlineKeyboardButton.builder()
-                .text(keyboardLocConfig.getPaymentMethods().getCrypto())
-                .callbackData("crypto")
-                .build();
-        row1.add(sbpqrButton);
-        row1.add(cardButton);
-        row1.add(cryptoButton);
+        for (PaymentCard card : cards) {
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            String btnText = card.getMethodName() + " (" + card.getHolderName() + ")";
+            row.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                    .text(btnText)
+                    .callbackData("card_" + card.getId())
+                    .style("success")
+                    .build());
+            keyboard.add(row);
+        }
 
-        InlineKeyboardRow row2 = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        InlineKeyboardRow backRow = new InlineKeyboardRow();
+        backRow.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
-                .build();
-        row2.add(backButton);
-
-        keyboard.add(row1);
-        keyboard.add(row2);
+                .iconCustomEmojiId("5258236805890710909")
+                .build());
+        keyboard.add(backRow);
 
         return InlineKeyboardMarkup.builder()
                 .keyboard(keyboard)

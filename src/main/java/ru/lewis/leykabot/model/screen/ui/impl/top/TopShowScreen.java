@@ -107,9 +107,10 @@ public class TopShowScreen extends AbstractScreen {
 
 
         InlineKeyboardRow backRow = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build();
         backRow.add(backButton);
 

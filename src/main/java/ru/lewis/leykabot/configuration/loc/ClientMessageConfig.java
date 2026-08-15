@@ -20,13 +20,10 @@ public class ClientMessageConfig {
     private String subscribeChannel;
     private String depositCommand;
     private String buyStarsCommand;
-    private String createReferralCommand;
     private String selectUserForBuyStarsCommand;
     private String successfullyCreatedTransaction;
     private String thanksForPayment;
     private String selectOther;
-    private String referralLinkMessage;
-    private String referralActivated;
 
     // Premium
     private String buyPremiumCommand;

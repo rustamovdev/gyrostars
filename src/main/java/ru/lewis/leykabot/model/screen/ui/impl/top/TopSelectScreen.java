@@ -47,26 +47,30 @@ public class TopSelectScreen extends AbstractScreen {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton premiumTopButton = InlineKeyboardButton.builder()
+        ru.lewis.leykabot.model.button.StyledInlineButton premiumTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text(buttonsLocConfig.getPremiumTop())
                 .callbackData("premium-top")
+                .style("primary")
                 .build();
-        InlineKeyboardButton starsTopButton = InlineKeyboardButton.builder()
+        ru.lewis.leykabot.model.button.StyledInlineButton starsTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text(buttonsLocConfig.getStarsTop())
                 .callbackData("stars-top")
+                .style("primary")
                 .build();
-        InlineKeyboardButton rublesTopButton = InlineKeyboardButton.builder()
+        ru.lewis.leykabot.model.button.StyledInlineButton rublesTopButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text(buttonsLocConfig.getRublesTop())
                 .callbackData("rubles-top")
+                .style("primary")
                 .build();
         row1.add(premiumTopButton);
         row1.add(starsTopButton);
         row1.add(rublesTopButton);
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build();
         row2.add(backButton);
 

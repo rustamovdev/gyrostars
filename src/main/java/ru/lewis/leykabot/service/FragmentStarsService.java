@@ -8,14 +8,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import ru.lewis.leykabot.configuration.FragmentConfig;
-import ru.lewis.leykabot.model.dto.fragment.InitResponse;
-import ru.lewis.leykabot.model.dto.fragment.star.StarsSearchResponse;
-import ru.lewis.leykabot.model.dto.fragment.TransactionResponse;
+import ru.lewis.leykabot.model.dto.fragment.FragmentApiResponse;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -27,81 +27,63 @@ public class FragmentStarsService {
 
     private HttpHeaders buildHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.add("X-Requested-With", "XMLHttpRequest");
-        headers.add("Cookie", config.getCookies());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("X-API-KEY", config.getApiKey());
         return headers;
     }
 
-    private String apiUrl() {
-        return config.getApiUrl() + "?hash=" + config.getHash();
-    }
-
     @Async
-    public CompletableFuture<StarsSearchResponse> searchRecipient(String username, int quantity) {
+    public CompletableFuture<FragmentApiResponse> buyStars(String username, int quantity) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-                body.add("method", "searchStarsRecipient");
-                body.add("query", username);
-                body.add("quantity", String.valueOf(quantity));
+                String cleanUsername = username.startsWith("@") ? username.substring(1).trim() : username.trim();
+                String url = config.getApiUrl() + "/stars/buy";
 
-                HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, buildHeaders());
+                Map<String, Object> body = new HashMap<>();
+                body.put("username", cleanUsername);
+                body.put("amount", quantity);
 
-                ResponseEntity<StarsSearchResponse> response =
-                        restTemplate.postForEntity(apiUrl(), entity, StarsSearchResponse.class);
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, buildHeaders());
+
+                ResponseEntity<FragmentApiResponse> response =
+                        restTemplate.postForEntity(url, entity, FragmentApiResponse.class);
 
                 return response.getBody();
+            } catch (HttpClientErrorException | HttpServerErrorException e) {
+                log.warn("Fragment Stars API returned error: {}", e.getResponseBodyAsString());
+                try {
+                    return e.getResponseBodyAs(FragmentApiResponse.class);
+                } catch (Exception ex) {
+                    FragmentApiResponse errorResp = new FragmentApiResponse();
+                    errorResp.setOk(false);
+                    errorResp.setMessage(e.getMessage());
+                    return errorResp;
+                }
             } catch (Exception e) {
-                log.error("Error searching recipient: {}", username, e);
-                throw new RuntimeException("Failed to search recipient", e);
+                log.error("Error buying stars for username: {}", username, e);
+                FragmentApiResponse errorResp = new FragmentApiResponse();
+                errorResp.setOk(false);
+                errorResp.setMessage(e.getMessage() != null ? e.getMessage() : "Noma'lum xatolik yuz berdi");
+                return errorResp;
             }
         });
     }
 
     @Async
-    public CompletableFuture<InitResponse> initBuy(String recipient, int quantity) {
+    public CompletableFuture<FragmentApiResponse> getWalletBalance() {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-                body.add("method", "initBuyStarsRequest");
-                body.add("recipient", recipient);
-                body.add("quantity", String.valueOf(quantity));
-
-                HttpEntity<MultiValueMap<String, String>> entity =
-                        new HttpEntity<>(body, buildHeaders());
-
-                ResponseEntity<InitResponse> response =
-                        restTemplate.postForEntity(apiUrl(), entity, InitResponse.class);
-
+                String url = config.getApiUrl() + "/wallet/balance";
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(new HashMap<>(), buildHeaders());
+                ResponseEntity<FragmentApiResponse> response =
+                        restTemplate.postForEntity(url, entity, FragmentApiResponse.class);
                 return response.getBody();
             } catch (Exception e) {
-                log.error("Error initializing buy for recipient: {}", recipient, e);
-                throw new RuntimeException("Failed to initialize buy", e);
-            }
-        });
-    }
-
-    @Async
-    public CompletableFuture<TransactionResponse> createTransaction(String reqId) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-                body.add("transaction", "1");
-                body.add("method", "getBuyStarsLink");
-                body.add("id", reqId);
-                body.add("show_sender", "0");
-
-                HttpEntity<MultiValueMap<String, String>> entity =
-                        new HttpEntity<>(body, buildHeaders());
-
-                ResponseEntity<TransactionResponse> response =
-                        restTemplate.postForEntity(apiUrl(), entity, TransactionResponse.class);
-
-                return response.getBody();
-            } catch (Exception e) {
-                log.error("Error creating transaction for reqId: {}", reqId, e);
-                throw new RuntimeException("Failed to create transaction", e);
+                log.error("Error fetching wallet balance", e);
+                FragmentApiResponse errorResp = new FragmentApiResponse();
+                errorResp.setOk(false);
+                errorResp.setMessage(e.getMessage());
+                return errorResp;
             }
         });
     }

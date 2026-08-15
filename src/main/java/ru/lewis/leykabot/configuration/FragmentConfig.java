@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 public class FragmentConfig {
     private String apiUrl;
+    private String apiKey;
     private String hash;
     private String cookies;
 }

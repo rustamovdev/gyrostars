@@ -1,19 +1,26 @@
 package ru.lewis.leykabot.model.screen.ui;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.service.TelegramService;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 public class ScreenManager {
     private final TelegramClient telegramClient;
     private final Map<Long, AbstractScreen> activeScreens = new ConcurrentHashMap<>();
     private final Map<Long, Integer> lastMessageIds = new ConcurrentHashMap<>();
     private final TelegramService telegramService;
+
+    @Autowired
+    @Lazy
+    private ScreenFactory screenFactory;
 
     public ScreenManager(TelegramService telegramService, TelegramClient telegramClient) {
         this.telegramClient = telegramClient;
@@ -64,13 +71,15 @@ public class ScreenManager {
      * Обрабатывает callback от пользователя
      */
     public void handleCallback(long chatId, String callbackData, Integer messageId) {
-        if (activeScreens.isEmpty()) {
-            telegramService.deleteMessage(chatId, messageId);
-            return;
+        AbstractScreen activeScreen = activeScreens.get(chatId);
+
+        if (activeScreen == null && screenFactory != null) {
+            log.info("No active screen found for chatId {}, creating StartScreen fallback", chatId);
+            activeScreen = screenFactory.createStartScreen(chatId, chatId);
+            activeScreens.put(chatId, activeScreen);
         }
 
-        var activeScreen = activeScreens.get(chatId);
-        if (activeScreen == null || !Objects.equals(activeScreen.getCurrentMessageId(), messageId)) {
+        if (activeScreen == null) {
             telegramService.deleteMessage(chatId, messageId);
             return;
         }
@@ -89,6 +98,26 @@ public class ScreenManager {
         AbstractScreen screen = activeScreens.get(chatId);
         if (screen != null) {
             screen.handleMessage(text, telegramClient);
+        }
+    }
+
+    /**
+     * Обрабатывает фото (чек) от пользователя
+     */
+    public void handlePhoto(long chatId, java.util.List<org.telegram.telegrambots.meta.api.objects.photo.PhotoSize> photos) {
+        AbstractScreen screen = activeScreens.get(chatId);
+        if (screen != null) {
+            screen.handlePhoto(photos, telegramClient);
+        }
+    }
+
+    /**
+     * Обрабатывает документ от пользователя
+     */
+    public void handleDocument(long chatId, org.telegram.telegrambots.meta.api.objects.Document document) {
+        AbstractScreen screen = activeScreens.get(chatId);
+        if (screen != null) {
+            screen.handleDocument(document, telegramClient);
         }
     }
 

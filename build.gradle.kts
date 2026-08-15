@@ -23,6 +23,7 @@ dependencies {
 
     // Database
     runtimeOnly(libs.postgresql)
+    runtimeOnly("com.h2database:h2:2.3.232")
 
     // Lombok
     compileOnly(libs.lombok)

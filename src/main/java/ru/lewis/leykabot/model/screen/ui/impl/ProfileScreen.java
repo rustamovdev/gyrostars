@@ -67,16 +67,19 @@ public class ProfileScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton depositButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getDeposit())
+        ru.lewis.leykabot.model.button.StyledInlineButton depositButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Balansni to‘ldirish")
                 .callbackData("deposit")
+                .style("success")
+                .iconCustomEmojiId("5436171485578308032")
                 .build();
         row1.add(depositButton);
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build();
         row2.add(backButton);
 
@@ -90,12 +93,19 @@ public class ProfileScreen extends AbstractScreen {
 
     @Override
     public String getText() {
+        long balance = userService.getBalance(userId).orElse(0);
+        long totalDeposited = transactionService.getAllTimeStats(userId).totalRubles();
+        long totalStars = starsTransactionService.getAllTimeStats(userId).totalStars();
+        long totalPremium = premiumTransactionService.getAllTimeStats(userId).totalMonths();
+        long txCount = transactionService.getCount(userId);
+
         return MessageFormat.format(clientMessageConfig.getProfileCommand(),
-                userService.getBalance(userId).orElse(0),
-                transactionService.getCount(userId),
-                transactionService.getAllTimeStats(userId).totalRubles(),
-                starsTransactionService.getAllTimeStats(userId).totalStars(),
-                premiumTransactionService.getAllTimeStats(userId).totalMonths(),
-                telegramService.getUsernameByUserId(userId));
+                String.format("%,d", balance).replace(',', ' '),
+                String.format("%,d", txCount).replace(',', ' '),
+                String.format("%,d", totalDeposited).replace(',', ' '),
+                String.format("%,d", totalStars).replace(',', ' '),
+                String.format("%,d", totalPremium).replace(',', ' '),
+                telegramService.getUsernameByUserId(userId),
+                String.valueOf(userId));
     }
 }

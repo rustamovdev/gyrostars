@@ -58,7 +58,7 @@ public class RublesDepositScreen extends AbstractScreen {
     public void handleCallback(String callback, TelegramClient bot) {
         switch (callback) {
             case "back":
-                screenManager.updateScreen(chatId, screenFactory.createProfileScreen(chatId, userId));
+                screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
                 return;
             default:
                 break;
@@ -87,10 +87,10 @@ public class RublesDepositScreen extends AbstractScreen {
         try {
             var number = Integer.parseInt(text);
 
-            if (number > 100000) {
+            if (number > 10000000) {
                 telegramService.sendMessageAuto(chatId, errorMessageConfig.getRubles().getMaxValue());
                 return;
-            } else if (number < 10) {
+            } else if (number < 1000) {
                 telegramService.sendMessageAuto(chatId, errorMessageConfig.getRubles().getMinValue());
                 return;
             }
@@ -121,9 +121,12 @@ public class RublesDepositScreen extends AbstractScreen {
         int count = 0;
 
         for (Map.Entry<String, KeyboardLocConfig.Section> entry : depositButtons.entrySet()) {
-            InlineKeyboardButton button = InlineKeyboardButton.builder()
+            boolean isCustom = "custom".equals(entry.getKey());
+            ru.lewis.leykabot.model.button.StyledInlineButton button = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                     .text(entry.getValue().getName())
                     .callbackData(entry.getKey())
+                    .style(isCustom ? "primary" : "success")
+                    .iconCustomEmojiId(isCustom ? "5470060791883374114" : "5436171485578308032")
                     .build();
 
             currentRow.add(button);
@@ -140,9 +143,10 @@ public class RublesDepositScreen extends AbstractScreen {
         }
 
         InlineKeyboardRow backRow = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build();
         backRow.add(backButton);
         keyboard.add(backRow);

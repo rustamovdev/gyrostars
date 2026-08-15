@@ -50,10 +50,20 @@ public class SupportScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
+        InlineKeyboardRow rowSupport = new InlineKeyboardRow();
+        rowSupport.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Adminga yozish")
+                .url("https://t.me/gyro_pm")
+                .style("primary")
+                .iconCustomEmojiId("5436304616679580574")
+                .build());
+        keyboard.add(rowSupport);
+
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build();
         row1.add(backButton);
 

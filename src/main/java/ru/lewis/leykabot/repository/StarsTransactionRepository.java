@@ -23,4 +23,7 @@ public interface StarsTransactionRepository extends JpaRepository<StarsTransacti
     @Query("SELECT s.telegramId, COALESCE(SUM(s.amountStars), 0) AS total " +
             "FROM StarsTransaction s GROUP BY s.telegramId ORDER BY total DESC")
     List<Object[]> findTopByStars(Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(s.amountStars), 0) FROM StarsTransaction s")
+    long sumAllStars();
 }

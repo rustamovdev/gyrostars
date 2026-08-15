@@ -1,0 +1,242 @@
+package ru.lewis.leykabot.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
+import ru.lewis.leykabot.configuration.DevModeConfig;
+import ru.lewis.leykabot.model.database.entity.DepositOrder;
+import ru.lewis.leykabot.model.database.entity.PaymentCard;
+import ru.lewis.leykabot.repository.DepositOrderRepository;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AutoPaymentService {
+
+    private final DepositOrderRepository depositOrderRepository;
+    private final TransactionService transactionService;
+    private final UserService userService;
+    private final TelegramService telegramService;
+    private final OrderChannelService orderChannelService;
+    private final TelegramClient telegramClient;
+    private final DevModeConfig devModeConfig;
+
+    /**
+     * Foydalanuvchi uchun 10 daqiqalik avto-to'lov buyurtmasini yaratadi yoki mavjud faol buyurtmani qaytaradi.
+     */
+    @Transactional
+    public DepositOrder createDepositOrder(Long userId, Long chatId, int baseAmount, PaymentCard card) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // Agar foydalanuvchida ayni shu summaga 10 daqiqa ichida yaratilgan faol buyurtma bo'lsa, o'shani qaytaramiz
+        Optional<DepositOrder> existingOpt = depositOrderRepository
+                .findTopByUserIdAndStatusAndExpiresAtAfterOrderByIdDesc(userId, "PENDING", now);
+
+        if (existingOpt.isPresent() && existingOpt.get().getBaseAmount().equals(baseAmount)) {
+            return existingOpt.get();
+        }
+
+        // Aniq yaxlit summa (qo'shimcha so'mlarsiz)
+        int exactAmount = baseAmount;
+
+        DepositOrder order = new DepositOrder();
+        order.setOrderCode(generateOrderCode());
+        order.setUserId(userId);
+        order.setChatId(chatId);
+        order.setBaseAmount(baseAmount);
+        order.setExactAmount(exactAmount);
+        if (card != null) {
+            order.setCardId(card.getId());
+            order.setCardInfo(card.getMethodName() + " (" + card.getCardNumber() + " - " + card.getHolderName() + ")");
+        }
+        order.setStatus("PENDING");
+        order.setCreatedAt(now);
+        // 10 daqiqalik aniq muddat beriladi
+        order.setExpiresAt(now.plusMinutes(10));
+
+        return depositOrderRepository.save(order);
+    }
+
+    private String generateOrderCode() {
+        String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(ThreadLocalRandom.current().nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
+
+    public Optional<DepositOrder> getOrder(Long orderId) {
+        if (orderId == null) return Optional.empty();
+        return depositOrderRepository.findById(orderId);
+    }
+
+    @Transactional
+    public void cancelOrder(Long orderId) {
+        if (orderId == null) return;
+        depositOrderRepository.findById(orderId).ifPresent(order -> {
+            if ("PENDING".equals(order.getStatus())) {
+                order.setStatus("CANCELLED");
+                depositOrderRepository.save(order);
+                log.info("Deposit order #{} cancelled by user {}", orderId, order.getUserId());
+            }
+        });
+    }
+
+    /**
+     * Har 30 soniyada muddati (10 daqiqa) o'tgan buyurtmalarni avtomatik bekor qiladi.
+     */
+    @Scheduled(fixedDelay = 30000)
+    @Transactional
+    public void expireOldOrders() {
+        LocalDateTime now = LocalDateTime.now();
+        List<DepositOrder> expired = depositOrderRepository.findAllByStatusAndExpiresAtBefore("PENDING", now);
+        for (DepositOrder o : expired) {
+            o.setStatus("EXPIRED");
+            depositOrderRepository.save(o);
+            log.info("Deposit order #{} expired for user {}", o.getId(), o.getUserId());
+        }
+    }
+
+    private int generateUniqueExactAmount(int baseAmount) {
+        LocalDateTime now = LocalDateTime.now();
+        // 1..99 oralig'ida unikal suffiks tanlaymiz
+        for (int i = 0; i < 50; i++) {
+            int suffix = ThreadLocalRandom.current().nextInt(1, 99);
+            int candidate = baseAmount + suffix;
+            if (!depositOrderRepository.existsByExactAmountAndStatusAndExpiresAtAfter(candidate, "PENDING", now)) {
+                return candidate;
+            }
+        }
+        return baseAmount;
+    }
+
+    /**
+     * CardXabarBot, Telegram Userbot yoki Bank SMS orqali kelgan to'lovni avtomatik qayta ishlash.
+     */
+    @Transactional
+    public synchronized Map<String, Object> processIncomingPayment(double rawAmount, String rawText) {
+        int amount = (int) Math.round(rawAmount);
+        log.info("Processing incoming card payment: {} UZS. Raw text: {}", amount, rawText);
+
+        LocalDateTime now = LocalDateTime.now();
+        Map<String, Object> response = new HashMap<>();
+
+        // 1. Exact amount bo'yicha qidirish
+        Optional<DepositOrder> orderOpt = depositOrderRepository
+                .findTopByExactAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
+
+        // 2. Agar topilmasa, Base amount bo'yicha qidirish
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByBaseAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
+        }
+
+        if (orderOpt.isPresent()) {
+            DepositOrder order = orderOpt.get();
+            order.setStatus("PAID_AUTO");
+            depositOrderRepository.save(order);
+
+            // Balansni to'ldirish
+            int creditAmount = order.getBaseAmount();
+            transactionService.create(order.getUserId(), creditAmount);
+
+            long updatedBalance = userService.getBalance(order.getUserId()).orElse(0);
+            String formattedCredit = String.format("%,d", creditAmount).replace(',', ' ');
+            String formattedBalance = String.format("%,d", updatedBalance).replace(',', ' ');
+            String username = telegramService.getUsernameByUserId(order.getUserId());
+
+            // Foydalanuvchiga xabar yuborish
+            String userMessage = "<tg-emoji emoji-id=\"5436406725232074977\">✅</tg-emoji> <b>To‘lovingiz avtomatik qabul qilindi!</b>\n\n" +
+                    "➕ Balansingizga <b>" + formattedCredit + " so‘m</b> qo‘shildi.\n" +
+                    "<tg-emoji emoji-id=\"5436171485578308032\">💸</tg-emoji> Joriy balansingiz: <b>" + formattedBalance + " so‘m</b>\n\n" +
+                    "Xaridlarni amalga oshirish uchun menyudan Stars yoki Premium bo‘limini tanlashingiz mumkin! ⭐️";
+
+            telegramService.sendMessageAuto(order.getChatId(), userMessage);
+
+            // Buyurtmalar kanaliga xabar yuborish
+            orderChannelService.sendOrderNotification(
+                    "<tg-emoji emoji-id=\"5436171485578308032\">💸</tg-emoji> Avto-To‘lov (Balans)",
+                    "+" + formattedCredit + " so‘m",
+                    username != null ? username : "ID:" + order.getUserId(),
+                    creditAmount
+            );
+
+            // Adminga xabarnoma yuborish
+            notifyAdminsAutoSuccess(order, creditAmount, username);
+
+            log.info("Auto-payment matched and processed for user {} (Order #{})", order.getUserId(), order.getId());
+
+            response.put("ok", true);
+            response.put("matched", true);
+            response.put("orderId", order.getId());
+            response.put("userId", order.getUserId());
+            response.put("amount", creditAmount);
+            return response;
+        }
+
+        // Mos buyurtma topilmadi - Adminga xabar berish
+        notifyAdminsUnmatchedPayment(amount, rawText);
+
+        response.put("ok", true);
+        response.put("matched", false);
+        response.put("amount", amount);
+        response.put("message", "Ushbu summaga mos faol buyurtma topilmadi");
+        return response;
+    }
+
+    private void notifyAdminsAutoSuccess(DepositOrder order, int amount, String username) {
+        String formattedAmount = String.format("%,d", amount).replace(',', ' ');
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+
+        String adminMsg = "⚡️ <b>Avto-To‘lov Muvaffaqiyatli Tushdi!</b>\n\n" +
+                "👤 <b>Foydalanuvchi:</b> " + (username != null ? username : "Noma'lum") + " (<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> ID: <code>" + order.getUserId() + "</code>)\n" +
+                "<tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Summa:</b> <b>" + formattedAmount + " so‘m</b>\n" +
+                "📦 <b>Buyurtma ID:</b> #DEP-" + order.getId() + "\n" +
+                "<tg-emoji emoji-id=\"5438193302778192083\">🕒</tg-emoji> <b>Vaqt:</b> " + dateStr;
+
+        sendToAdmins(adminMsg);
+    }
+
+    private void notifyAdminsUnmatchedPayment(int amount, String rawText) {
+        String formattedAmount = String.format("%,d", amount).replace(',', ' ');
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+
+        String adminMsg = "⚠️ <b>Noma'lum Avto-To‘lov Qabul Qilindi!</b>\n\n" +
+                "<tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Summa:</b> <b>" + formattedAmount + " so‘m</b>\n" +
+                "<tg-emoji emoji-id=\"5438193302778192083\">🕒</tg-emoji> <b>Vaqt:</b> " + dateStr + "\n" +
+                "📄 <b>Matn:</b> <code>" + (rawText != null ? rawText : "Mavjud emas") + "</code>\n\n" +
+                "<i>Eslatma: Botda ushbu summaga mos faol buyurtma topilmadi. Agar kerak bo'lsa, foydalanuvchining balansini qo'lda to'ldirishingiz mumkin.</i>";
+
+        sendToAdmins(adminMsg);
+    }
+
+    private void sendToAdmins(String text) {
+        List<Long> admins = devModeConfig.getWhitelist();
+        if (admins == null) admins = new ArrayList<>();
+        if (!admins.contains(AdminService.PRIMARY_ADMIN)) {
+            admins.add(AdminService.PRIMARY_ADMIN);
+        }
+
+        for (Long adminId : admins) {
+            try {
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(adminId)
+                        .text(text)
+                        .parseMode("HTML")
+                        .build());
+            } catch (Exception e) {
+                log.warn("Failed to notify admin {} about auto-payment: {}", adminId, e.getMessage());
+            }
+        }
+    }
+}

@@ -15,7 +15,6 @@ public class LogMessageConfig {
     private String appDisable;
     private String appEnable;
     private String balanceInTonNotEnough;
-    private String referralActivated;
     private String starsTransactionCreate;
     private String premiumTransactionCreate;
 }

@@ -30,13 +30,13 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
     private final ScreenFactory screenFactory;
     private final UserService userService;
     private final FragmentStarsService fragmentStarsService;
-    private final TonService tonService;
     private final TransactionService transactionService;
     private final CodeService codeService;
     private final LogMessageConfig logMessageConfig;
     private final StarsTransactionService starsTransactionService;
     private final PremiumTransactionService premiumTransactionService;
-    private final PlategaService plategaService;
+    private final AdminService adminService;
+    private final PaymentCardService paymentCardService;
 
     @Override
     public void consume(Update update) {
@@ -45,13 +45,50 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             var chatId = callback.getMessage().getChatId();
             var data = callback.getData();
             var messageId = callback.getMessage().getMessageId();
+            var fromId = callback.getFrom().getId();
 
             try {
                 telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
                         .callbackQueryId(callback.getId())
                         .build());
-            } catch (Exception e) {
-                log.error("Error answering callback", e);
+            } catch (Exception ignored) {}
+
+            if (data.startsWith("dep_app_")) {
+                try {
+                    long receiptId = Long.parseLong(data.substring(8));
+                    if (paymentCardService.approveDeposit(receiptId, fromId)) {
+                        String adminTag = telegramService.getUsernameByUserId(fromId);
+                        String oldCaption = "";
+                        if (callback.getMessage() instanceof org.telegram.telegrambots.meta.api.objects.message.Message msg) {
+                            oldCaption = msg.getCaption() != null ? msg.getCaption() : "";
+                        }
+                        telegramClient.execute(org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageCaption.builder()
+                                .chatId(chatId)
+                                .messageId(messageId)
+                                .caption(oldCaption + "\n\n✅ <b>TASDIQLANDI!</b> (Admin: " + (adminTag != null ? adminTag : fromId) + ")")
+                                .parseMode("HTML")
+                                .build());
+                    }
+                } catch (Exception ignored) {}
+                return;
+            } else if (data.startsWith("dep_rej_")) {
+                try {
+                    long receiptId = Long.parseLong(data.substring(8));
+                    if (paymentCardService.rejectDeposit(receiptId, fromId)) {
+                        String adminTag = telegramService.getUsernameByUserId(fromId);
+                        String oldCaption = "";
+                        if (callback.getMessage() instanceof org.telegram.telegrambots.meta.api.objects.message.Message msg) {
+                            oldCaption = msg.getCaption() != null ? msg.getCaption() : "";
+                        }
+                        telegramClient.execute(org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageCaption.builder()
+                                .chatId(chatId)
+                                .messageId(messageId)
+                                .caption(oldCaption + "\n\n❌ <b>RAD ETILDI!</b> (Admin: " + (adminTag != null ? adminTag : fromId) + ")")
+                                .parseMode("HTML")
+                                .build());
+                    }
+                } catch (Exception ignored) {}
+                return;
             }
 
             screenManager.handleCallback(chatId, data, messageId);
@@ -63,14 +100,29 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         var message = update.getMessage();
+        var userId = message.getFrom().getId();
+        var chatId = message.getChatId();
+
+        if (message.hasPhoto() && message.getPhoto() != null && !message.getPhoto().isEmpty()) {
+            screenManager.handlePhoto(chatId, message.getPhoto());
+            return;
+        }
+
+        if (message.hasDocument() && message.getDocument() != null) {
+            screenManager.handleDocument(chatId, message.getDocument());
+            return;
+        }
 
         if (!message.hasText() || message.getText() == null) {
             return;
         }
 
         var text = message.getText();
-        var userId = message.getFrom().getId();
-        var chatId = message.getChatId();
+
+        if (text.startsWith("/admin") && adminService.isAdmin(userId)) {
+            screenManager.createScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
+            return;
+        }
 
         start(text, userId, chatId);
 
@@ -80,24 +132,6 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
     private void start(String message, Long userId, Long chatId) {
         // command check
         if (message.startsWith("/start")) {
-            // active referral
-            if (message.contains(" ")) {
-                var qrCode = message.split(" ")[1];
-
-                if (userService.activateReferral(qrCode, userId)) {
-                    var referralOwnerId = userService.getReferralOwner(qrCode).get();
-                    var referralOwnerName = telegramService.getUsernameByUserId(referralOwnerId);
-                    var referralActivatedName = telegramService.getUsernameByUserId(userId);
-
-                    var referralAmountActivated = userService.getReferralActivationCount(referralOwnerId);
-
-                    telegramService.sendMessage(chatId, clientMessageConfig.getReferralActivated());
-                    telegramService.sendMessageToTopic(telegramConfig.getLogChannelId(), telegramConfig.getLogChannelTopicId(),
-                            MessageFormat.format(logMessageConfig.getReferralActivated(),
-                                    referralActivatedName, referralOwnerName, referralAmountActivated));
-                }
-            }
-
             // check sub
             if (!telegramService.isUserSubscribed(userId)) {
                 screenManager.createScreen(chatId, screenFactory.createSubscribeChannelScreen(chatId, userId));

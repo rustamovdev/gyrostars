@@ -1,19 +1,16 @@
 package ru.lewis.leykabot.model.screen.ui.impl.premium;
 
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.configuration.DevModeConfig;
-import ru.lewis.leykabot.configuration.MarkupConfig;
 import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
 import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
-import ru.lewis.leykabot.configuration.loc.KeyboardLocConfig;
+import ru.lewis.leykabot.model.button.StyledInlineButton;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
-import ru.lewis.leykabot.service.PlategaService;
-import ru.lewis.leykabot.service.RapiraService;
+import ru.lewis.leykabot.service.PriceService;
 import ru.lewis.leykabot.service.TelegramService;
 
 import java.util.ArrayList;
@@ -23,40 +20,34 @@ import java.util.Map;
 public class PremiumBuyScreen extends AbstractScreen {
 
     private final ButtonsLocConfig    buttonsLocConfig;
-    private final KeyboardLocConfig   keyboardLocConfig;
     private final ClientMessageConfig clientMessageConfig;
     private final TelegramService     telegramService;
     private final DevModeConfig       devModeConfig;
-    private final MarkupConfig        markupConfig;
-    private final RapiraService       rapiraService;
+    private final PriceService        priceService;
     private final ScreenManager       screenManager;
     private final ScreenFactory       screenFactory;
 
     public PremiumBuyScreen(Long chatId, Long userId,
                             ButtonsLocConfig buttonsLocConfig,
-                            KeyboardLocConfig keyboardLocConfig,
                             ClientMessageConfig clientMessageConfig,
                             TelegramService telegramService,
                             DevModeConfig devModeConfig,
-                            MarkupConfig markupConfig,
-                            RapiraService rapiraService,
+                            PriceService priceService,
                             ScreenManager screenManager,
                             ScreenFactory screenFactory) {
         super(chatId, userId);
         this.buttonsLocConfig = buttonsLocConfig;
-        this.keyboardLocConfig = keyboardLocConfig;
         this.clientMessageConfig = clientMessageConfig;
         this.telegramService = telegramService;
         this.devModeConfig = devModeConfig;
-        this.markupConfig = markupConfig;
-        this.rapiraService = rapiraService;
+        this.priceService = priceService;
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
     }
 
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
-        if (callback.equals("back")) {
+        if ("back".equals(callback)) {
             screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
             return;
         }
@@ -66,20 +57,14 @@ public class PremiumBuyScreen extends AbstractScreen {
             return;
         }
 
-        // callback = ключ из keyboardLocConfig.getBuyPremium(), например "3", "6", "12"
-        Map<String, KeyboardLocConfig.BuyPremium> premiumButtons = keyboardLocConfig.getBuyPremium();
-        var buyPremium = premiumButtons.get(callback);
-        if (buyPremium == null) return;
-
-        rapiraService.getUsdtToRubRateWithMarkup().thenAccept(rate -> {
-            int months = buyPremium.getMonths();
-            float amount = buyPremium.getAmount();
-
-            int rubles = (int) Math.ceil(amount * rate * markupConfig.getPlatega() * markupConfig.getProfit());
-
-            screenManager.updateScreen(chatId,
-                    screenFactory.createSelectUserForBuyPremiumScreen(chatId, userId, months, rubles));
-        });
+        if (callback.startsWith("prem_")) {
+            try {
+                int months = Integer.parseInt(callback.substring(5));
+                int rubles = priceService.getPremiumPrice(months);
+                screenManager.updateScreen(chatId,
+                        screenFactory.createSelectUserForBuyPremiumScreen(chatId, userId, months, rubles));
+            } catch (NumberFormatException ignored) {}
+        }
     }
 
     @Override
@@ -91,33 +76,45 @@ public class PremiumBuyScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
-        Map<String, KeyboardLocConfig.BuyPremium> premiumButtons = keyboardLocConfig.getBuyPremium();
+        // 1 oylik Telegram Premium -> Adminga (@BLACK_mladshiy) to'g'ridan-to'g'ri tayyor shablon bilan yo'naltiriladi
+        InlineKeyboardRow row1m = new InlineKeyboardRow();
+        row1m.add(StyledInlineButton.styledBuilder()
+                .text("1 oylik Telegram Premium")
+                .url("https://t.me/BLACK_mladshiy?text=Men%201%20oylik%20Telegram%20Premium%20sotib%20olmoqchiman")
+                .style("primary")
+                .iconCustomEmojiId("5938420017665152105")
+                .build());
+        keyboard.add(row1m);
 
-        InlineKeyboardRow currentRow = new InlineKeyboardRow();
-        int count = 0;
+        Map<Integer, Integer> premiumPrices = priceService.getAllPremiumPrices();
 
-        for (Map.Entry<String, KeyboardLocConfig.BuyPremium> entry : premiumButtons.entrySet()) {
-            InlineKeyboardButton button = InlineKeyboardButton.builder()
-                    .text(entry.getValue().getName())
-                    .callbackData(entry.getKey())
-                    .build();
-            currentRow.add(button);
-            count++;
+        for (Map.Entry<Integer, Integer> entry : premiumPrices.entrySet()) {
+            int months = entry.getKey();
+            if (months == 1) continue; // 1 oylik yuqorida alohida ulandi
+            int price = entry.getValue();
+            String priceStr = String.format("%,d", price).replace(',', ' ');
 
-            if (count % 2 == 0) {
-                keyboard.add(currentRow);
-                currentRow = new InlineKeyboardRow();
-            }
-        }
+            String label = switch (months) {
+                case 3 -> "3 oylik — " + priceStr + " so‘m";
+                case 6 -> "6 oylik — " + priceStr + " so‘m";
+                case 12 -> "1 yillik — " + priceStr + " so‘m";
+                default -> months + " oylik — " + priceStr + " so‘m";
+            };
 
-        if (!currentRow.isEmpty()) {
-            keyboard.add(currentRow);
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(StyledInlineButton.styledBuilder()
+                    .text(label)
+                    .callbackData("prem_" + months)
+                    .iconCustomEmojiId("5938420017665152105")
+                    .build());
+            keyboard.add(row);
         }
 
         InlineKeyboardRow backRow = new InlineKeyboardRow();
-        backRow.add(InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBack())
+        backRow.add(StyledInlineButton.styledBuilder()
+                .text("Orqaga")
                 .callbackData("back")
+                .iconCustomEmojiId("5258236805890710909")
                 .build());
         keyboard.add(backRow);
 

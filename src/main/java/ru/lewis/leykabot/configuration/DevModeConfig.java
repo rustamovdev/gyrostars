@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -13,5 +14,5 @@ import java.util.List;
 @Setter
 public class DevModeConfig {
     private boolean enable;
-    private List<Long> whitelist;
+    private List<Long> whitelist = new ArrayList<>();
 }

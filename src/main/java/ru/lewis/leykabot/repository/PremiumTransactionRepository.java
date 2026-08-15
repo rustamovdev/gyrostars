@@ -23,4 +23,7 @@ public interface PremiumTransactionRepository extends JpaRepository<PremiumTrans
     @Query("SELECT p.telegramId, COALESCE(SUM(p.months), 0) AS total " +
             "FROM PremiumTransaction p GROUP BY p.telegramId ORDER BY total DESC")
     List<Object[]> findTopByMonths(Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.months), 0) FROM PremiumTransaction p")
+    long sumAllPremiumMonths();
 }

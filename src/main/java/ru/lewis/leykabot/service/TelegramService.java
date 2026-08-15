@@ -114,7 +114,7 @@ public class TelegramService {
 
     public void editMedia(TelegramClient bot, Long chatId, Integer messageId, File photo, String caption, InlineKeyboardMarkup markup) {
         if (caption != null && caption.length() > MAX_MESSAGE_LENGTH) {
-            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         InputMediaPhoto media = new InputMediaPhoto(photo, photo.getName());
@@ -147,7 +147,7 @@ public class TelegramService {
 
     public Message sendPhoto(Long chatId, File photo, String caption, InlineKeyboardMarkup markup) {
         if (caption != null && caption.length() > MAX_MESSAGE_LENGTH) {
-            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         var builder = SendPhoto.builder()
@@ -173,7 +173,7 @@ public class TelegramService {
     /** Отправка фото по fileId или URL */
     public Message sendPhoto(Long chatId, String fileIdOrUrl, String caption, InlineKeyboardMarkup markup) {
         if (caption != null && caption.length() > MAX_MESSAGE_LENGTH) {
-            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         var builder = SendPhoto.builder()
@@ -204,7 +204,7 @@ public class TelegramService {
 
     public void editCaption(Long chatId, Integer messageId, String caption, InlineKeyboardMarkup markup) {
         if (caption != null && caption.length() > MAX_MESSAGE_LENGTH) {
-            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            caption = caption.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         var builder = EditMessageCaption.builder()
@@ -279,10 +279,33 @@ public class TelegramService {
         }
     }
 
+    public String getRawUsernameByUserId(Long userId) {
+        try {
+            GetChat getChat = GetChat.builder()
+                    .chatId(userId)
+                    .build();
+
+            Chat chat = telegramClient.execute(getChat);
+            String username = chat.getUserName();
+
+            if (username != null && !username.isBlank()) {
+                return username.startsWith("@") ? username.substring(1).trim() : username.trim();
+            }
+            return null;
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public boolean isUserSubscribed(Long userId) {
+        String channel = telegramConfig.getChannelCheckSubscribe();
+        if (channel == null || channel.isBlank() || channel.equals("@your-bot") || channel.equals("@your_channel")) {
+            return true;
+        }
         try {
             GetChatMember getChatMember = GetChatMember.builder()
-                    .chatId(telegramConfig.getChannelCheckSubscribe())
+                    .chatId(channel)
                     .userId(userId)
                     .build();
 
@@ -293,7 +316,7 @@ public class TelegramService {
                     "administrator".equals(status) ||
                     "creator".equals(status);
         } catch (TelegramApiException e) {
-            return false;
+            return true;
         }
     }
 
@@ -319,6 +342,7 @@ public class TelegramService {
     }
 
     public void sendMessageToTopic(Long chatId, Integer topicId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
+        if (chatId == null || chatId == 0 || chatId == -1337) return;
         try {
             var builder = SendMessage.builder()
                     .chatId(chatId)
@@ -341,8 +365,9 @@ public class TelegramService {
     }
 
     public Message sendMessage(Long chatId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
+        if (chatId == null || chatId == 0 || chatId == -1337) return null;
         if (text.length() > MAX_MESSAGE_LENGTH) {
-            text = text.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            text = text.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         var builder = SendMessage.builder()
@@ -368,7 +393,7 @@ public class TelegramService {
 
     public void editMessage(TelegramClient bot, Long chatId, Integer messageId, String text, InlineKeyboardMarkup inlineKeyboardMarkup) {
         if (text.length() > MAX_MESSAGE_LENGTH) {
-            text = text.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (сообщение обрезано)";
+            text = text.substring(0, MAX_MESSAGE_LENGTH - 50) + "\n\n... (xabar qisqartirildi)";
         }
 
         var builder = EditMessageText.builder()

@@ -1,9 +1,29 @@
-FROM gradle:8-jdk21 AS builder
-WORKDIR /build
-COPY . .
-RUN gradle bootJar --no-daemon
+FROM eclipse-temurin:21-jdk-jammy
 
-FROM eclipse-temurin:21-jre
+# Install Python 3, pip, and supervisor
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    supervisor \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-COPY --from=builder /build/build/libs/LeykaBot-1.0-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Install Python dependencies
+COPY requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy project files
+COPY . .
+
+# Grant execute permission to Gradle wrapper and build the project
+RUN chmod +x ./gradlew && ./gradlew build -x test --no-daemon
+
+# Copy supervisor config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 8085
+
+# Start both Java Bot and Python Humo Listener 24/7
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

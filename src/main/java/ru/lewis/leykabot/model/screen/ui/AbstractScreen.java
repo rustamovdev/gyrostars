@@ -2,8 +2,12 @@ package ru.lewis.leykabot.model.screen.ui;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.telegram.telegrambots.meta.api.objects.Document;
+import org.telegram.telegrambots.meta.api.objects.photo.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,7 +28,15 @@ public abstract class AbstractScreen {
     public abstract void handleCallback(String callback, TelegramClient bot);
 
     public void handleMessage(String text, TelegramClient bot) {
-        // По умолчанию ничего не делаем
+        // Default do nothing
+    }
+
+    public void handlePhoto(List<PhotoSize> photos, TelegramClient bot) {
+        // Default do nothing
+    }
+
+    public void handleDocument(Document document, TelegramClient bot) {
+        // Default do nothing
     }
 
     public String getText() {

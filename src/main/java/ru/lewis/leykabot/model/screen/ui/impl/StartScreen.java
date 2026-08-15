@@ -5,13 +5,14 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-import ru.lewis.leykabot.configuration.telegram.TelegramConfig;
 import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
 import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
-import ru.lewis.leykabot.service.TelegramService;
+import ru.lewis.leykabot.configuration.telegram.TelegramConfig;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
+import ru.lewis.leykabot.service.AdminService;
+import ru.lewis.leykabot.service.TelegramService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class StartScreen extends AbstractScreen {
     private final ScreenFactory screenFactory;
     private final TelegramConfig telegramConfig;
     private final TelegramService telegramService;
+    private final AdminService adminService;
 
     public StartScreen(Long chatId, Long userId,
                        ClientMessageConfig clientMessageConfig,
@@ -30,6 +32,7 @@ public class StartScreen extends AbstractScreen {
                        ScreenManager screenManager,
                        TelegramService telegramService,
                        TelegramConfig telegramConfig,
+                       AdminService adminService,
                        ScreenFactory screenFactory) {
         super(chatId, userId);
         this.clientMessageConfig = clientMessageConfig;
@@ -38,6 +41,7 @@ public class StartScreen extends AbstractScreen {
         this.telegramService = telegramService;
         this.screenFactory = screenFactory;
         this.telegramConfig = telegramConfig;
+        this.adminService = adminService;
     }
 
     @Override
@@ -51,33 +55,17 @@ public class StartScreen extends AbstractScreen {
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
         switch (callback) {
-            case "profile":
-                screenManager.updateScreen(chatId, screenFactory.createProfileScreen(chatId, userId));
-                break;
-            case "support":
-                screenManager.updateScreen(chatId, screenFactory.createSupportScreen(chatId, userId));
-                break;
-            case "links":
-                screenManager.updateScreen(chatId, screenFactory.createLinksScreen(chatId, userId));
-                break;
-            case "buy-stars": {
-                screenManager.updateScreen(chatId, screenFactory.createBuyStarsScreen(chatId, userId));
-                break;
+            case "buy-stars" -> screenManager.updateScreen(chatId, screenFactory.createBuyStarsScreen(chatId, userId));
+            case "buy-premium" -> screenManager.updateScreen(chatId, screenFactory.createBuyPremiumScreen(chatId, userId));
+            case "profile" -> screenManager.updateScreen(chatId, screenFactory.createProfileScreen(chatId, userId));
+            case "deposit" -> screenManager.updateScreen(chatId, screenFactory.createDepositRublesScreen(chatId, userId));
+            case "top" -> screenManager.updateScreen(chatId, screenFactory.createTopSelectScreen(chatId, userId));
+            case "support" -> screenManager.updateScreen(chatId, screenFactory.createSupportScreen(chatId, userId));
+            case "admin" -> {
+                if (adminService.isAdmin(userId)) {
+                    screenManager.updateScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
+                }
             }
-            case "buy-premium": {
-                screenManager.updateScreen(chatId, screenFactory.createBuyPremiumScreen(chatId, userId));
-                break;
-            }
-            case "referral": {
-                screenManager.updateScreen(chatId, screenFactory.createReferralScreen(chatId, userId));
-                break;
-            }
-            case "top": {
-                screenManager.updateScreen(chatId, screenFactory.createTopSelectScreen(chatId, userId));
-                break;
-            }
-            default:
-                break;
         }
     }
 
@@ -90,54 +78,65 @@ public class StartScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
+        // Row 1: Stars va Premium xaridi
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton buyStarsButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBuyStars())
+        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Stars sotib olish")
                 .callbackData("buy-stars")
-                .build();
-        row1.add(buyStarsButton);
-
-        InlineKeyboardButton buyPremiumButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getBuyPremium())
+                .style("primary")
+                .iconCustomEmojiId("5985826831591281620")
+                .build());
+        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Premium sotib olish")
                 .callbackData("buy-premium")
-                .build();
-        row1.add(buyPremiumButton);
+                .style("primary")
+                .iconCustomEmojiId("5938420017665152105")
+                .build());
 
+        // Row 2: Profil va Hisob to'ldirish
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        InlineKeyboardButton profileButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getProfile())
+        row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Profil")
                 .callbackData("profile")
-                .build();
+                .style("primary")
+                .iconCustomEmojiId("5256143829672672750")
+                .build());
+        row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Balansni to‘ldirish")
+                .callbackData("deposit")
+                .style("success")
+                .iconCustomEmojiId("5436171485578308032")
+                .build());
 
-        InlineKeyboardButton topButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getTop())
-                .callbackData("top")
-                .build();
-
-        InlineKeyboardButton referralButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getReferralSystem())
-                .callbackData("referral")
-                .build();
-        row2.add(profileButton);
-        row2.add(topButton);
-        row2.add(referralButton);
-
+        // Row 3: Reyting va Qo'llab-quvvatlash
         InlineKeyboardRow row3 = new InlineKeyboardRow();
-        InlineKeyboardButton supportButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getSupport())
+        row3.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Reyting")
+                .callbackData("top")
+                .style("primary")
+                .iconCustomEmojiId("5436201215341930329")
+                .build());
+        row3.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                .text("Qo‘llab-quvvatlash")
                 .callbackData("support")
-                .build();
-        row3.add(supportButton);
-
-        InlineKeyboardButton linksButton = InlineKeyboardButton.builder()
-                .text(buttonsLocConfig.getLinks())
-                .callbackData("links")
-                .build();
-        row3.add(linksButton);
+                .style("primary")
+                .iconCustomEmojiId("5436304616679580574")
+                .build());
 
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
+
+        // Row 5: Admin panel (faqat adminlarga ko'rinadi)
+        if (adminService.isAdmin(userId)) {
+            InlineKeyboardRow adminRow = new InlineKeyboardRow();
+            adminRow.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+                    .text("👑 Admin Panel")
+                    .callbackData("admin")
+                    .style("danger")
+                    .build());
+            keyboard.add(adminRow);
+        }
 
         return InlineKeyboardMarkup.builder()
                 .keyboard(keyboard)

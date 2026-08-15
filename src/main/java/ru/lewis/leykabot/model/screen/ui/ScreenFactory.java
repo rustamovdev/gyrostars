@@ -3,7 +3,6 @@ package ru.lewis.leykabot.model.screen.ui;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.lewis.leykabot.configuration.DevModeConfig;
-import ru.lewis.leykabot.configuration.MarkupConfig;
 import ru.lewis.leykabot.configuration.TopFormat;
 import ru.lewis.leykabot.configuration.telegram.TelegramConfig;
 import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
@@ -11,8 +10,10 @@ import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
 import ru.lewis.leykabot.configuration.loc.ErrorMessageConfig;
 import ru.lewis.leykabot.configuration.loc.KeyboardLocConfig;
 import ru.lewis.leykabot.model.Top;
+import ru.lewis.leykabot.model.database.entity.PaymentCard;
 import ru.lewis.leykabot.model.screen.ui.impl.*;
-import ru.lewis.leykabot.model.screen.ui.impl.deposit.RublesReplenishScreen;
+import ru.lewis.leykabot.model.screen.ui.impl.admin.*;
+import ru.lewis.leykabot.model.screen.ui.impl.deposit.RublesDepositOrderScreen;
 import ru.lewis.leykabot.model.screen.ui.impl.deposit.RublesDepositScreen;
 import ru.lewis.leykabot.model.screen.ui.impl.deposit.RublesDepositSelectPaymentMethodScreen;
 import ru.lewis.leykabot.model.screen.ui.impl.premium.PremiumBuyScreen;
@@ -38,27 +39,24 @@ public class ScreenFactory {
     private final ErrorMessageConfig errorMessageConfig;
     private final DevModeConfig devModeConfig;
     private final FragmentStarsService fragmentStarsService;
-    private final TonService tonService;
     private final StarsTransactionService starsTransactionService;
     private final PremiumTransactionService premiumTransactionService;
-    private final MarkupConfig markupConfig;
     private final FragmentPremiumService fragmentPremiumService;
     private final TopService topService;
     private final TopFormat topFormat;
-    private final PlategaService plategaService;
-    private final RapiraService rapiraService;
+    private final AdminService adminService;
+    private final PriceService priceService;
+    private final PaymentCardService paymentCardService;
+    private final OrderChannelService orderChannelService;
+    private final AutoPaymentService autoPaymentService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
-        return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig,this);
+        return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, this);
     }
 
     public ProfileScreen createProfileScreen(Long chatId, Long userId) {
         return new ProfileScreen(chatId, userId, buttonsLocConfig, clientMessageConfig, screenManager, telegramService, userService,
                 transactionService, starsTransactionService, premiumTransactionService, this);
-    }
-
-    public LinksScreen createLinksScreen(Long chatId, Long userId) {
-        return new LinksScreen(chatId, userId, buttonsLocConfig, clientMessageConfig, screenManager, telegramService,this);
     }
 
     public SupportScreen createSupportScreen(Long chatId, Long userId) {
@@ -73,32 +71,28 @@ public class ScreenFactory {
 
     public StarBuyScreen createBuyStarsScreen(Long chatId, Long userId) {
         return new StarBuyScreen(chatId, userId,
-                buttonsLocConfig, keyboardLocConfig, clientMessageConfig,
-                errorMessageConfig, telegramService, devModeConfig, markupConfig, rapiraService, screenManager, this);
+                buttonsLocConfig, clientMessageConfig,
+                errorMessageConfig, telegramService, devModeConfig, priceService, screenManager, this);
     }
 
     public UserSelectStarsScreen createSelectUserForBuyStarsScreen(Long chatId, Long userId, int stars, int rubles) {
         return new UserSelectStarsScreen(chatId, userId, stars, rubles,
                 clientMessageConfig, buttonsLocConfig, telegramService, fragmentStarsService,
-                errorMessageConfig, userService, tonService, starsTransactionService, screenManager, this);
+                errorMessageConfig, userService, starsTransactionService, orderChannelService, screenManager, this);
     }
 
     public ChannelSubscribeScreen createSubscribeChannelScreen(Long chatId, Long userId) {
         return new ChannelSubscribeScreen(chatId, userId, telegramService, clientMessageConfig, telegramConfig, buttonsLocConfig, screenManager, this);
     }
 
-    public ReferralScreen createReferralScreen(Long chatId, Long userId) {
-        return new ReferralScreen(chatId, userId, userService, buttonsLocConfig, clientMessageConfig, telegramService, screenManager, this);
-    }
-
     public PremiumBuyScreen createBuyPremiumScreen(Long chatId, Long userId) {
-        return new PremiumBuyScreen(chatId, userId, buttonsLocConfig, keyboardLocConfig, clientMessageConfig, telegramService,
-                devModeConfig, markupConfig, rapiraService, screenManager, this);
+        return new PremiumBuyScreen(chatId, userId, buttonsLocConfig, clientMessageConfig, telegramService,
+                devModeConfig, priceService, screenManager, this);
     }
 
     public UserSelectPremiumScreen createSelectUserForBuyPremiumScreen(Long chatId, Long userId, int months, int rubles) {
         return new UserSelectPremiumScreen(chatId, userId, months, rubles, clientMessageConfig, buttonsLocConfig, errorMessageConfig, telegramService,
-                fragmentPremiumService, premiumTransactionService, userService, tonService, screenManager, this);
+                fragmentPremiumService, premiumTransactionService, userService, orderChannelService, screenManager, this);
     }
 
     public TopShowScreen createTopShowScreen(Long chatId, Long userId, Top top, int page) {
@@ -110,11 +104,39 @@ public class ScreenFactory {
     }
 
     public RublesDepositSelectPaymentMethodScreen createRublesDepositSelectPaymentMethodScreen(Long chatId, Long userId, int rubles) {
-        return new RublesDepositSelectPaymentMethodScreen(chatId, userId, rubles, telegramService, buttonsLocConfig,
-                clientMessageConfig, keyboardLocConfig, plategaService, errorMessageConfig, screenManager, this);
+        return new RublesDepositSelectPaymentMethodScreen(chatId, userId, rubles, buttonsLocConfig,
+                clientMessageConfig, paymentCardService, screenManager, this);
     }
 
-    public RublesReplenishScreen createRublesReplenishScreen(Long chatId, Long userId, int rubles) {
-        return new RublesReplenishScreen(chatId, userId, rubles, buttonsLocConfig, clientMessageConfig, screenManager, this);
+    public RublesDepositOrderScreen createRublesDepositOrderScreen(Long chatId, Long userId, int rubles, PaymentCard card) {
+        return new RublesDepositOrderScreen(chatId, userId, rubles, card, paymentCardService, autoPaymentService, telegramService, buttonsLocConfig, screenManager, this);
+    }
+
+    public AdminMainScreen createAdminMainScreen(Long chatId, Long userId) {
+        return new AdminMainScreen(chatId, userId, screenManager, this, adminService, fragmentStarsService, telegramService);
+    }
+
+    public AdminStatsScreen createAdminStatsScreen(Long chatId, Long userId) {
+        return new AdminStatsScreen(chatId, userId, screenManager, this, adminService);
+    }
+
+    public AdminBroadcastScreen createAdminBroadcastScreen(Long chatId, Long userId) {
+        return new AdminBroadcastScreen(chatId, userId, screenManager, this, adminService, telegramService);
+    }
+
+    public AdminOrderChannelScreen createAdminOrderChannelScreen(Long chatId, Long userId) {
+        return new AdminOrderChannelScreen(chatId, userId, screenManager, this, adminService, orderChannelService, telegramService);
+    }
+
+    public AdminPriceScreen createAdminPriceScreen(Long chatId, Long userId) {
+        return new AdminPriceScreen(chatId, userId, screenManager, this, adminService, priceService, telegramService);
+    }
+
+    public AdminAdminsScreen createAdminAdminsScreen(Long chatId, Long userId) {
+        return new AdminAdminsScreen(chatId, userId, screenManager, this, adminService, telegramService);
+    }
+
+    public AdminCardScreen createAdminCardScreen(Long chatId, Long userId) {
+        return new AdminCardScreen(chatId, userId, screenManager, this, adminService, paymentCardService, telegramService);
     }
 }

@@ -1,198 +1,221 @@
 localization:
   keyboard:
     payment-methods:
-      "sbpqr": "СБП"
-      "card": "Карты"
-      "crypto": "Криптой"
+      "sbpqr": "Humo / Uzcard"
+      "card": "Bank kartasi"
+      "crypto": "Kriptovalyuta"
     buy-premium:
+      "one-month":
+        months: 1
+        name: "💎 1 oy"
+        amount: 50000
       "three-months":
         months: 3
-        name: "💎 3 месяца"
-        amount: 12.0 # в баксах
+        name: "💎 3 oy"
+        amount: 170000
       "six-months":
         months: 6
-        name: "💎 6 месяцев"
-        amount: 16.0
+        name: "💎 6 oy"
+        amount: 230000
       "twelve-months":
         months: 12
-        name: "💎 12 месяцев"
-        amount: 29.0
+        name: "💎 12 oy"
+        amount: 300000
     buy-stars:
-      "one-hundred":
-        amount: 100 # кол-во покупаемых звезд, цена расчитывается относительно config.yml -> markup: //
-        name: "100 ⭐️"
-      "two-hundred":
-        amount: 200
-        name: "200 ⭐️"
-      "three-hundred":
-        amount: 300
-        name: "300 ⭐️"
-      "four-hundred":
-        amount: 400
-        name: "400 ⭐️"
-      "five-hundred":
-        amount: 500
-        name: "500 ⭐️"
-      "custom":
-        amount: -1
-        name: "Введите свое значение"
-    deposit-rubles:
+      "fifty":
+        amount: 50
+        name: "50 ⭐️ Stars"
       "one-hundred":
         amount: 100
-        name: "100 ₽"
-      "two-hundred":
-        amount: 200
-        name: "200 ₽"
-      "three-hundred":
-        amount: 300
-        name: "300 ₽"
-      "four-hundred":
-        amount: 400
-        name: "400 ₽"
+        name: "100 ⭐️ Stars"
+      "one-hundred-fifty":
+        amount: 150
+        name: "150 ⭐️ Stars"
+      "two-hundred-fifty":
+        amount: 250
+        name: "250 ⭐️ Stars"
+      "three-hundred-fifty":
+        amount: 350
+        name: "350 ⭐️ Stars"
       "five-hundred":
         amount: 500
-        name: "500 ₽"
+        name: "500 ⭐️ Stars"
+      "seven-hundred-fifty":
+        amount: 750
+        name: "750 ⭐️ Stars"
+      "one-thousand":
+        amount: 1000
+        name: "1000 ⭐️ Stars"
       "custom":
         amount: -1
-        name: "Введите свое значение"
+        name: "Boshqa miqdor kiritish"
+    deposit-rubles:
+      "ten-thousand":
+        amount: 10000
+        name: "10 000 so‘m"
+      "twenty-five-thousand":
+        amount: 25000
+        name: "25 000 so‘m"
+      "fifty-thousand":
+        amount: 50000
+        name: "50 000 so‘m"
+      "one-hundred-thousand":
+        amount: 100000
+        name: "100 000 so‘m"
+      "two-hundred-thousand":
+        amount: 200000
+        name: "200 000 so‘m"
+      "five-hundred-thousand":
+        amount: 500000
+        name: "500 000 so‘m"
+      "custom":
+        amount: -1
+        name: "Boshqa miqdor kiritish"
   buttons:
-    deposit: '💸 Пополнить баланс'
-    back: '◀️ Вернуться назад'
-    profile: '👨‍💻 Профиль'
-    support: '🥰 Поддержка (Работает 24/7)'
-    links: '👉 О нас'
-    buy-stars: '⭐️ Купить звезды'
-    yourself: '🫵 Себе'
-    other: '🫂 Другому'
-    confirm: '✅ Подтвердить'
-    check-sub: '⚠️ Проверить подписку ⚠️'
-    go-channel: '👉 Перейти'
-    referral-system: 'Реферальная система'
-    referral-create-link: '🤖 Моя реферальная ссылка'
-    buy-premium: '💎 Купить Premium'
-    next: 'Следующая страница ->'
-    forward: '<- Предыдущая страница'
-    top: 'Топы'
-    premium-top: 'Топ по премке'
-    stars-top: 'Топ по звездам'
-    rubles-top: 'Топ по рублям'
+    deposit: '💸 Balansni to‘ldirish'
+    back: '◀️ Orqaga'
+    profile: '👤 Profil'
+    support: '💬 Qo‘llab-quvvatlash'
+    links: '👉 Biz haqimizda'
+    buy-stars: '⭐️ Stars sotib olish'
+    yourself: '👤 O‘zimga'
+    other: '👥 Do‘stimga'
+    confirm: '✅ Tasdiqlash'
+    check-sub: '⚠️ Obunani tekshirish ⚠️'
+    go-channel: '👉 Kanalga o‘tish'
+    buy-premium: '💎 Premium sotib olish'
+    next: 'Keyingi sahifa ➡️'
+    forward: '⬅️ Oldingi sahifa'
+    top: '🏆 Reyting'
+    premium-top: '💎 Premium bo‘yicha top'
+    stars-top: '⭐️ Stars bo‘yicha top'
+    rubles-top: '💰 To‘ldirishlar bo‘yicha top'
   error-message:
-    provider-code: 'Не удалось создать платеж. Попробуйте другой метод оплаты. Ответ от API: {0}'
-    username-not-selected: 'Сначала выберите получателя!'
-    transaction-not-created: 'Транзакция не создана, деньги не списаны. Код ошибки: {0}, сообщение {1} (Обратитесь к разработчикам)'
-    fragment-error: 'Проблема на стороне Fragment (Возможно устарел API, обратитесь в ТП) Ответ от API {0}'
-    username-not-found: 'Юзернейм который вы указали не найден!'
-    number-format: 'Используйте, пожалуйста, цифры!'
+    provider-code: 'To‘lov yaratib bo‘lmadi. Boshqa to‘lov usulini tanlang. API javobi: {0}'
+    username-not-selected: 'Avval qabul qiluvchini tanlang!'
+    transaction-not-created: 'Tranzaksiya yaratilmadi, pul yechilmadi. Xato kodi: {0}, xabar: {1}'
+    fragment-error: 'Fragment tomonida muammo yuz berdi. API javobi: {0}'
+    username-not-found: 'Siz kiritgan foydalanuvchi nomi (@username) topilmadi!'
+    number-format: 'Iltimos, faqat raqamlardan foydalaning!'
     stars:
-      max-value: 'Максимальное значение для зачисления 100.000 ⭐️'
-      min-value: 'Минимальное значение для зачисления 50 ⭐️'
+      max-value: 'Maksimal miqdor: 100 000 Stars'
+      min-value: 'Minimal miqdor: 50 Stars'
     rubles:
-      max-value: 'Максимальное значение для зачисления 100.000 ₽'
-      min-value: 'Минимальное значение для зачисления 10 ₽'
+      max-value: 'Maksimal to‘ldirish miqdori: 10 000 000 so‘m'
+      min-value: 'Minimal to‘ldirish miqdori: 1 000 so‘m'
   log-message:
-    premium-transaction-create: 'Пользователь {0} ({1}) купил Premium на {2} месяцев для @{3}'
-    stars-transaction-create: 'Пользователь {0} ({1}) купил {2} звезд'
-    referral-activated: 'Пользователь {0} активировал рефералку {1}, на его счету активированых рефералок {2}'
-    balance-in-ton-not-enough: 'Сервис попытался создать транзацию на {0} нанотон (на кошельке {1} нанотон) но на кошельке не хватает денег для оплаты.'
+    premium-transaction-create: 'Foydalanuvchi {0} ({1}) @{3} uchun {2} oylik Premium sotib oldi'
+    stars-transaction-create: 'Foydalanuvchi {0} ({1}) {2} Stars sotib oldi'
+    balance-in-ton-not-enough: 'Xizmat {0} nanoTON miqdorida tranzaksiya yaratishga urindi (hamyonda {1} nanoTON), ammo mablag‘ yetarli emas.'
     app-disable: |-
-      Бот был выключен.
+      Bot to‘xtatildi.
     transaction-create: |-
-      Была создана новая транзакция для {0} ({1})
-      Пополнено рублей: {2}
-      Куплено звезд: {3}
+      Foydalanuvchi {0} ({1}) uchun yangi tranzaksiya yaratildi
+      To‘ldirilgan summa: {2} so‘m
+      Sotib olingan Stars: {3} Stars
     create-code: |-
-      Был создан новый промокод: {0}
+      Yangi promokod yaratildi: {0}
     app-enable: |-
-      Приложение запущено ✅
-      📦 Коммит: {0}
+      Bot muvaffaqiyatli ishga tushdi ✅
+      📦 Kommit: {0}
       💬 {1}
       👤 {2}
   client-message:
     top-command: |-
-      Выберите топ который хотите посмотреть
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b>Ko‘rmoqchi bo‘lgan reytingingizni tanlang:</b>
     buy-premium-command: |-
-      💎 Выберите срок подписки Telegram Premium
+      <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> <b>Telegram Premium</b> obuna muddatini tanlang:
     select-user-for-buy-premium-command: |-
-      Выберите пользователя которому покупаете Premium. (Себя или кого-то другого)
-      Срок: {0} мес., Оплатите: {1} ₽
-    referral-activated: 'Вы активировали рефералку пользователя!'
-    referral-link-message: 'Ваша реферальная ссылка: {0}'
-    create-referral-command: |-
-      Чтобы создать реферальную ссылку нажмите на кнопку ниже.
-    rubles-not-enough: 'У вас недостаточно рублей на баласе.'
+      Premium sotib olmoqchi bo‘lgan foydalanuvchini tanlang:
+      (O‘zingizga yoki do‘stingizga)
+
+      <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> <b>Obuna muddati:</b> <b>{0} oy</b>
+      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> <b>To‘lov summasi:</b> <b>{1} so‘m</b>
+    select-other: |-
+      Qabul qiluvchining foydalanuvchi nomini (@username) kiriting:
+    rubles-not-enough: 'Balansingizda yetarli mablag‘ mavjud emas.'
     thanks-for-payment: |-
-      Спасибо за покупку!
-      Потрачено рублей: {1}
+      <tg-emoji emoji-id="5436406725232074977">✅</tg-emoji> <b>Xaridingiz muvaffaqiyatli amalga oshirildi!</b>
+
+      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> <b>Yechilgan summa:</b> <b>{0} so‘m</b>
     select-user-for-buy-stars-command: |-
-      Выберите пользователя которому покупаете звезды. (Себя или кого-то другого)
-      Звезд: {0}, Оплатите: {1}
+      Stars sotib olmoqchi bo‘lgan foydalanuvchini tanlang:
+      (O‘zingizga yoki do‘stingizga)
+
+      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Stars miqdori:</b> <b>{0} Stars</b>
+      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> <b>To‘lov summasi:</b> <b>{1} so‘m</b>
     buy-stars-command: |-
-      🤑 Выберите сколько вы хотите купить звезд, либо введите свое значение
+      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Qancha Stars sotib olmoqchisiz?</b>
+
+      Quyidagi tugmalardan birini tanlang yoki o‘z miqdoringizni kiriting:
     development-mode: |-
-      Внимание, сейчас в боте проводятся технические работы.
+      Diqqat, hozirda botda texnik ishlar olib borilmoqda.
     successfully-created-transaction: |-
-      Транзакция успешно была создана, деньги зачислены на счет.
+      <tg-emoji emoji-id="5436406725232074977">✅</tg-emoji> <b>Tranzaksiya muvaffaqiyatli amalga oshirildi</b>, mablag‘ hisobingizga tushirildi.
     star-buy-enter-sum: |-
-      Введите сумму которую хотите купить
-      (от 50 ⭐️ до 100.000 ⭐️)
+      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olmoqchi bo‘lgan Stars miqdorini kiriting:
+      (Minimal: 50 Stars | Maksimal: 100 000 Stars)
     deposit-enter-sum: |-
-      Введите сумму которую хотите пополнить
-      (от 10 руб до 100.000 руб)
+      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>Hisobingizni to‘ldirmoqchi bo‘lgan summani kiriting:</b>
+      (Minimal: 1 000 so‘m | Maksimal: 10 000 000 so‘m)
     deposit-command: |-
-      🤑 Выберите сколько вы хотите пополнить, либо введите свое значение
+      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>Balansni to‘ldirish</b>
+
+      Quyidagi summalardan birini tanlang yoki o‘z miqdoringizni kiriting:
     support-command: |-
-      ⚠️ Появился вопрос?
+      <tg-emoji emoji-id="5436304616679580574">💬</tg-emoji> <b>Qo‘llab-quvvatlash xizmati</b>
 
-      <a href="https://t.me/your-bot?direct">Обращайся в нашу техническую поддержку</a>
+      Savol, taklif yoki to‘lovlar bo‘yicha muammolar bo‘lsa, adminga yozishingiz mumkin:
+      👉 <a href="https://t.me/gyro_pm">@gyro_pm</a>
     links-command: |-
-      🔗 <b>Наши ссылки</b>
+      <tg-emoji emoji-id="5436304616679580574">💬</tg-emoji> <b>Bizning havolalar</b>
 
-      🤖 Бот для покупки звезд: <i>@your-bot</i>
-      🤙 ТГК с розыгрышами и полезной информацией: <i>@your-bot</i>
+      🤖 Bot: <i>@your-bot</i>
+      📢 Rasmiy kanal: <i>@your-channel</i>
     profile-command: |-
-      ✨ <b>Ваш профиль</b>: {5}
+      <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> @{5}
+      <tg-emoji emoji-id="5436172829903068620">🆔</tg-emoji> <b>ID:</b> <code>{6}</code>
       
-      💸 Баланс: {0}
-      ⚡️ Транзакций за все время: {1}
-      ₽ Пополнено рублей за все время: {2}
-      ❄️ Куплено всего звезд за все время: {3}
-      👑 Премиум куплено за все время на {4} месяца
+      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> Asosiy balans: <b>{0} so‘m</b>
+      ⚡️ Jami tranzaksiyalar: <b>{1} ta</b>
+      📥 Jami to‘ldirilgan: <b>{2} so‘m</b>
+      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olingan Stars: <b>{3} Stars</b>
+      <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> Sotib olingan Premium: <b>{4} oy</b>
     start-command: |-
-      Добро пожаловать в <b>официальный магазин</b> звезд Telegram!
+      <tg-emoji emoji-id="5436173070421238756">👋</tg-emoji> <b>Assalomu alaykum!</b>
+      <tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> <b>Telegram Stars va Premium Do‘koni</b>ga xush kelibsiz!
 
-      💎 Что мы предлагаем:
-      <i>
-      • Звезды Telegram по себестоимости
-      • Без комиссий и наценок
-      • Мгновенное пополнение
-      • Надежность проверенная временем</i>
-      
-      ✨ За все время звезд продано: <i>1 511</i>
+      <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> <b>Bizning afzalliklarimiz:</b>
+      <i>• Telegram Stars va Premium eng qulay narxlarda
+      • Yashirin komissiyalarsiz
+      • Bir lahzada hisobga yetkazib berish (Avto-yetkazish)
+      • 100% ishonchli va xavfsiz</i>
 
-      ⭐️ Работаем с 2025 года
-      📊 <a href="https://t.me/your-bot/">Отзывы клиентов</a>
+      Kerakli xizmatni tanlang <tg-emoji emoji-id="5436307657516426102">👇</tg-emoji>
     subscribe-channel: |-
-      Перед пользованием бота подпишись на наш ТГК,
-      чтобы не пропускать розыгрыши **ЗВЕЗД** и важные новости!
+      Botdan foydalanish uchun rasmiy kanalimizga a’zo bo‘ling:
     rubles-deposit-select-payment-method-command: |-
-          Выберите платежную систему:
+      <tg-emoji emoji-id="5436171485578308032">💸</tg-emoji> <b>To‘lov usulini tanlang:</b>
     rubles-successfully-created-payment: |-
-      Платеж был успешно создан. Сссылка для оплаты: {0}
-    payment-create-limit: 'У вас лимит по созданным платежам ({0})'
+      To‘lov hisobi muvaffaqiyatli yaratildi. To‘lov havolasi: {0}
+    payment-create-limit: 'Sizda yaratilgan faol to‘lovlar cheklovi mavjud ({0})'
     rubles-replenish-command: |-
-      Вам нехватает {0} рублей для покупки, создать платеж на них?
+      ⚠️ Balansingizda yetarli mablag‘ mavjud emas.
+
+      Xarid uchun sizga yana <b>{0} so‘m</b> yetishmayapti.
+      Hisobni to‘ldirish uchun to‘lov yaratilsinmi?
 top:
   one-page-limit: 6
   max-limit: 20
   premium:
-    format: 'Место {0}, пользователь {1} - {2} месяцев'
+    format: '{0}-o‘rin, foydalanuvchi {1} - {2} oy'
     message: |-
-      Топ по премиум (покупка премиум в месяцах)
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> Telegram Premium bo‘yicha reyting:</b>
   rubles:
-    format: 'Место {0}, пользователь {1} - {2} рублей'
+    format: '{0}-o‘rin, foydalanuvchi {1} - {2} so‘m'
     message: |-
-      Топ по пополнению кошелька (в рублях)
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b>Balans to‘ldirish bo‘yicha reyting:</b>
   stars:
-    format: 'Место {0}, пользователь {1} - {2} звезд'
+    format: '{0}-o‘rin, foydalanuvchi {1} - {2} Stars'
     message: |-
-      Топ по купленным звездам
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5436050603723760533">⭐️</tg-emoji> Sotib olingan Stars bo‘yicha reyting:</b>

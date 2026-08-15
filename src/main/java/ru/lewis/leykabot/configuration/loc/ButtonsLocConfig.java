@@ -21,8 +21,6 @@ public class ButtonsLocConfig {
     private String confirm;
     private String checkSub;
     private String goChannel;
-    private String referralSystem;
-    private String referralCreateLink;
 
     // --- Premium ---
     private String buyPremium;
