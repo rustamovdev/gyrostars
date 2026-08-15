@@ -94,7 +94,7 @@ public class StartScreen extends AbstractScreen {
                 "<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> <b>User ID:</b> <code>" + userId + "</code>\n" +
                 "└ <tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm";
 
-        return text + ";images/welcome.png";
+        return text;
     }
 
     @Override
@@ -112,6 +112,7 @@ public class StartScreen extends AbstractScreen {
                 .text("⭐ STARS")
                 .callbackData("buy-stars")
                 .style("primary")
+                .iconCustomEmojiId("5985826831591281620")
                 .build());
 
         // Row 2: PUBG UC DONAT QILISH
@@ -120,6 +121,7 @@ public class StartScreen extends AbstractScreen {
                 .text("🎮 PUBG UC DONAT QILISH")
                 .callbackData("buy-pubg")
                 .style("primary")
+                .iconCustomEmojiId("5204252919565657978")
                 .build());
 
         // Row 3: Premium (Full width)
@@ -128,38 +130,44 @@ public class StartScreen extends AbstractScreen {
                 .text("💎 Premium")
                 .callbackData("buy-premium")
                 .style("primary")
+                .iconCustomEmojiId("5938420017665152105")
                 .build());
 
-        // Row 4: Do'stlarga ulashish (URL button to share bot)
+        // Row 4: Hisob to'ldirish & Kabinet
         InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton.builder()
-                .text("🔗 Do‘stlarga ulashish")
-                .url(shareUrl)
-                .build());
-
-        // Row 5: Hisob to'ldirish & Kabinet
-        InlineKeyboardRow row5 = new InlineKeyboardRow();
-        row5.add(StyledInlineButton.styledBuilder()
+        row4.add(StyledInlineButton.styledBuilder()
                 .text("💳 Hisob to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
+                .iconCustomEmojiId("5890848474563352982")
                 .build());
-        row5.add(StyledInlineButton.styledBuilder()
+        row4.add(StyledInlineButton.styledBuilder()
                 .text("👤 Kabinet")
                 .callbackData("profile")
                 .style("primary")
+                .iconCustomEmojiId("5256143829672672750")
                 .build());
 
-        // Row 6: Reyting & Yordam
-        InlineKeyboardRow row6 = new InlineKeyboardRow();
-        row6.add(StyledInlineButton.styledBuilder()
+        // Row 5: Reyting & Yordam
+        InlineKeyboardRow row5 = new InlineKeyboardRow();
+        row5.add(StyledInlineButton.styledBuilder()
                 .text("🏆 Reyting")
                 .callbackData("top")
                 .style("primary")
+                .iconCustomEmojiId("5436201215341930329")
                 .build());
-        row6.add(StyledInlineButton.styledBuilder()
+        row5.add(StyledInlineButton.styledBuilder()
                 .text("💬 Yordam")
                 .callbackData("support")
+                .iconCustomEmojiId("5436304616679580574")
+                .build());
+
+        // Row 6: Do'stlarga ulashish (Eng pastda)
+        InlineKeyboardRow row6 = new InlineKeyboardRow();
+        row6.add(StyledInlineButton.styledBuilder()
+                .text("🔗 Do‘stlarga ulashish")
+                .url(shareUrl)
+                .iconCustomEmojiId("5271604874419647061")
                 .build());
 
         keyboard.add(row1);

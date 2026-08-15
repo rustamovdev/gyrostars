@@ -67,6 +67,7 @@ public class StyledInlineButton extends InlineKeyboardButton {
             button.setCallbackData(callbackData);
             button.setUrl(url);
             button.setStyle(style);
+            button.setIconCustomEmojiId(iconCustomEmojiId);
             return button;
         }
     }
