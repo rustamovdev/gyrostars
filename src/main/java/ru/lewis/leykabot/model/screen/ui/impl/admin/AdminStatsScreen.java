@@ -9,6 +9,7 @@ import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
 import ru.lewis.leykabot.service.AdminService;
+import ru.lewis.leykabot.service.DailyReportService;
 import ru.lewis.leykabot.service.ReportService;
 
 import java.time.LocalDate;
