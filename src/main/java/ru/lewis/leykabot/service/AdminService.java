@@ -57,7 +57,6 @@ public class AdminService {
         if (transactionService != null) transactionService.clearCache();
         if (starsTransactionService != null) starsTransactionService.clearCache();
         if (premiumTransactionService != null) premiumTransactionService.clearCache();
-        if (telegramService != null) telegramService.clearCache();
         if (codeService != null) codeService.warmUpAllCodes();
     }
 
