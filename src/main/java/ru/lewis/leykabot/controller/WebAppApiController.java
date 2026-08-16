@@ -344,7 +344,7 @@ public class WebAppApiController {
             if (currentBalance < price) {
                 return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Balansda mablag' yetarli emas!"));
             }
-            starsTransactionService.create(uid, price, stars);
+            starsTransactionService.create(uid, -price, stars);
 
             String cleanTarget = req.getTargetUsername().replace("@", "").trim();
             fragmentStarsService.buyStars(cleanTarget, stars);
@@ -389,7 +389,7 @@ public class WebAppApiController {
         }
         Long uid = req.getUserId();
         int months = req.getMonths() != null ? req.getMonths() : 3;
-        int price = priceService.getPremiumPrice(months, 170000);
+        int price = priceService.getPremiumPrice(months);
 
         User user = userService.getUser(uid).orElseGet(() -> userService.createUser(uid));
         int currentBalance = user.getBalance() != null ? user.getBalance() : 0;
@@ -401,7 +401,7 @@ public class WebAppApiController {
 
             String cleanTarget = req.getTargetUsername().replace("@", "").trim();
             fragmentPremiumService.buyPremium(cleanTarget, months);
-            premiumTransactionService.create(uid, price, months);
+            premiumTransactionService.create(uid, -price, months);
 
             if (orderChannelService != null) {
                 String duration = months >= 12 ? (months / 12) + " yillik" : months + " oylik";
