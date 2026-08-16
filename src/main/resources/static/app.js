@@ -1158,23 +1158,5 @@ function shareReceiptDetails() {
   }
 }
 
-// MULTI-LANGUAGE SYSTEM (UZ / RU)
-let currentLang = localStorage.getItem('app_lang') || 'UZ';
-
-function toggleLanguage() {
-  triggerHaptic('medium');
-  currentLang = currentLang === 'UZ' ? 'RU' : 'UZ';
-  localStorage.setItem('app_lang', currentLang);
-  applyLanguage();
-  showToast(currentLang === 'UZ' ? "Til o'zgartirildi: O'zbekcha 🇺🇿" : "Язык изменен: Русский 🇷🇺");
-}
-
-function applyLanguage() {
-  const btn = document.getElementById('langSwitchBtn');
-  if (btn) btn.innerText = currentLang === 'UZ' ? '🇺🇿 UZ' : '🇷🇺 RU';
-}
-
-// Init language on load
-applyLanguage();
 
 
