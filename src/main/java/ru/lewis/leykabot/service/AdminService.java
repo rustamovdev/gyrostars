@@ -45,6 +45,7 @@ public class AdminService {
     private final StarsTransactionService starsTransactionService;
     private final PremiumTransactionService premiumTransactionService;
     private final PriceService priceService;
+    private final TelegramService telegramService;
     private final FragmentConfig fragmentConfig;
     private final RestTemplate restTemplate;
 
