@@ -457,6 +457,19 @@ async function submitPremiumOrder() {
     return;
   }
 
+  // 1 oylik Premium admin orqali amalga oshiriladi (xuddi bot tugmalaridagi kabi)
+  if (state.selectedPremMonths === 1) {
+    const cleanTarget = target.startsWith('@') ? target : '@' + target;
+    const adminUrl = "https://t.me/BLACK_mladshiy?text=" + encodeURIComponent("Salom! Men 1 oylik Telegram Premium sotib olmoqchiman. Qabul qiluvchi: " + cleanTarget);
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(adminUrl);
+    } else {
+      window.open(adminUrl, '_blank');
+    }
+    showToast("1 oylik Premium uchun adminga yo'naltirilmoqda... 💬");
+    return;
+  }
+
   try {
     const res = await fetch('/api/webapp/buy/premium', {
       method: 'POST',
@@ -473,6 +486,16 @@ async function submitPremiumOrder() {
     if (!data.ok) {
       showToast(data.error || "Xatolik yuz berdi!");
       triggerHaptic('error');
+      return;
+    }
+
+    if (data.redirectAdmin && data.adminUrl) {
+      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openTelegramLink) {
+        window.Telegram.WebApp.openTelegramLink(data.adminUrl);
+      } else {
+        window.open(data.adminUrl, '_blank');
+      }
+      showToast(data.message || "Adminga yo'naltirilmoqda...");
       return;
     }
 

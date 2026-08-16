@@ -342,6 +342,20 @@ public class WebAppApiController {
         }
         Long uid = req.getUserId();
         int months = req.getMonths() != null ? req.getMonths() : 3;
+
+        // 1 oylik Telegram Premium bot tugmalaridagidek to'g'ridan-to'g'ri adminga yo'naltiriladi
+        if (months == 1) {
+            String target = req.getTargetUsername() != null ? req.getTargetUsername().replace("@", "").trim() : "";
+            String adminUrl = "https://t.me/BLACK_mladshiy?text=" +
+                    java.net.URLEncoder.encode("Salom! Men 1 oylik Telegram Premium sotib olmoqchiman. Qabul qiluvchi: @" + target, java.nio.charset.StandardCharsets.UTF_8);
+            return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "redirectAdmin", true,
+                    "adminUrl", adminUrl,
+                    "message", "1 oylik Telegram Premium admin (@BLACK_mladshiy) orqali rasmiylashtiriladi."
+            ));
+        }
+
         int price = priceService.getPremiumPrice(months);
 
         User user = userService.getUser(uid).orElseGet(() -> userService.createUser(uid));
