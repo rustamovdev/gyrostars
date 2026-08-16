@@ -34,5 +34,5 @@ fi
 echo "📦 Executable JAR: $JAR_PATH"
 echo "=========================================================="
 
-# Low-overhead memory tuning for Render 512MB RAM + Keep-Alive
-exec java -Xmx260m -Xms64m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
+# Safe SerialGC tuning with unconstrained metaspace to prevent OOM crashes on startup
+exec java -Xmx300m -Xms64m -XX:+UseSerialGC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"

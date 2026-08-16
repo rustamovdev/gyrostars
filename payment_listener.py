@@ -171,7 +171,7 @@ async def send_to_bot_api(amount: float, raw_text: str):
     # Remove duplicates while preserving order
     urls = list(dict.fromkeys(urls))
 
-    max_attempts = 10
+    max_attempts = 30
     for attempt in range(1, max_attempts + 1):
         for target_url in urls:
             try:
@@ -189,10 +189,11 @@ async def send_to_bot_api(amount: float, raw_text: str):
                 body = response.read().decode("utf-8")
                 logger.info("✅ Bot API ga yuborildi (urinish %d, url=%s): status=%s, body=%s", attempt, target_url, status_code, body)
                 return
-            except Exception as e:
+            except Exception:
                 pass
 
-        logger.warning("⚠️ Bot API ga ulanish kutilmoqda (urinish %d/%d)... Server ishga tushishi kutilmoqda.", attempt, max_attempts)
+        if attempt % 5 == 0 or attempt == 1:
+            logger.info("⏳ Bot API server ishga tushishi kutilmoqda (urinish %d/%d)...", attempt, max_attempts)
         await asyncio.sleep(2)
 
     logger.error("❌ Bot API ga to'lov xabarini yetkazib bo'lmadi (Barcha urinishlar tugadi).")
