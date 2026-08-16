@@ -5,12 +5,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.model.database.entity.BotSetting;
 import ru.lewis.leykabot.repository.BotSettingRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
@@ -25,19 +29,23 @@ public class OrderChannelService {
     private static final String ORDER_COUNTER_KEY = "order_counter";
 
     private final AtomicLong orderCounter = new AtomicLong(0);
-    private String orderChannel = null;
+    private volatile String orderChannel = null;
 
     @PostConstruct
     public void init() {
-        botSettingRepository.findById(ORDER_CHANNEL_KEY).ifPresent(setting -> {
-            this.orderChannel = normalizeChannelId(setting.getValue());
-        });
+        try {
+            botSettingRepository.findById(ORDER_CHANNEL_KEY).ifPresent(setting -> {
+                this.orderChannel = normalizeChannelId(setting.getValue());
+            });
 
-        botSettingRepository.findById(ORDER_COUNTER_KEY).ifPresent(setting -> {
-            try {
-                this.orderCounter.set(Long.parseLong(setting.getValue()));
-            } catch (NumberFormatException ignored) {}
-        });
+            botSettingRepository.findById(ORDER_COUNTER_KEY).ifPresent(setting -> {
+                try {
+                    this.orderCounter.set(Long.parseLong(setting.getValue()));
+                } catch (NumberFormatException ignored) {}
+            });
+        } catch (Exception e) {
+            log.error("OrderChannelService init error: {}", e.getMessage());
+        }
     }
 
     public static String normalizeChannelId(String input) {
@@ -64,9 +72,20 @@ public class OrderChannelService {
 
     public synchronized String getOrderChannel() {
         if (this.orderChannel == null) {
-            botSettingRepository.findById(ORDER_CHANNEL_KEY).ifPresent(setting -> {
-                this.orderChannel = normalizeChannelId(setting.getValue());
-            });
+            try {
+                botSettingRepository.findById(ORDER_CHANNEL_KEY).ifPresent(setting -> {
+                    this.orderChannel = normalizeChannelId(setting.getValue());
+                });
+            } catch (Exception ignored) {}
+        }
+        if (this.orderChannel == null) {
+            String envChan = System.getenv("ORDER_CHANNEL");
+            if (envChan == null || envChan.isBlank()) {
+                envChan = System.getenv("ORDER_CHANNEL_ID");
+            }
+            if (envChan != null && !envChan.isBlank()) {
+                this.orderChannel = normalizeChannelId(envChan);
+            }
         }
         return this.orderChannel;
     }
@@ -86,14 +105,18 @@ public class OrderChannelService {
 
     public long nextOrderNumber() {
         long next = orderCounter.incrementAndGet();
-        botSettingRepository.save(new BotSetting(ORDER_COUNTER_KEY, String.valueOf(next)));
+        try {
+            botSettingRepository.save(new BotSetting(ORDER_COUNTER_KEY, String.valueOf(next)));
+        } catch (Exception e) {
+            log.warn("Failed to persist order counter: {}", e.getMessage());
+        }
         return next;
     }
 
     public void sendOrderNotification(String productType, String quantity, String recipient, int priceSoom) {
         String targetChannel = getOrderChannel();
         if (targetChannel == null || targetChannel.isBlank()) {
-            log.warn("Order notification skipped: no order channel configured.");
+            log.warn("Order notification skipped: no order channel configured in Bot Settings or ENV.");
             return;
         }
 
@@ -101,25 +124,68 @@ public class OrderChannelService {
         String formattedPrice = String.format("%,d", priceSoom).replace(',', ' ');
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
 
-        String cleanRecipient = recipient.startsWith("@") ? recipient : "@" + recipient;
+        String cleanRecipient = (recipient != null && !recipient.isBlank()) ? recipient.trim() : "Mijoz";
+        if (!cleanRecipient.startsWith("@") && !cleanRecipient.startsWith("ID:") && !cleanRecipient.matches("^\\d+$")) {
+            cleanRecipient = "@" + cleanRecipient;
+        }
 
-        String message = "🛍 <b>Yangi buyurtma! <tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> #ORD-" + orderNum + "</b>\n\n" +
-                "📌 <b>Mahsulot:</b> " + productType + "\n" +
-                "📦 <b>Miqdori:</b> " + quantity + "\n" +
-                "👤 <b>Qabul qiluvchi:</b> " + cleanRecipient + "\n" +
-                "<tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>To‘lov summasi:</b> " + formattedPrice + " so‘m\n" +
-                "<tg-emoji emoji-id=\"5438193302778192083\">🕒</tg-emoji> <b>Vaqt:</b> " + dateStr;
+        String safeProduct = escapeHtml(productType);
+        String safeQuantity = escapeHtml(quantity);
+        String safeRecipient = escapeHtml(cleanRecipient);
+
+        String message = "🛍 <b>Yangi buyurtma! #ORD-" + orderNum + "</b>\n\n" +
+                "📌 <b>Mahsulot:</b> " + safeProduct + "\n" +
+                "📦 <b>Miqdori:</b> " + safeQuantity + "\n" +
+                "👤 <b>Qabul qiluvchi:</b> " + safeRecipient + "\n" +
+                "💰 <b>To‘lov summasi:</b> " + formattedPrice + " so‘m\n" +
+                "🕒 <b>Vaqt:</b> " + dateStr + "\n\n" +
+                "⚡️ <i>Buyurtma muvaffaqiyatli yetkazildi!</i>";
+
+        InlineKeyboardMarkup keyboard = InlineKeyboardMarkup.builder()
+                .keyboard(List.of(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton.builder()
+                                        .text("🤖 Botdan xarid qilish")
+                                        .url("https://t.me/GyroService_bot")
+                                        .build()
+                        )
+                ))
+                .build();
 
         try {
             telegramClient.execute(SendMessage.builder()
                     .chatId(targetChannel)
                     .text(message)
                     .parseMode("HTML")
+                    .replyMarkup(keyboard)
                     .build());
-            log.info("Order notification sent to channel {} for order #ORD-{}", targetChannel, orderNum);
+            log.info("✅ Order notification sent to channel {} for order #ORD-{}", targetChannel, orderNum);
         } catch (Exception e) {
-            log.warn("Failed to send order notification to channel {}: {}", targetChannel, e.getMessage());
+            log.error("Failed to send HTML order notification to channel {}: {}. Attempting plain-text fallback...", targetChannel, e.getMessage());
+            try {
+                String plainMsg = "🛍 Yangi buyurtma! #ORD-" + orderNum + "\n\n" +
+                        "📌 Mahsulot: " + productType + "\n" +
+                        "📦 Miqdori: " + quantity + "\n" +
+                        "👤 Qabul qiluvchi: " + cleanRecipient + "\n" +
+                        "💰 To‘lov: " + formattedPrice + " so‘m\n" +
+                        "🕒 Vaqt: " + dateStr;
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(targetChannel)
+                        .text(plainMsg)
+                        .build());
+                log.info("✅ Fallback plain order notification sent to channel {}", targetChannel);
+            } catch (Exception ex) {
+                log.error("❌ Critical: Failed to send fallback order notification to channel {}: {}", targetChannel, ex.getMessage());
+            }
         }
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
     public boolean testChannel(String channelToTest) {
@@ -129,7 +195,7 @@ public class OrderChannelService {
             String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
             telegramClient.execute(SendMessage.builder()
                     .chatId(normalized)
-                    .text("✅ <b>Buyurtmalar kanali ulandi!</b>\n\nBarcha yangi xaridlar ushbu kanalga yuboriladi.\n🕒 <b>Vaqt:</b> " + dateStr)
+                    .text("✅ <b>Buyurtmalar kanali muvaffaqiyatli ulandi!</b>\n\nBarcha yangi xaridlar ushbu kanalga yuboriladi.\n🕒 <b>Vaqt:</b> " + dateStr)
                     .parseMode("HTML")
                     .build());
             return true;
