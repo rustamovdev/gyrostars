@@ -1,21 +1,16 @@
 # -------------------------------------------------------------
-# Stage 1: Build Java application with Gradle
+# Stage 1: Build Java application with official Gradle image
 # -------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-jammy AS builder
+FROM gradle:8.12-jdk21 AS builder
 WORKDIR /app
 
-# Copy gradle wrapper and config files first for caching
-COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./
+# Copy gradle config files and dependencies
+COPY settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle ./gradle
-
-# Grant execution rights and download dependencies
-RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew dependencies --no-daemon || true
-
-# Copy source code and resources
 COPY src ./src
 
 # Build production jar without tests
-RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon --info --stacktrace
+RUN gradle bootJar -x test --no-daemon
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
