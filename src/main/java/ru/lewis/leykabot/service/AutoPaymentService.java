@@ -190,7 +190,8 @@ public class AutoPaymentService {
 
             // 2% Referal bonusini hisoblash va berish
             try {
-                if (user.getReferrerId() != null && user.getReferrerId() > 0 && !user.getReferrerId().equals(user.getTelegramId())) {
+                User user = userService.getUser(order.getUserId()).orElse(null);
+                if (user != null && user.getReferrerId() != null && user.getReferrerId() > 0 && !user.getReferrerId().equals(user.getTelegramId())) {
                     int refBonus = (int) Math.round(creditAmount * 0.02);
                     if (refBonus > 0) {
                         transactionService.create(user.getReferrerId(), refBonus);

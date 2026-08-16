@@ -121,8 +121,8 @@ public class WebAppApiController {
                 )
         ));
 
-        long totalStars = currentId > 0 ? starsRepository.findTotalStarsByTelegramId(currentId) : 0;
-        long totalSpent = currentId > 0 ? transactionRepository.findTotalSpentByTelegramId(currentId) : 0;
+        long totalStars = currentId > 0 ? starsRepository.sumStarsByTelegramId(currentId) : 0;
+        long totalSpent = currentId > 0 ? Math.abs(transactionRepository.sumRublesByTelegramId(currentId)) : 0;
         long totalPurchases = currentId > 0 ? (starsRepository.countByTelegramId(currentId) + premiumRepository.countByTelegramId(currentId) + pubgRepository.countByTelegramId(currentId)) : 0;
         int goalProgress = (int) Math.min(100, Math.round(((double) totalSpent / 1200000.0) * 100));
 
@@ -183,11 +183,12 @@ public class WebAppApiController {
 
         var stars = starsRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
         for (var s : stars) {
+            int amt = (s.getTransaction() != null && s.getTransaction().getAmountRubles() != null) ? Math.abs(s.getTransaction().getAmountRubles()) : 0;
             list.add(Map.of(
                     "id", "STR-" + s.getId(),
                     "service", "⭐ Stars",
                     "details", s.getAmountStars() + " Stars",
-                    "amount", Math.abs(s.getAmountRubles()),
+                    "amount", amt,
                     "status", "COMPLETED",
                     "date", s.getCreatedAt().toString()
             ));
@@ -195,11 +196,12 @@ public class WebAppApiController {
 
         var prem = premiumRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
         for (var p : prem) {
+            int amt = (p.getTransaction() != null && p.getTransaction().getAmountRubles() != null) ? Math.abs(p.getTransaction().getAmountRubles()) : 0;
             list.add(Map.of(
                     "id", "PRM-" + p.getId(),
                     "service", "💎 Premium",
                     "details", p.getMonths() + " oy",
-                    "amount", Math.abs(p.getAmountRubles()),
+                    "amount", amt,
                     "status", "COMPLETED",
                     "date", p.getCreatedAt().toString()
             ));
