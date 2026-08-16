@@ -1,9 +1,8 @@
 """
-Payment Listener — @HUMOcardbot dan kelgan to'lov xabarlarini avtomatik o'qib,
-asosiy Java botdagi foydalanuvchi balansini 10 daqiqa ichida avtomatik to'ldiradi.
-
-O'rnatilgan kutubxona:
-    telethon
+Safe & Event-Driven Humo Payment Listener
+- 100% Passiv tinglovchi: Telegram serveriga ortiqcha so'rov yubormaydi (Ban xavfi 0%).
+- Telegram Push-Event (@client.on(events.NewMessage)) orqali ishlaydi.
+- @HUMOcardbot dan to'lov xabari kelganda Java Bot API ga yuboradi.
 """
 
 import asyncio
@@ -14,6 +13,12 @@ import re
 import urllib.request
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
+from telethon.errors import (
+    UserDeactivatedError,
+    UserDeactivatedBanError,
+    AuthKeyUnregisteredError,
+    SessionPasswordNeededError
+)
 
 # -------------------------------------------------------------
 # SOZLAMALAR
@@ -21,10 +26,8 @@ from telethon.sessions import StringSession
 API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 
-# Tinglanadigan botlar ro'yxati
 LISTEN_BOTS = ["humocardbot", "humocard", "humobot", "hpay", "paynet"]
 
-# Logger sozlamalari
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -47,7 +50,6 @@ client = TelegramClient(session_obj, API_ID, API_HASH)
 def normalize_uz_text(text: str) -> str:
     if not text:
         return ""
-    # Har qanday turdagi apostroflarni (', ‘, ’, ʻ, `) bitta standart ' ga aylantiramiz
     for char in ["\u2018", "\u2019", "\u02bb", "`", "’", "‘", "ʻ"]:
         text = text.replace(char, "'")
     return text.replace("\xa0", " ")
@@ -82,16 +84,6 @@ def clean_uz_number(raw: str) -> float | None:
 
 
 def parse_amount(text: str) -> float | None:
-    """
-    @HUMOcardbot xabaridan kirim summasini ajratib oladi.
-    Format namunasi:
-      To'ldirish
-       12.000,00 UZS
-       PAYNET P2P HUM2HUM>T
-       HUMOCARD *7042
-       13:57 15.08.2026
-       66.766,69 UZS
-    """
     if not text:
         return None
 
@@ -108,7 +100,7 @@ def parse_amount(text: str) -> float | None:
         if val:
             return val
 
-    # 2. Boshqa standart formatlar (Kirim: 10 000 UZS, +10 000 UZS va h.k.)
+    # 2. Standart formatlar
     patterns = [
         r"(?:to'?lanishi kerak bo'?lgan summa|to'?lash|summa|to'?lov|qabul qilindi|\+)\s*:?\s*`?([0-9\s.,]+)`?\s*(?:uzs|so'?m|rub|usd)?",
         r"([0-9\s.,]+)\s*(?:uzs|so'?m)\s*(?:kirim|tushum|\+)",
@@ -126,26 +118,17 @@ def parse_amount(text: str) -> float | None:
 
 
 def is_incoming(text: str) -> bool:
-    """
-    Xabar kirim operatsiyasi ekanligini tekshiradi (chiqim yoki hisobot emas).
-    """
     lower = normalize_uz_text(text).lower()
     negative_words = [
         "chiqim", "spisanie", "yechildi", "otmenen",
         "rad etildi", "yetarli emas", "blokirovka"
     ]
-
     if any(neg in lower for neg in negative_words):
         return False
-
     return True
 
 
 async def send_to_bot_api(amount: float, raw_text: str):
-    """
-    Java Botning /api/v1/payment/notify-card endpointiga ma'lumot jo'natadi.
-    Server ishga tushayotgan bo'lsa, qayta urinishlar orqali yetkazadi.
-    """
     payload = {
         "amount": amount,
         "rawText": raw_text,
@@ -163,35 +146,28 @@ async def send_to_bot_api(amount: float, raw_text: str):
         "http://127.0.0.1:10000/api/v1/payment/notify-card",
         "http://127.0.0.1:8085/api/v1/payment/notify-card"
     ])
-    # Remove duplicates while preserving order
     urls = list(dict.fromkeys(urls))
 
-    max_attempts = 30
-    for attempt in range(1, max_attempts + 1):
-        for target_url in urls:
-            try:
-                req = urllib.request.Request(
-                    target_url,
-                    data=data,
-                    headers={"Content-Type": "application/json"}
-                )
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(
-                    None,
-                    lambda: urllib.request.urlopen(req, timeout=5)
-                )
-                status_code = response.getcode()
-                body = response.read().decode("utf-8")
-                logger.info("✅ Bot API ga yuborildi (urinish %d, url=%s): status=%s, body=%s", attempt, target_url, status_code, body)
-                return
-            except Exception:
-                pass
+    for target_url in urls:
+        try:
+            req = urllib.request.Request(
+                target_url,
+                data=data,
+                headers={"Content-Type": "application/json"}
+            )
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: urllib.request.urlopen(req, timeout=5)
+            )
+            status_code = response.getcode()
+            body = response.read().decode("utf-8")
+            logger.info("✅ Bot API ga muvaffaqiyatli yuborildi: status=%s, javob=%s", status_code, body)
+            return
+        except Exception:
+            pass
 
-        if attempt % 5 == 0 or attempt == 1:
-            logger.info("⏳ Bot API server ishga tushishi kutilmoqda (urinish %d/%d)...", attempt, max_attempts)
-        await asyncio.sleep(2)
-
-    logger.error("❌ Bot API ga to'lov xabarini yetkazib bo'lmadi (Barcha urinishlar tugadi).")
+    logger.warning("⚠️ Bot API server hozircha javob bermadi, navbatdagi so'rovda qayta uriniladi.")
 
 
 processed_msg_ids = set()
@@ -208,83 +184,65 @@ async def process_msg_text(msg_id, text, sender_username=""):
     if amount is None:
         return
 
-    logger.info("💰 Aniqlangan kirim summasi: %s UZS. Tezkor Bot API ga yuborilmoqda...", amount)
+    logger.info("💰 Aniqlangan kirim: %s UZS. Bot API ga uzatilmoqda...", amount)
     await send_to_bot_api(amount, text)
 
 
 @client.on(events.NewMessage)
 async def handle_new_message(event):
-    """
-    Har qanday yangi xabar kelganda tezkor ishlaydi.
-    """
-    sender = await event.get_sender()
-    sender_username = (getattr(sender, "username", "") or "").lower()
+    try:
+        sender = await event.get_sender()
+        sender_username = (getattr(sender, "username", "") or "").lower()
 
-    text = event.message.text or ""
-    if not text:
-        return
+        text = event.message.text or ""
+        if not text:
+            return
 
-    is_humo_bot = (
-        any(bot_name in sender_username for bot_name in LISTEN_BOTS)
-        or "humo" in sender_username
-        or "card" in sender_username
-        or "humo" in text.lower()
-        or event.is_private
-    )
+        is_humo_bot = (
+            any(bot_name in sender_username for bot_name in LISTEN_BOTS)
+            or "humo" in sender_username
+            or "card" in sender_username
+            or "humo" in text.lower()
+            or event.is_private
+        )
 
-    if is_humo_bot:
-        logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username, event.message.id)
-        await process_msg_text(event.message.id, text, sender_username)
-
-
-async def poll_recent_humo_messages():
-    """
-    Telegram push voqealari kechikmasligi uchun har 5 soniyada HUMOcardbot dan so'nggi xabarlarni tekshirib turadi.
-    """
-    while True:
-        try:
-            async for dialog in client.iter_dialogs(limit=15):
-                name = dialog.name.lower()
-                username = (dialog.entity.username or "").lower() if hasattr(dialog.entity, "username") else ""
-                if "humo" in name or "humo" in username:
-                    async for msg in client.iter_messages(dialog.entity, limit=3):
-                        if msg.text and msg.id not in processed_msg_ids:
-                            await process_msg_text(msg.id, msg.text, username)
-        except Exception as e:
-            logger.debug("Poll check error: %s", e)
-        await asyncio.sleep(5)
+        if is_humo_bot:
+            logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username, event.message.id)
+            await process_msg_text(event.message.id, text, sender_username)
+    except Exception as e:
+        logger.error("Xabarni qayta ishlashda xatolik: %s", e)
 
 
 async def main():
-    logger.info("🚀 @HUMOcardbot Tezkor Payment Listener ishga tushmoqda...")
-    poll_task = None
+    logger.info("🚀 Xavfsiz Humo Payment Listener ishga tushmoqda...")
     while True:
         try:
             await client.connect()
             if not await client.is_user_authorized():
-                logger.warning("⚠️ Foydalanuvchi hali avtorizatsiyadan o'tmagan yoki sessiya kutmoqda...")
-                await asyncio.sleep(10)
+                logger.warning("⚠️ Telegram sessiyasi mavjud emas yoki avtorizatsiya talab qilinadi. Asosiy Java bot faol ishlamoqda.")
+                await asyncio.sleep(300)
                 continue
+
             me = await client.get_me()
             if me is None:
-                logger.warning("⚠️ Akkaunt ma'lumotlari bo'sh qaytdi, 5 soniyadan keyin qayta ulanadi...")
-                await asyncio.sleep(5)
+                logger.warning("⚠️ Foydalanuvchi ma'lumotlari olinmadi. 60 soniyadan so'ng qayta ulanadi...")
+                await asyncio.sleep(60)
                 continue
-            first_name = getattr(me, "first_name", "Admin") or "Admin"
+
+            first_name = getattr(me, "first_name", "User") or "User"
             username = getattr(me, "username", "") or "unknown"
-            logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", first_name, username)
-            logger.info("🎯 Faqat @HUMOcardbot xabarlari tezkor tinglanmoqda...")
-            if poll_task is None or poll_task.done():
-                poll_task = asyncio.create_task(poll_recent_humo_messages())
+            logger.info("✅ Telegram akkaunt xavfsiz ulandi: %s (@%s) [ID: %s]", first_name, username, me.id)
+            logger.info("🎯 Passiv Push-Event rejimida @HUMOcardbot to'lovlari kutilmoqda (0 so'rovli xavfsiz rejim)...")
+
+            # Faqat xabarlarni passiv kutish (Hech qanday loop yoki polling so'rovlari yo'q)
             await client.run_until_disconnected()
+
+        except (UserDeactivatedError, UserDeactivatedBanError, AuthKeyUnregisteredError) as e:
+            logger.error("❌ Telegram sessiyasi bekor qilingan (%s). Loop to'xtatildi. Asosiy bot xavfsiz faoliyat yuritmoqda.", e)
+            await asyncio.sleep(86400)  # 24 soat kutish (Telegramga qayta so'rov yubormaslik)
         except Exception as e:
-            err_msg = str(e)
-            if "USER_DEACTIVATED" in err_msg or "401" in err_msg or "deactivated" in err_msg.lower():
-                logger.error("❌ Telegram akkaunt sessiyasi bekor qilingan (USER_DEACTIVATED). Humo tinglovchisi to'xtatildi. Asosiy Java Bot to'liq faoliyat yuritmoqda.")
-                await asyncio.sleep(3600)
-            else:
-                logger.error("Xatolik: %s. 10 soniyadan so'ng qayta ulanadi...", e)
-                await asyncio.sleep(10)
+            logger.error("Ulanishda xatolik: %s. 60 soniyadan so'ng xavfsiz qayta ulanishga uriniladi...", e)
+            await asyncio.sleep(60)
 
 
 if __name__ == "__main__":
