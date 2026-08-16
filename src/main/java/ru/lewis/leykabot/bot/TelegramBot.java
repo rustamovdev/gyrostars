@@ -144,19 +144,18 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             return;
         }
 
-        if (!message.hasText() || message.getText() == null) {
-            return;
-        }
-
         var text = message.getText();
+        if (text == null) return;
+        String trimmed = text.trim();
+        String lower = trimmed.toLowerCase();
 
-        if (text.startsWith("/admin") && adminService.isAdmin(userId)) {
+        if (lower.startsWith("/admin") && adminService.isAdmin(userId)) {
             screenManager.createScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
             return;
         }
 
-        if (text.startsWith("/start")) {
-            start(text, userId, chatId);
+        if (lower.startsWith("/start")) {
+            start(trimmed, userId, chatId);
             return;
         }
 

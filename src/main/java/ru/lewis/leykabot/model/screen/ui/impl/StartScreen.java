@@ -78,17 +78,20 @@ public class StartScreen extends AbstractScreen {
 
     @Override
     public String getText() {
-        String username = telegramService.getUsernameByUserId(userId);
-        if (username == null || username.isBlank()) {
-            username = "Foydalanuvchi";
-        }
+        String username = "Foydalanuvchi";
+        try {
+            String u = telegramService.getUsernameByUserId(userId);
+            if (u != null && !u.isBlank()) username = u;
+        } catch (Exception ignored) {}
+
         int balance = 0;
-        if (userService != null) {
-            balance = userService.getBalance(userId).orElse(0);
-        }
+        try {
+            if (userService != null) {
+                balance = userService.getBalance(userId).orElse(0);
+            }
+        } catch (Exception ignored) {}
+
         String formattedBalance = String.format("%,d", balance).replace(',', ' ');
-        String botUsername = telegramService.getBotUsername();
-        String botLink = "t.me/" + botUsername;
 
         String text = "<tg-emoji emoji-id=\"5436173070421238756\">👋</tg-emoji> Assalomu alaykum, " + username + "\n\n" +
                 "<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> <b>User ID:</b> <code>" + userId + "</code>\n" +

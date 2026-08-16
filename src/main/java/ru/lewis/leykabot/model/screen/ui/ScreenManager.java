@@ -32,7 +32,11 @@ public class ScreenManager {
      */
     public void createScreen(long chatId, AbstractScreen screen) {
         activeScreens.put(chatId, screen);
-        screen.render(telegramClient);
+        try {
+            screen.render(telegramClient);
+        } catch (Exception e) {
+            log.error("❌ Error rendering screen for chatId {}: ", chatId, e);
+        }
 
         if (screen.getCurrentMessageId() != null) {
             lastMessageIds.put(chatId, screen.getCurrentMessageId());
