@@ -451,8 +451,8 @@ public class WebAppApiController {
         }
 
         CodeService.ActivationResult result = codeService.activateCode(req.getUserId(), req.getCode().trim().toUpperCase());
-        if (!result.isSuccess()) {
-            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", result.getMessage()));
+        if (!result.success()) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", result.message()));
         }
 
         User user = userService.getUser(req.getUserId()).orElseGet(() -> userService.createUser(req.getUserId()));
