@@ -5,7 +5,7 @@ FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 
 # Copy gradle wrapper and config files first for caching
-COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts ./
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle ./gradle
 
 # Grant execution rights and download dependencies
@@ -14,8 +14,8 @@ RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew dependencies -
 # Copy source code and resources
 COPY src ./src
 
-# Build production jar without tests
-RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon --stacktrace
+# Build production jar without tests with optimized low-memory GC
+RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx384m -XX:+UseSerialGC"
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
