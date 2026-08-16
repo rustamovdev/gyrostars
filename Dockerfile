@@ -10,7 +10,7 @@ COPY gradle ./gradle
 COPY src ./src
 
 # Build production jar without tests
-RUN gradle bootJar -x test --no-daemon
+RUN gradle bootJar -x test --no-daemon --stacktrace 2>&1
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
