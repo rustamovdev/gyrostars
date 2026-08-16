@@ -29,6 +29,7 @@ public class PremiumTransactionService {
     private final TelegramService              telegramService;
     private final LogMessageConfig             logMessageConfig;
     private final TopService                   topService;
+    private final UserService                  userService;
 
     // Кэш: telegramId → список premium-транзакций DESC по дате
     private Cache<Long, List<PremiumTransaction>> cache;
@@ -106,6 +107,11 @@ public class PremiumTransactionService {
 
         topService.updatePremiumTop(telegramId, months);
         topService.updateRublesTop(telegramId, amountRubles);
+
+        // Do'sti savdo qilganda referal bonusi (+200 so'm)
+        if (userService != null) {
+            userService.checkAndRewardReferrerOnPurchase(telegramId);
+        }
 
         var tag = telegramService.getUsernameByUserId(telegramId);
         log.info("Premium-транзакция #{} для {} {}: {} мес.",

@@ -44,7 +44,18 @@ elif TG_SESSION_ENV:
 else:
     session_obj = "humo_payment_session"
 
-client = TelegramClient(session_obj, API_ID, API_HASH)
+# Anti-ban xavfsizlik parametrlari (Telegram serverida haqiqiy mobil ilova bo'lib ko'rinadi)
+client = TelegramClient(
+    session_obj,
+    API_ID,
+    API_HASH,
+    device_model="Samsung Galaxy S24 Ultra",
+    system_version="Android 14",
+    app_version="11.2.0",
+    lang_code="uz",
+    system_lang_code="uz-UZ",
+    flood_sleep_threshold=120
+)
 
 
 def normalize_uz_text(text: str) -> str:

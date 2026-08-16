@@ -49,10 +49,11 @@ public class ReferralScreen extends AbstractScreen {
         String refLink = "https://t.me/" + botUsername + "?start=u" + userId;
 
         return "<tg-emoji emoji-id=\"5422736199343168249\">🔗</tg-emoji> <b>Referral Dasturi</b>\n\n" +
-                "Do‘stlaringizni taklif qiling va bot orqali bonuslarga ega bo‘ling!\n\n" +
-                "👥 <b>Siz taklif qilganlar:</b> <b>" + refCount + " ta</b>\n" +
-                "💰 <b>Referral balansi:</b> <b>0 so‘m</b>\n\n" +
-                "🔗 <b>Sizning referral havolangiz:</b>\n" +
+                "Do‘stlaringizni taklif qiling va har bir do‘stingiz uchun naqd bonuslarga ega bo‘ling!\n\n" +
+                "🎁 <b>Har bir taklif qilingan do‘st uchun:</b> <b>+100 so‘m</b>\n" +
+                "🛍 <b>Taklif qilingan do‘st savdo qilsa:</b> yana <b>+200 so‘m</b>\n\n" +
+                "👥 <b>Siz taklif qilgan do‘stlar soni:</b> <b>" + refCount + " ta</b>\n\n" +
+                "🔗 <b>Sizning shaxsiy referral havolangiz:</b>\n" +
                 "<code>" + refLink + "</code>";
     }
 

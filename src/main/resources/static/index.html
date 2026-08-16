@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app.css?v=4.0">
+  <link rel="stylesheet" href="/app.css?v=5.0">
 </head>
 <body>
   <div class="app-container">
@@ -36,7 +36,6 @@
         </div>
       </div>
       <div class="header-right-actions">
-        <button type="button" class="lang-switch-btn" id="langSwitchBtn" onclick="toggleLanguage()">🇺🇿 UZ</button>
         <div class="user-balance-btn" onclick="switchScreen('deposit')">
           <span id="userBalanceTop">0 so'm</span>
           <div class="plus-circle">+</div>
@@ -353,17 +352,17 @@
           <div class="stat-icon-wrap yellow"><span class="sticker-emoji">🎁</span></div>
           <div>
             <div class="card-title-bold">Do‘stlarni taklif qiling</div>
-            <div class="card-sub-desc">Har bir to‘ldirishdan <b>2% naqd bonus</b> olasiz</div>
+            <div class="card-sub-desc">Har bir do‘stga <b>+100 so‘m</b>, xarid qilsa <b>+200 so‘m</b> bonus!</div>
           </div>
         </div>
         <div class="ref-stats-row">
           <div class="ref-stat-item">
             <div class="ref-stat-val" id="refCountVal">0 ta</div>
-            <div class="ref-stat-lbl">Taklif qilingan do'stlar</div>
+            <div class="ref-stat-lbl">Taklif qilinganlar</div>
           </div>
           <div class="ref-stat-item">
-            <div class="ref-stat-val" id="refPercentVal">2%</div>
-            <div class="ref-stat-lbl">Keshbek stavkasi</div>
+            <div class="ref-stat-val" id="refPercentVal">+100 / +200</div>
+            <div class="ref-stat-lbl">Do'stlik bonusi</div>
           </div>
         </div>
         <div class="ref-action-row">
@@ -644,7 +643,7 @@
 
   </div>
 
-  <script src="/app.js?v=4.0"></script>
+  <script src="/app.js?v=5.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

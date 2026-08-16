@@ -95,6 +95,8 @@ public class AdminService {
 
     public record AdminStats(
             long totalUsers,
+            long usersJoinedToday,
+            long currentTotalUsersBalance,
             long totalDeposited,
             long totalStars,
             long totalStarsRubles,
@@ -107,6 +109,8 @@ public class AdminService {
 
     public AdminStats getStats() {
         long totalUsers = userRepository.count();
+        long usersJoinedToday = userRepository.countCreatedAfter(java.time.LocalDate.now().atStartOfDay());
+        long currentTotalUsersBalance = userRepository.sumTotalBalance();
         long totalDeposited = transactionRepository.sumAllDepositedRubles();
         long totalStars = starsTransactionRepository.sumAllStars();
         long totalStarsRubles = starsTransactionRepository.sumAllStarsRubles();
@@ -116,7 +120,19 @@ public class AdminService {
         long totalPubgRubles = pubgTransactionRepository.sumPriceBetween(LocalDateTime.of(2020, 1, 1, 0, 0), LocalDateTime.now());
         long totalTransactions = transactionRepository.count();
 
-        return new AdminStats(totalUsers, totalDeposited, totalStars, totalStarsRubles, totalPremiumMonths, totalPremiumRubles, totalPubgUc, totalPubgRubles, totalTransactions);
+        return new AdminStats(
+                totalUsers,
+                usersJoinedToday,
+                currentTotalUsersBalance,
+                totalDeposited,
+                totalStars,
+                totalStarsRubles,
+                totalPremiumMonths,
+                totalPremiumRubles,
+                totalPubgUc,
+                totalPubgRubles,
+                totalTransactions
+        );
     }
 
     public CompletableFuture<BroadcastResult> broadcast(String message) {

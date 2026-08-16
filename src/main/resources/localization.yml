@@ -173,7 +173,7 @@ localization:
       🤖 Bot: <i>@your-bot</i>
       📢 Rasmiy kanal: <i>@your-channel</i>
     profile-command: |-
-      <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> @{5}
+      <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> {5}
       <tg-emoji emoji-id="5436172829903068620">🆔</tg-emoji> <b>ID:</b> <code>{6}</code>
       
       <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> Asosiy balans: <b>{0} so‘m</b>

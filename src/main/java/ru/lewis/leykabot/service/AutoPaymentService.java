@@ -189,19 +189,9 @@ public class AutoPaymentService {
 
             telegramService.sendMessageAuto(order.getChatId(), userMessage);
 
-            // 2% Referal bonusini hisoblash va berish
+            // Referal savdo bonusi (+200 so'm)
             try {
-                User user = userService.getUser(order.getUserId()).orElse(null);
-                if (user != null && user.getReferrerId() != null && user.getReferrerId() > 0 && !user.getReferrerId().equals(user.getTelegramId())) {
-                    int refBonus = (int) Math.round(creditAmount * 0.02);
-                    if (refBonus > 0) {
-                        transactionService.create(user.getReferrerId(), refBonus);
-                        telegramService.sendMessageAuto(user.getReferrerId(),
-                                "🎁 <b>Do‘stingiz hisobini to‘ldirdi!</b>\n\n" +
-                                "➕ Sizga <b>2% doimiy keshbek bonusi</b> qo‘shildi: <b>+" + String.format("%,d", refBonus).replace(',', ' ') + " so‘m</b>\n" +
-                                "👥 Referal dasturimizda ishtirok etayotganingiz uchun rahmat!");
-                    }
-                }
+                userService.checkAndRewardReferrerOnPurchase(order.getUserId());
             } catch (Exception e) {
                 log.error("Referral bonus processing failed: {}", e.getMessage());
             }

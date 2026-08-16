@@ -142,10 +142,10 @@ public class WebAppApiController {
             @RequestParam(value = "period", defaultValue = "today") String period,
             @RequestParam(value = "userId", required = false) Long userId
     ) {
-        List<TopService.TopEntry> entries = topService.getTopByStars(0, 10);
+        TopService.GlobalStats stats = topService.getGlobalStats(period, userId);
         List<Map<String, Object>> topList = new ArrayList<>();
         int rank = 1;
-        for (TopService.TopEntry e : entries) {
+        for (TopService.TopEntry e : stats.top7()) {
             String name = telegramService.getUsernameByUserId(e.telegramId());
             if (name == null || name.isBlank()) {
                 name = "ID: " + e.telegramId();
@@ -154,16 +154,25 @@ public class WebAppApiController {
                     "rank", rank++,
                     "name", name,
                     "total", e.total(),
+                    "stars", e.stars(),
+                    "premium", e.premiumMonths(),
                     "isMe", userId != null && userId.equals(e.telegramId())
             ));
         }
 
         List<String> recentBuyers = new ArrayList<>();
-        var recentTx = starsRepository.findAll();
-        for (int i = Math.max(0, recentTx.size() - 5); i < recentTx.size(); i++) {
-            var tx = recentTx.get(i);
+        var recentStars = starsRepository.findAll();
+        for (int i = Math.max(0, recentStars.size() - 3); i < recentStars.size(); i++) {
+            var tx = recentStars.get(i);
             String un = telegramService.getUsernameByUserId(tx.getTelegramId());
             recentBuyers.add((un != null ? un : "Mijoz") + " · " + tx.getAmountStars() + " ⭐");
+        }
+
+        var recentPrem = premiumRepository.findAll();
+        for (int i = Math.max(0, recentPrem.size() - 3); i < recentPrem.size(); i++) {
+            var tx = recentPrem.get(i);
+            String un = telegramService.getUsernameByUserId(tx.getTelegramId());
+            recentBuyers.add((un != null ? un : "Mijoz") + " · " + tx.getMonths() + " oylik 💎");
         }
 
         return ResponseEntity.ok(Map.of(
@@ -348,13 +357,13 @@ public class WebAppApiController {
         // 1 oylik Telegram Premium bot tugmalaridagidek to'g'ridan-to'g'ri adminga yo'naltiriladi
         if (months == 1) {
             String target = req.getTargetUsername() != null ? req.getTargetUsername().replace("@", "").trim() : "";
-            String adminUrl = "https://t.me/BLACK_mladshiy?text=" +
+            String adminUrl = "https://t.me/stalkerbek?text=" +
                     java.net.URLEncoder.encode("Salom! Men 1 oylik Telegram Premium sotib olmoqchiman. Qabul qiluvchi: @" + target, java.nio.charset.StandardCharsets.UTF_8);
             return ResponseEntity.ok(Map.of(
                     "ok", true,
                     "redirectAdmin", true,
                     "adminUrl", adminUrl,
-                    "message", "1 oylik Telegram Premium admin (@BLACK_mladshiy) orqali rasmiylashtiriladi."
+                    "message", "1 oylik Telegram Premium admin (@stalkerbek) orqali rasmiylashtiriladi."
             ));
         }
 
@@ -486,7 +495,8 @@ public class WebAppApiController {
                 "ok", true,
                 "link", link,
                 "count", count,
-                "percent", 2
+                "rewardJoin", 100,
+                "rewardTrade", 200
         ));
     }
 }

@@ -76,11 +76,11 @@ public class PremiumBuyScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
-        // 1 oylik Telegram Premium -> Adminga (@BLACK_mladshiy) to'g'ridan-to'g'ri tayyor shablon bilan yo'naltiriladi
+        // 1 oylik Telegram Premium -> Adminga (@stalkerbek) to'g'ridan-to'g'ri tayyor shablon bilan yo'naltiriladi
         InlineKeyboardRow row1m = new InlineKeyboardRow();
         row1m.add(StyledInlineButton.styledBuilder()
-                .text("1 oylik Telegram Premium")
-                .url("https://t.me/BLACK_mladshiy?text=Men%201%20oylik%20Telegram%20Premium%20sotib%20olmoqchiman")
+                .text("💎 1 oylik Premium (Admindan)")
+                .url("https://t.me/stalkerbek?text=Salom!%20Men%201%20oylik%20Telegram%20Premium%20sotib%20olmoqchiman.")
                 .style("primary")
                 .iconCustomEmojiId("5938420017665152105")
                 .build());

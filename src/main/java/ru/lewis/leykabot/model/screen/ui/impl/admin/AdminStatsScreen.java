@@ -64,6 +64,9 @@ public class AdminStatsScreen extends AbstractScreen {
     public String getText() {
         AdminService.AdminStats stats = adminService.getStats();
 
+        String formattedUsers = String.format("%,d", stats.totalUsers()).replace(',', ' ');
+        String formattedTodayUsers = String.format("%,d", stats.usersJoinedToday()).replace(',', ' ');
+        String formattedCurrentBalance = String.format("%,d", stats.currentTotalUsersBalance()).replace(',', ' ');
         String formattedDeposited = String.format("%,d", stats.totalDeposited()).replace(',', ' ');
         String formattedStars = String.format("%,d", stats.totalStars()).replace(',', ' ');
         String formattedStarsRubles = String.format("%,d", stats.totalStarsRubles()).replace(',', ' ');
@@ -72,15 +75,16 @@ public class AdminStatsScreen extends AbstractScreen {
         String formattedPubgUc = String.format("%,d", stats.totalPubgUc()).replace(',', ' ');
         String formattedPubgRubles = String.format("%,d", stats.totalPubgRubles()).replace(',', ' ');
         String formattedTx = String.format("%,d", stats.totalTransactions()).replace(',', ' ');
-        String formattedUsers = String.format("%,d", stats.totalUsers()).replace(',', ' ');
 
         return "📊 <b>Bot To‘liq Statistikasi:</b>\n\n" +
-                "👥 <b>Jami foydalanuvchilar:</b> " + formattedUsers + " ta\n" +
+                "👥 <b>Jami foydalanuvchilar:</b> <b>" + formattedUsers + " ta</b>\n" +
+                "🆕 <b>Bugun qo‘shilganlar:</b> <b>" + formattedTodayUsers + " ta</b>\n" +
+                "💰 <b>Foydalanuvchilar umumiy balansi:</b> <b>" + formattedCurrentBalance + " so‘m</b>\n\n" +
                 "📥 <b>Jami to‘ldirilgan summa:</b> " + formattedDeposited + " so‘m\n" +
                 "<tg-emoji emoji-id=\"5985826831591281620\">⭐️</tg-emoji> <b>Jami Stars:</b> " + formattedStars + " Stars (<b>" + formattedStarsRubles + " so‘m</b>)\n" +
                 "<tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Jami Premium:</b> " + formattedPremium + " oy (<b>" + formattedPremiumRubles + " so‘m</b>)\n" +
                 "<tg-emoji emoji-id=\"5204252919565657978\">🎮</tg-emoji> <b>Jami PUBG UC:</b> " + formattedPubgUc + " UC (<b>" + formattedPubgRubles + " so‘m</b>)\n" +
-                "⚡️ <b>Jami tranzaksiyalar:</b> " + formattedTx + " ta\n\n" +
+                "⚡️ <b>Jami buyurtmalar/tranzaksiyalar:</b> " + formattedTx + " ta\n\n" +
                 "<i>Ma’lumotlar real vaqt rejimida yangilanadi.</i>";
     }
 

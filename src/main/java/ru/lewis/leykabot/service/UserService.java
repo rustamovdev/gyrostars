@@ -24,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final CodeRepository codeRepository;
     private final ActivatedCodeRepository activatedCodeRepository;
+    private final TelegramService telegramService;
 
     // telegramId -> User
     private Cache<Long, User> userCache;
@@ -83,12 +84,56 @@ public class UserService {
         User user = new User();
         user.setTelegramId(telegramId);
         user.setBalance(0);
+        user.setReferralBonusPaid(false);
         if (referrerId != null && !referrerId.equals(telegramId) && isUserExists(referrerId)) {
             user.setReferrerId(referrerId);
         }
         User saved = userRepository.save(user);
         userCache.put(telegramId, saved);
+
+        // 1. Yangi do'st qo'shilganda: Taklif qilgan do'stga +100 so'm naqd bonus
+        if (saved.getReferrerId() != null) {
+            Long refId = saved.getReferrerId();
+            userRepository.findByTelegramId(refId).ifPresent(referrer -> {
+                int cur = referrer.getBalance() != null ? referrer.getBalance() : 0;
+                referrer.setBalance(cur + 100);
+                userRepository.save(referrer);
+                updateUserCache(referrer);
+                if (telegramService != null) {
+                    telegramService.sendMessageAuto(refId,
+                            "🎉 <b>Yangi do‘st qo‘shildi!</b>\n\n" +
+                            "Sizning referal havolangiz orqali yangi do‘stingiz botga qo‘shildi. Balansingizga <b>+100 so‘m</b> bonus berildi!");
+                }
+            });
+        }
+
         return saved;
+    }
+
+    @Transactional
+    public void checkAndRewardReferrerOnPurchase(Long buyerTelegramId) {
+        if (buyerTelegramId == null) return;
+        userRepository.findByTelegramId(buyerTelegramId).ifPresent(buyer -> {
+            Long referrerId = buyer.getReferrerId();
+            if (referrerId != null && !Boolean.TRUE.equals(buyer.getReferralBonusPaid())) {
+                buyer.setReferralBonusPaid(true);
+                userRepository.save(buyer);
+                updateUserCache(buyer);
+
+                // 2. Taklif qilingan do'st savdo qilganda: Taklif qilganga yana +200 so'm bonus
+                userRepository.findByTelegramId(referrerId).ifPresent(referrer -> {
+                    int cur = referrer.getBalance() != null ? referrer.getBalance() : 0;
+                    referrer.setBalance(cur + 200);
+                    userRepository.save(referrer);
+                    updateUserCache(referrer);
+                    if (telegramService != null) {
+                        telegramService.sendMessageAuto(referrerId,
+                                "🎁 <b>Referal savdo bonusi!</b>\n\n" +
+                                "Siz taklif qilgan do‘stingiz ilk xaridini amalga oshirdi! Balansingizga qo‘shimcha <b>+200 so‘m</b> bonus berildi!");
+                    }
+                });
+            }
+        });
     }
 
     @Transactional

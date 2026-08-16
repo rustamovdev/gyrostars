@@ -33,6 +33,9 @@ public class User {
     @Column(name = "referrerId")
     private Long referrerId;
 
+    @Column(name = "referralBonusPaid")
+    private Boolean referralBonusPaid = false;
+
     @CreationTimestamp
     @Column(name = "createdAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;

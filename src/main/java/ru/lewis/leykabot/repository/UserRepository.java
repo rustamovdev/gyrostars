@@ -17,8 +17,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     void deleteByTelegramId(Long telegramId);
 
-    @Query("SELECT u.balance FROM User u WHERE u.telegramId = :telegramId")
-    Optional<Integer> getBalanceByTelegramId(@Param("telegramId") Long telegramId);
+    @Query("SELECT COALESCE(SUM(u.balance), 0) FROM User u")
+    long sumTotalBalance();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :after")
+    long countCreatedAfter(@Param("after") java.time.LocalDateTime after);
 
     long countByReferrerId(Long referrerId);
 }
