@@ -106,7 +106,7 @@ public class StarsTransactionService {
         addToCache(telegramId, saved);
 
         topService.updateStarsTop(telegramId, amountStars);
-        topService.updateRublesTop(telegramId, amountRubles);
+        topService.updateRublesTop(telegramId, Math.abs(amountRubles));
 
         // Do'sti savdo qilganda referal bonusi (+200 so'm)
         if (userService != null) {

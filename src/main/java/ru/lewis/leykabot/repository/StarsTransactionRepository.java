@@ -37,9 +37,9 @@ public interface StarsTransactionRepository extends JpaRepository<StarsTransacti
     @Query("SELECT COALESCE(SUM(s.amountStars), 0) FROM StarsTransaction s WHERE s.telegramId = :telegramId AND s.createdAt BETWEEN :from AND :to")
     long sumStarsByTelegramIdBetween(@Param("telegramId") Long telegramId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query("SELECT COALESCE(SUM(s.transaction.amountRubles), 0) FROM StarsTransaction s WHERE s.createdAt BETWEEN :from AND :to")
+    @Query("SELECT COALESCE(SUM(ABS(s.transaction.amountRubles)), 0) FROM StarsTransaction s WHERE s.createdAt BETWEEN :from AND :to")
     long sumStarsRublesBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query("SELECT COALESCE(SUM(s.transaction.amountRubles), 0) FROM StarsTransaction s")
+    @Query("SELECT COALESCE(SUM(ABS(s.transaction.amountRubles)), 0) FROM StarsTransaction s")
     long sumAllStarsRubles();
 }

@@ -106,7 +106,7 @@ public class PremiumTransactionService {
         addToCache(telegramId, saved);
 
         topService.updatePremiumTop(telegramId, months);
-        topService.updateRublesTop(telegramId, amountRubles);
+        topService.updateRublesTop(telegramId, Math.abs(amountRubles));
 
         // Do'sti savdo qilganda referal bonusi (+200 so'm)
         if (userService != null) {

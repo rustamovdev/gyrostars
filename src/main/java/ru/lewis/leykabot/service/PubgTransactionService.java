@@ -18,18 +18,16 @@ public class PubgTransactionService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final OrderChannelService orderChannelService;
+    private final TransactionService transactionService;
+    private final TopService topService;
 
     @Transactional
     public PubgTransaction create(Long telegramId, String playerId, String playerNickname,
                                   String offerId, int ucAmount, int priceRubles,
                                   Long apiOrderId, String reference, String redeemCode) {
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new IllegalArgumentException("Foydalanuvchi topilmadi: " + telegramId));
 
-        int currentBalance = user.getBalance() != null ? user.getBalance() : 0;
-        user.setBalance(currentBalance - priceRubles);
-        userRepository.save(user);
-        userService.updateUserCache(user);
+        // 1. Asosiy tranzaksiya yaratish va balansni yechish
+        transactionService.create(telegramId, -priceRubles);
 
         PubgTransaction tx = new PubgTransaction();
         tx.setTelegramId(telegramId);
@@ -48,13 +46,23 @@ public class PubgTransactionService {
         log.info("PUBG UC xaridi muvaffaqiyatli saqlandi #{} (Foydalanuvchi: {}, Player: {}, UC: {})",
                 saved.getId(), telegramId, playerId, ucAmount);
 
+        // Top statistikasini yangilash
+        if (topService != null) {
+            topService.updateRublesTop(telegramId, Math.abs(priceRubles));
+        }
+
+        // Referal savdo bonusi (+200 so'm)
+        if (userService != null) {
+            userService.checkAndRewardReferrerOnPurchase(telegramId);
+        }
+
         // Order kanaliga xabar yuborish
         if (orderChannelService != null) {
             String recipientInfo = (playerNickname != null && !playerNickname.isBlank())
                     ? playerNickname + " (" + playerId + ")"
                     : "ID: " + playerId;
             orderChannelService.sendOrderNotification(
-                    "<tg-emoji emoji-id=\"5436050603723760533\">🎮</tg-emoji> PUBG Mobile UC",
+                    "🎮 PUBG Mobile UC",
                     ucAmount + " UC",
                     recipientInfo,
                     priceRubles
