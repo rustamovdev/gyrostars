@@ -7,6 +7,11 @@ plugins {
 group = "ru.lewis.leykabot"
 version = "1.0-SNAPSHOT"
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 repositories {
     maven { url = uri("https://jitpack.io") }
     mavenCentral()
@@ -37,10 +42,8 @@ dependencies {
     implementation("com.itextpdf:itextpdf:5.5.13.3")
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
