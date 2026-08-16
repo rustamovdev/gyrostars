@@ -21,28 +21,13 @@ from telethon.sessions import StringSession
 API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 
-SESSION_STRING = os.environ.get(
-    "TG_SESSION_STRING",
-    "1ApWapzMBu0Xo8FaGEbO3YVwaIYPe5T-ZdJtBn1b5L4fglvBdmnIEpSonKHFEKa8-5USa9vTUL6iUtANs6G43bLMBOuxvv8DylVkiX8LNzFtQw3iaUH2XkwnKzrEvQDgXJV0e6Wj_-eBcP7n5-Um6I_8dflAV4qdR46RS9GyYcuU5N5c0WiF3DnqSwhtlmi_TGaSeWKketYQxocLO3C8OjZ1kvALeNlatU96vEixEf0LiBQ8P3UEIjxz_M3ZkVLV6vJZZUQDz5XUf0cciM9pQEkmBuG_xGdrUO6q7xTLLuUiLBA7WINwVZJw4mxG-pnNQ-MoYJ4fIeONINWnMSn1cGTq3uLL-lAg="
-)
+SESSION_FILE = "humo_payment_session.session"
+TG_SESSION_ENV = os.environ.get("TG_SESSION_STRING", "").strip()
 
-BOT_API_PORT = os.environ.get("PORT", "10000")
-BOT_API_URL = os.environ.get("BOT_API_URL", f"http://127.0.0.1:{BOT_API_PORT}/api/v1/payment/notify-card")
-
-LISTEN_BOTS = [
-    "humocardbot",
-    "humo_card_bot",
-    "humobot"
-]
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("HumoPaymentListener")
-
-if SESSION_STRING:
-    session_obj = StringSession(SESSION_STRING)
+if os.path.exists(SESSION_FILE):
+    session_obj = "humo_payment_session"
+elif TG_SESSION_ENV:
+    session_obj = StringSession(TG_SESSION_ENV)
 else:
     session_obj = "humo_payment_session"
 
@@ -267,11 +252,17 @@ async def main():
         try:
             await client.connect()
             if not await client.is_user_authorized():
-                logger.error("❌ Foydalanuvchi avtorizatsiyadan o'tmagan!")
+                logger.warning("⚠️ Foydalanuvchi hali avtorizatsiyadan o'tmagan yoki sessiya kutmoqda...")
                 await asyncio.sleep(10)
                 continue
             me = await client.get_me()
-            logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", me.first_name, me.username)
+            if me is None:
+                logger.warning("⚠️ Akkaunt ma'lumotlari bo'sh qaytdi, 5 soniyadan keyin qayta ulanadi...")
+                await asyncio.sleep(5)
+                continue
+            first_name = getattr(me, "first_name", "Admin") or "Admin"
+            username = getattr(me, "username", "") or "unknown"
+            logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", first_name, username)
             logger.info("🎯 Faqat @HUMOcardbot xabarlari tezkor tinglanmoqda...")
             if poll_task is None or poll_task.done():
                 poll_task = asyncio.create_task(poll_recent_humo_messages())
