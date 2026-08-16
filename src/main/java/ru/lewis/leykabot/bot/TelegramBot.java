@@ -164,6 +164,7 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
     }
 
     private void start(String message, Long userId, Long chatId) {
+        log.info("🚀 Handling /start for userId: {}, chatId: {}", userId, chatId);
         // check sub
         if (!telegramService.isUserSubscribed(userId)) {
             screenManager.createScreen(chatId, screenFactory.createSubscribeChannelScreen(chatId, userId));
@@ -191,5 +192,6 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         screenManager.createScreen(chatId, screenFactory.createStartScreen(chatId, userId));
+        log.info("✅ Start screen successfully created for userId: {}", userId);
     }
 }

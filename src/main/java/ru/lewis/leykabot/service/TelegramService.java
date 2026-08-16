@@ -81,38 +81,53 @@ public class TelegramService {
     private File resolveFile(String path) {
         if (path == null || path.isBlank()) return null;
 
-        // 1. Fayl diskda mavjud bo'lsa
-        File file = new File(path);
-        if (file.exists() && file.isFile()) {
-            return file;
-        }
-
-        // 2. Keshdan tekshirish
-        if (resourceCache.containsKey(path)) {
-            File cached = resourceCache.get(path);
-            if (cached != null && cached.exists()) {
-                return cached;
+        try {
+            // 1. Fayl diskda mavjud bo'lsa
+            File file = new File(path);
+            if (file.exists() && file.isFile()) {
+                return file;
             }
-        }
 
-        // 3. Classpath (JAR ichidan resursni vaqtinchalik faylga o'qib olish)
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            if (is != null) {
-                String cleanName = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
-                String suffix = cleanName.contains(".") ? cleanName.substring(cleanName.lastIndexOf(".")) : ".png";
-                String prefix = cleanName.contains(".") ? cleanName.substring(0, cleanName.lastIndexOf(".")) : cleanName;
-                if (prefix.length() < 3) prefix = "tg_res_" + prefix;
+            File fileSrc = new File("src/main/resources/" + path);
+            if (fileSrc.exists() && fileSrc.isFile()) {
+                return fileSrc;
+            }
 
-                File tempFile = File.createTempFile(prefix + "_", suffix);
-                tempFile.deleteOnExit();
-                try (OutputStream os = new FileOutputStream(tempFile)) {
-                    is.transferTo(os);
+            File fileRoot = new File("/app/" + path);
+            if (fileRoot.exists() && fileRoot.isFile()) {
+                return fileRoot;
+            }
+
+            // 2. Keshdan tekshirish
+            if (resourceCache.containsKey(path)) {
+                File cached = resourceCache.get(path);
+                if (cached != null && cached.exists()) {
+                    return cached;
                 }
-                resourceCache.put(path, tempFile);
-                return tempFile;
+            }
+
+            // 3. Spring ClassPathResource
+            org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource(path);
+            if (!resource.exists() && !path.startsWith("images/")) {
+                resource = new org.springframework.core.io.ClassPathResource("images/" + path);
+            }
+            if (!resource.exists()) {
+                resource = new org.springframework.core.io.ClassPathResource("image.png");
+            }
+
+            if (resource.exists()) {
+                try (InputStream is = resource.getInputStream()) {
+                    File tempFile = File.createTempFile("tg_img_", ".png");
+                    tempFile.deleteOnExit();
+                    try (OutputStream os = new FileOutputStream(tempFile)) {
+                        is.transferTo(os);
+                    }
+                    resourceCache.put(path, tempFile);
+                    return tempFile;
+                }
             }
         } catch (Exception e) {
-            log.error("Could not load resource from classpath: {}", path, e);
+            log.warn("⚠️ Could not resolve file {}: {}", path, e.getMessage());
         }
         return null;
     }
@@ -129,12 +144,16 @@ public class TelegramService {
         String path = parts[1];
 
         if (path != null) {
-            File photo = resolveFile(path);
-            if (photo != null) {
-                Message photoMsg = sendPhoto(chatId, photo, text, markup);
-                if (photoMsg != null) {
-                    return photoMsg;
+            try {
+                File photo = resolveFile(path);
+                if (photo != null && photo.exists() && photo.length() > 0) {
+                    Message photoMsg = sendPhoto(chatId, photo, text, markup);
+                    if (photoMsg != null) {
+                        return photoMsg;
+                    }
                 }
+            } catch (Exception e) {
+                log.warn("⚠️ Photo send failed, trying text message: {}", e.getMessage());
             }
         }
         return sendMessage(chatId, text, markup);
