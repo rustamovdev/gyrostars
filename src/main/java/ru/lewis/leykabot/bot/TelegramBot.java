@@ -61,6 +61,11 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             var messageId = callback.getMessage().getMessageId();
             var fromId = callback.getFrom().getId();
 
+            // Real-time user registration
+            if (fromId != null && fromId > 0 && !userService.isUserExists(fromId)) {
+                userService.createUser(fromId);
+            }
+
             // Flood tekshiruvi
             if (antiFloodService.isFlooding(fromId, chatId)) {
                 try {
@@ -128,6 +133,11 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
         var message = update.getMessage();
         var userId = message.getFrom().getId();
         var chatId = message.getChatId();
+
+        // Real-time user registration
+        if (userId != null && userId > 0 && !userService.isUserExists(userId)) {
+            userService.createUser(userId);
+        }
 
         // Flood tekshiruvi
         if (antiFloodService.isFlooding(userId, chatId)) {

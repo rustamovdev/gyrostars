@@ -76,7 +76,9 @@ public class AdminStatsScreen extends AbstractScreen {
         String formattedPubgRubles = String.format("%,d", stats.totalPubgRubles()).replace(',', ' ');
         String formattedTx = String.format("%,d", stats.totalTransactions()).replace(',', ' ');
 
-        return "📊 <b>Bot To‘liq Statistikasi:</b>\n\n" +
+        String nowTime = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss, dd.MM.yyyy"));
+
+        return "📊 <b>Bot To‘liq Statistikasi (Real-Time):</b>\n\n" +
                 "👥 <b>Jami foydalanuvchilar:</b> <b>" + formattedUsers + " ta</b>\n" +
                 "🆕 <b>Bugun qo‘shilganlar:</b> <b>" + formattedTodayUsers + " ta</b>\n" +
                 "💰 <b>Foydalanuvchilar umumiy balansi:</b> <b>" + formattedCurrentBalance + " so‘m</b>\n\n" +
@@ -85,7 +87,8 @@ public class AdminStatsScreen extends AbstractScreen {
                 "<tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Jami Premium:</b> " + formattedPremium + " oy (<b>" + formattedPremiumRubles + " so‘m</b>)\n" +
                 "<tg-emoji emoji-id=\"5204252919565657978\">🎮</tg-emoji> <b>Jami PUBG UC:</b> " + formattedPubgUc + " UC (<b>" + formattedPubgRubles + " so‘m</b>)\n" +
                 "⚡️ <b>Jami buyurtmalar/tranzaksiyalar:</b> " + formattedTx + " ta\n\n" +
-                "<i>Ma’lumotlar real vaqt rejimida yangilanadi.</i>";
+                "🕒 <b>Oxirgi yangilanish:</b> <code>" + nowTime + "</code>\n" +
+                "<i>(Barcha hisob-kitoblar to‘g‘ridan-to‘g‘ri bazadan olinadi)</i>";
     }
 
     @Override
