@@ -21,6 +21,16 @@ from telethon.sessions import StringSession
 API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 
+# Tinglanadigan botlar ro'yxati
+LISTEN_BOTS = ["humocardbot", "humocard", "humobot", "hpay", "paynet"]
+
+# Logger sozlamalari
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("HumoPaymentListener")
+
 SESSION_FILE = "humo_payment_session.session"
 TG_SESSION_ENV = os.environ.get("TG_SESSION_STRING", "").strip()
 
