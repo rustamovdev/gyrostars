@@ -9,13 +9,13 @@ COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts ./
 COPY gradle ./gradle
 
 # Grant execution rights and download dependencies
-RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon || true
+RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew dependencies --no-daemon || true
 
 # Copy source code and resources
 COPY src ./src
 
 # Build production jar without tests
-RUN ./gradlew bootJar -x test --no-daemon
+RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon --stacktrace
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
