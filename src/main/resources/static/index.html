@@ -156,6 +156,20 @@
               </div>
             </div>
           </div>
+          <!-- Payment Method Toggle -->
+          <div class="form-group">
+            <label>💳 To'lov turi</label>
+            <div class="toggle-buttons-group">
+              <button type="button" class="toggle-btn active prem-pay-card" onclick="selectPayMethod('card')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Karta orqali
+              </button>
+              <button type="button" class="toggle-btn prem-pay-bal" onclick="selectPayMethod('balance')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><circle cx="16" cy="14" r="2"></circle></svg>
+                Balansdan to'lash
+              </button>
+            </div>
+          </div>
           <button type="button" class="btn-primary-glow" onclick="submitPremiumOrder()">
             <span class="sticker-emoji">💎</span> Premium xarid qilish
           </button>
@@ -179,6 +193,20 @@
           <div class="form-group" style="margin-top:14px;">
             <label>🆔 PUBG Player ID (Raqamli ID)</label>
             <input type="text" id="pubgPlayerIdInput" placeholder="Masalan: 5123456789">
+          </div>
+          <!-- Payment Method Toggle -->
+          <div class="form-group">
+            <label>💳 To'lov turi</label>
+            <div class="toggle-buttons-group">
+              <button type="button" class="toggle-btn active pubg-pay-card" onclick="selectPayMethod('card')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                Karta orqali
+              </button>
+              <button type="button" class="toggle-btn pubg-pay-bal" onclick="selectPayMethod('balance')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><circle cx="16" cy="14" r="2"></circle></svg>
+                Balansdan to'lash
+              </button>
+            </div>
           </div>
           <button type="button" class="btn-primary-glow" onclick="submitPubgOrder()">
             <span class="sticker-emoji">🎮</span> UC sotib olish

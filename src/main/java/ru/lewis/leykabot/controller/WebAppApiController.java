@@ -28,8 +28,11 @@ public class WebAppApiController {
     private final PaymentCardService paymentCardService;
     private final AutoPaymentService autoPaymentService;
     private final StarsTransactionService starsTransactionService;
+    private final PremiumTransactionService premiumTransactionService;
     private final PubgTransactionService pubgTransactionService;
     private final FragmentStarsService fragmentStarsService;
+    private final FragmentPremiumService fragmentPremiumService;
+    private final OrderChannelService orderChannelService;
     private final TopService topService;
     private final TransactionRepository transactionRepository;
     private final StarsTransactionRepository starsRepository;
@@ -97,7 +100,9 @@ public class WebAppApiController {
 
         String displayName = fullName;
         if (displayName == null || displayName.isBlank()) {
-            displayName = telegramService.getFullNameByUserId(currentId);
+            try {
+                displayName = telegramService.getFullNameByUserId(currentId);
+            } catch (Exception ignored) {}
         }
         if (displayName == null || displayName.isBlank()) {
             displayName = username != null && !username.isBlank() ? "@" + username : "Mijoz #" + currentId;
@@ -105,7 +110,9 @@ public class WebAppApiController {
 
         String displayUsername = username;
         if (displayUsername == null || displayUsername.isBlank()) {
-            displayUsername = telegramService.getUsernameByUserId(currentId);
+            try {
+                displayUsername = telegramService.getUsernameByUserId(currentId);
+            } catch (Exception ignored) {}
         }
         if (displayUsername == null) displayUsername = "";
 
@@ -159,8 +166,15 @@ public class WebAppApiController {
 
         List<Map<String, Object>> topList = new ArrayList<>();
         for (TopService.TopEntry entry : stats.top7()) {
-            String name = telegramService.getFullNameByUserId(entry.telegramId());
-            if (name == null || name.isBlank()) name = telegramService.getUsernameByUserId(entry.telegramId());
+            String name = null;
+            try {
+                name = telegramService.getFullNameByUserId(entry.telegramId());
+            } catch (Exception ignored) {}
+            if (name == null || name.isBlank()) {
+                try {
+                    name = telegramService.getUsernameByUserId(entry.telegramId());
+                } catch (Exception ignored) {}
+            }
             if (name == null || name.isBlank()) name = "Mijoz #" + entry.telegramId();
 
             topList.add(Map.of(
@@ -176,17 +190,23 @@ public class WebAppApiController {
         List<String> recentBuyers = new ArrayList<>();
         var recentTxList = transactionRepository.findTop10ByOrderByCreatedAtDesc();
         for (var tx : recentTxList) {
-            String bName = telegramService.getFullNameByUserId(tx.getTelegramId());
-            if (bName == null || bName.isBlank()) bName = telegramService.getUsernameByUserId(tx.getTelegramId());
+            String bName = null;
+            try {
+                bName = telegramService.getFullNameByUserId(tx.getTelegramId());
+            } catch (Exception ignored) {}
+            if (bName == null || bName.isBlank()) {
+                try {
+                    bName = telegramService.getUsernameByUserId(tx.getTelegramId());
+                } catch (Exception ignored) {}
+            }
             if (bName != null && !bName.isBlank() && !recentBuyers.contains(bName)) {
                 recentBuyers.add(bName);
             }
         }
         if (recentBuyers.isEmpty()) {
             for (TopService.TopEntry entry : stats.top7()) {
-                String n = telegramService.getFullNameByUserId(entry.telegramId());
-                if (n == null || n.isBlank()) n = telegramService.getUsernameByUserId(entry.telegramId());
-                if (n != null && !n.isBlank() && !recentBuyers.contains(n)) recentBuyers.add(n);
+                String n = "Mijoz #" + entry.telegramId();
+                if (!recentBuyers.contains(n)) recentBuyers.add(n);
             }
         }
 
@@ -329,9 +349,68 @@ public class WebAppApiController {
             String cleanTarget = req.getTargetUsername().replace("@", "").trim();
             fragmentStarsService.buyStars(cleanTarget, stars);
 
+            if (orderChannelService != null) {
+                orderChannelService.sendOrderNotification("⭐ Telegram Stars", stars + " Stars", cleanTarget, price);
+            }
+
             return ResponseEntity.ok(Map.of(
                     "ok", true,
                     "message", "✅ " + stars + " Stars muvaffaqiyatli xarid qilindi!",
+                    "newBalance", currentBalance - price
+            ));
+        } else {
+            // Direct card invoice
+            PaymentCard card = resolveActiveCard();
+            DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
+            return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "invoice", true,
+                    "orderId", order.getId(),
+                    "amount", order.getExactAmount(),
+                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
+                    "holderName", card != null ? card.getHolderName() : "Admin",
+                    "methodName", card != null ? card.getMethodName() : "HUMO"
+            ));
+        }
+    }
+
+    @Data
+    public static class BuyPremiumRequest {
+        private Long userId;
+        private Integer months;
+        private String targetUsername;
+        private String paymentMethod; // "card" or "balance"
+    }
+
+    @PostMapping("/buy/premium")
+    public ResponseEntity<?> buyPremium(@RequestBody BuyPremiumRequest req) {
+        if (req.getUserId() == null || req.getUserId() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
+        }
+        Long uid = req.getUserId();
+        int months = req.getMonths() != null ? req.getMonths() : 3;
+        int price = priceService.getPremiumPrice(months, 170000);
+
+        User user = userService.getUser(uid).orElseGet(() -> userService.createUser(uid));
+        int currentBalance = user.getBalance() != null ? user.getBalance() : 0;
+
+        if ("balance".equalsIgnoreCase(req.getPaymentMethod())) {
+            if (currentBalance < price) {
+                return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Balansda mablag' yetarli emas!"));
+            }
+
+            String cleanTarget = req.getTargetUsername().replace("@", "").trim();
+            fragmentPremiumService.buyPremium(cleanTarget, months);
+            premiumTransactionService.create(uid, price, months);
+
+            if (orderChannelService != null) {
+                String duration = months >= 12 ? (months / 12) + " yillik" : months + " oylik";
+                orderChannelService.sendOrderNotification("💎 Telegram Premium", duration, cleanTarget, price);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "ok", true,
+                    "message", "✅ " + months + " oylik Telegram Premium muvaffaqiyatli xarid qilindi!",
                     "newBalance", currentBalance - price
             ));
         } else {
@@ -375,6 +454,10 @@ public class WebAppApiController {
                 return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Balansda mablag' yetarli emas!"));
             }
             pubgTransactionService.create(uid, req.getPlayerId(), req.getPlayerId(), "PUBG_" + uc, uc, price, null, "webapp", null);
+
+            if (orderChannelService != null) {
+                orderChannelService.sendOrderNotification("🎮 PUBG Mobile UC", uc + " UC", "ID: " + req.getPlayerId(), price);
+            }
 
             return ResponseEntity.ok(Map.of(
                     "ok", true,

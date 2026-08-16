@@ -277,8 +277,20 @@ function togglePostMode() {
 function selectPayMethod(method) {
   triggerHaptic('light');
   state.payMethod = method;
-  document.getElementById('payMethodCard').classList.toggle('active', method === 'card');
-  document.getElementById('payMethodBalance').classList.toggle('active', method === 'balance');
+
+  const isCard = method === 'card';
+  const isBal = method === 'balance';
+
+  const starsCard = document.getElementById('payMethodCard');
+  const starsBal = document.getElementById('payMethodBalance');
+  if (starsCard) starsCard.classList.toggle('active', isCard);
+  if (starsBal) starsBal.classList.toggle('active', isBal);
+
+  document.querySelectorAll('.prem-pay-card').forEach(b => b.classList.toggle('active', isCard));
+  document.querySelectorAll('.prem-pay-bal').forEach(b => b.classList.toggle('active', isBal));
+
+  document.querySelectorAll('.pubg-pay-card').forEach(b => b.classList.toggle('active', isCard));
+  document.querySelectorAll('.pubg-pay-bal').forEach(b => b.classList.toggle('active', isBal));
 }
 
 // Premium & PUBG Package Pickers
@@ -367,14 +379,36 @@ async function submitPremiumOrder() {
     return;
   }
 
-  const orderRes = await fetch('/api/webapp/deposit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId: state.user.userId, amount: state.selectedPremPrice })
-  });
-  const data = await orderRes.json();
-  if (data.ok) {
-    showInvoiceScreen(data);
+  try {
+    const res = await fetch('/api/webapp/buy/premium', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.user.userId,
+        months: state.selectedPremMonths,
+        targetUsername: target,
+        paymentMethod: state.payMethod
+      })
+    });
+
+    const data = await res.json();
+    if (!data.ok) {
+      showToast(data.error || "Xatolik yuz berdi!");
+      triggerHaptic('error');
+      return;
+    }
+
+    if (data.invoice) {
+      showInvoiceScreen(data);
+    } else {
+      triggerHaptic('success');
+      showToast(data.message || "Telegram Premium muvaffaqiyatli xarid qilindi! 💎");
+      state.user.balance = data.newBalance;
+      updateUserUI();
+    }
+  } catch (e) {
+    showToast("Server bilan ulanishda xatolik!");
+    triggerHaptic('error');
   }
 }
 
@@ -392,25 +426,35 @@ async function submitPubgOrder() {
     return;
   }
 
-  const orderRes = await fetch('/api/webapp/buy/pubg', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: state.user.userId,
-      ucAmount: state.selectedPubgUc,
-      playerId: playerId,
-      paymentMethod: state.payMethod
-    })
-  });
-  const data = await orderRes.json();
-  if (data.ok) {
-    if (data.invoice) showInvoiceScreen(data);
-    else {
+  try {
+    const orderRes = await fetch('/api/webapp/buy/pubg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.user.userId,
+        ucAmount: state.selectedPubgUc,
+        playerId: playerId,
+        paymentMethod: state.payMethod
+      })
+    });
+    const data = await orderRes.json();
+    if (!data.ok) {
+      showToast(data.error || "Xatolik yuz berdi!");
+      triggerHaptic('error');
+      return;
+    }
+
+    if (data.invoice) {
+      showInvoiceScreen(data);
+    } else {
       triggerHaptic('success');
       showToast(data.message || "PUBG UC yuborildi! 🎮");
       state.user.balance = data.newBalance;
       updateUserUI();
     }
+  } catch (e) {
+    showToast("Server bilan ulanishda xatolik!");
+    triggerHaptic('error');
   }
 }
 
