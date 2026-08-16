@@ -2,7 +2,6 @@ plugins {
     id("java")
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
-    kotlin("jvm")
 }
 
 group = "ru.lewis.leykabot"
@@ -36,10 +35,6 @@ dependencies {
 
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
     implementation("com.itextpdf:itextpdf:5.5.13.3")
-    implementation(kotlin("stdlib-jdk8"))
-}
-kotlin {
-    jvmToolchain(21)
 }
 
 java {
