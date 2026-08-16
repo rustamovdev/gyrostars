@@ -43,6 +43,10 @@ public class TransactionService {
                 .build();
     }
 
+    public void clearCache() {
+        if (cache != null) cache.invalidateAll();
+    }
+
     // -------------------------------------------------------------------------
     // Кэш
     // -------------------------------------------------------------------------

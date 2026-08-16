@@ -25,6 +25,7 @@ public class AdminUserManageScreen extends AbstractScreen {
     private Long targetUserId = null;
     private boolean isWaitingUserId = true;
     private boolean isWaitingBalanceAmount = false;
+    private boolean isWaitingPmMessage = false;
     private int balanceMultiplier = 1;
 
     public AdminUserManageScreen(Long chatId, Long userId,
@@ -47,6 +48,7 @@ public class AdminUserManageScreen extends AbstractScreen {
             case "add_balance" -> {
                 if (targetUserId != null) {
                     isWaitingBalanceAmount = true;
+                    isWaitingPmMessage = false;
                     balanceMultiplier = 1;
                     telegramService.sendMessageAuto(chatId, "Qo‘shmoqchi bo‘lgan summani kiriting (so‘mda):");
                 }
@@ -54,19 +56,29 @@ public class AdminUserManageScreen extends AbstractScreen {
             case "sub_balance" -> {
                 if (targetUserId != null) {
                     isWaitingBalanceAmount = true;
+                    isWaitingPmMessage = false;
                     balanceMultiplier = -1;
                     telegramService.sendMessageAuto(chatId, "Ayirmoqchi bo‘lgan summani kiriting (so‘mda):");
+                }
+            }
+            case "send_pm" -> {
+                if (targetUserId != null) {
+                    isWaitingPmMessage = true;
+                    isWaitingBalanceAmount = false;
+                    telegramService.sendMessageAuto(chatId, "✉️ Foydalanuvchiga yubormoqchi bo‘lgan xabaringizni yozing:");
                 }
             }
             case "search_another" -> {
                 targetUserId = null;
                 isWaitingUserId = true;
                 isWaitingBalanceAmount = false;
+                isWaitingPmMessage = false;
                 screenManager.updateScreen(chatId, this);
             }
             case "back_admin" -> {
                 isWaitingUserId = false;
                 isWaitingBalanceAmount = false;
+                isWaitingPmMessage = false;
                 screenManager.updateScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
             }
         }
@@ -75,6 +87,15 @@ public class AdminUserManageScreen extends AbstractScreen {
     @Override
     public void handleMessage(String text, TelegramClient bot) {
         if (!adminService.isAdmin(userId)) return;
+
+        if (isWaitingPmMessage && targetUserId != null) {
+            telegramService.sendMessageAuto(targetUserId,
+                    "🔔 <b>Admin Xabarnomasi:</b>\n\n" + text + "\n\n<i>Savollaringiz bo‘lsa qo‘llab-quvvatlash xizmatiga murojaat qiling.</i>");
+            telegramService.sendMessageAuto(chatId, "✅ Xabar foydalanuvchiga muvaffaqiyatli yuborildi!");
+            isWaitingPmMessage = false;
+            screenManager.updateScreen(chatId, this);
+            return;
+        }
 
         if (isWaitingBalanceAmount && targetUserId != null) {
             try {
@@ -143,11 +164,15 @@ public class AdminUserManageScreen extends AbstractScreen {
             row1.add(InlineKeyboardButton.builder().text("➕ Balans qo‘shish").callbackData("add_balance").build());
             row1.add(InlineKeyboardButton.builder().text("➖ Balans ayirish").callbackData("sub_balance").build());
 
+            InlineKeyboardRow rowPm = new InlineKeyboardRow();
+            rowPm.add(InlineKeyboardButton.builder().text("✉️ Shaxsiy xabar yuborish").callbackData("send_pm").build());
+
             InlineKeyboardRow row2 = new InlineKeyboardRow();
             row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder().text("Boshqa ID qidirish").callbackData("search_another").iconCustomEmojiId("5470060791883374114").build());
             row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder().text("Orqaga").callbackData("back_admin").iconCustomEmojiId("5258236805890710909").build());
 
             keyboard.add(row1);
+            keyboard.add(rowPm);
             keyboard.add(row2);
         } else {
             InlineKeyboardRow row = new InlineKeyboardRow();

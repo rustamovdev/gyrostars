@@ -32,9 +32,12 @@
           </div>
         </div>
       </div>
-      <div class="user-balance-btn" onclick="switchScreen('deposit')">
-        <span id="userBalanceTop">0 so'm</span>
-        <div class="plus-circle">+</div>
+      <div class="header-right-actions">
+        <button type="button" class="lang-switch-btn" id="langSwitchBtn" onclick="toggleLanguage()">🇺🇿 UZ</button>
+        <div class="user-balance-btn" onclick="switchScreen('deposit')">
+          <span id="userBalanceTop">0 so'm</span>
+          <div class="plus-circle">+</div>
+        </div>
       </div>
     </header>
 
@@ -50,9 +53,6 @@
         </button>
         <button type="button" class="cat-tab" data-cat="pubg" onclick="switchHomeTab('pubg')">
           <span class="sticker-emoji">🎮</span> PUBG UC
-        </button>
-        <button type="button" class="cat-tab" data-cat="gift" onclick="switchHomeTab('gift')">
-          <span class="sticker-emoji">🎁</span> Gift
         </button>
       </div>
 
@@ -73,17 +73,21 @@
               <span class="calculated-price" id="starsCalculatedPrice">0 so'm</span>
             </div>
             <div class="input-wrap">
-              <input type="number" id="starsAmountInput" placeholder="Masalan: 100" min="50" max="25000" oninput="calculateStarsPrice()">
+              <input type="number" id="starsAmountInput" placeholder="Masalan: 100" min="50" max="25000" oninput="onStarsInputChange()">
+            </div>
+            <!-- Interactive Range Slider -->
+            <div class="slider-container" style="margin-top: 10px;">
+              <input type="range" id="starsRangeSlider" min="50" max="2500" step="50" value="100" class="ios-slider" oninput="onStarsSliderChange(this.value)">
             </div>
           </div>
 
           <!-- Quick Stars Packages -->
           <div class="quick-packages-grid">
-            <button type="button" class="pkg-chip" onclick="setStarsAmount(50)">50 ⭐</button>
-            <button type="button" class="pkg-chip" onclick="setStarsAmount(100)">100 ⭐</button>
-            <button type="button" class="pkg-chip" onclick="setStarsAmount(250)">250 ⭐</button>
-            <button type="button" class="pkg-chip" onclick="setStarsAmount(500)">500 ⭐</button>
-            <button type="button" class="pkg-chip" onclick="setStarsAmount(1000)">1000 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(50, this)">50 ⭐</button>
+            <button type="button" class="pkg-chip active" onclick="setStarsAmount(100, this)">100 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(250, this)">250 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(500, this)">500 ⭐</button>
+            <button type="button" class="pkg-chip" onclick="setStarsAmount(1000, this)">1000 ⭐</button>
           </div>
 
           <!-- Target Username with 👤 Quick Auto-Fill -->
@@ -213,19 +217,6 @@
           </button>
         </div>
       </div>
-
-      <!-- GIFT SECTION -->
-      <div id="home-gift-view" class="tab-content-view">
-        <div class="section-title-row">
-          <div class="section-title"><span class="sticker-emoji-lg">🎁</span> Telegram Sovg'alari</div>
-        </div>
-        <div class="card-box form-card" style="text-align: center; padding: 36px 20px;">
-          <div class="sticker-emoji-xl" style="margin-bottom: 12px;">🎁</div>
-          <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">Telegram Sovg'alari</div>
-          <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 18px;">Tez orada Telegram orqali maxsus sovg'alar yuborish imkoniyati qo'shiladi!</div>
-          <button type="button" class="pill-badge-btn" onclick="switchHomeTab('stars')">⭐ Stars xaridiga o'tish</button>
-        </div>
-      </div>
     </main>
 
     <!-- 2. TOP REYTING (LEADERBOARD) -->
@@ -237,6 +228,16 @@
         <button type="button" class="period-tab active" data-period="today" onclick="switchTopPeriod('today')">Bugun</button>
         <button type="button" class="period-tab" data-period="week" onclick="switchTopPeriod('week')">Hafta</button>
         <button type="button" class="period-tab" data-period="month" onclick="switchTopPeriod('month')">Oy</button>
+      </div>
+
+      <!-- Top 1 Prize Banner -->
+      <div class="card-box top-prize-banner">
+        <div class="prize-badge-row">
+          <div class="prize-badge"><span class="sticker-emoji">🎁</span> Oylik Tanlov Sovg'asi</div>
+        </div>
+        <div class="prize-banner-text">
+          1 oy ichida reytingda <b>Top 1</b> bo‘lgan g‘olibga <b>1 oylik Telegram Premium</b> bepul beriladi! 💎✨
+        </div>
       </div>
 
       <div class="card-box leaderboard-card" id="topListContainer">
@@ -327,22 +328,77 @@
         </div>
       </div>
 
-      <button type="button" class="btn-primary-glow" style="margin-bottom: 14px;" onclick="switchScreen('deposit')">
+      <button type="button" class="btn-primary-glow" style="margin-bottom: 12px;" onclick="switchScreen('deposit')">
         <span class="sticker-emoji">💳</span> + Hisobni to'ldirish
       </button>
 
-      <!-- Goal Progress Card -->
-      <div class="card-box goal-card">
-        <div class="goal-header">
-          <div class="goal-trophy sticker-emoji-lg">🏆</div>
-          <div class="goal-info">
-            <div class="goal-title">Sizning maqsadingiz (VIP Status)</div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="goalBarFill" style="width: 5%;"></div>
-            </div>
-            <div class="goal-sub" id="goalSubText">1 200 000 so'm qoldi · 0% bajarildi</div>
+      <!-- Promocode Action Card -->
+      <div class="card-box promo-action-card" onclick="openPromoModal()">
+        <div class="action-card-left">
+          <div class="stat-icon-wrap purple"><span class="sticker-emoji">🎟</span></div>
+          <div>
+            <div class="card-title-bold">Promokod kiritish</div>
+            <div class="card-sub-desc">Maxsus bonus yoki sovg'alarga ega bo'ling</div>
           </div>
         </div>
+        <button type="button" class="btn-sm-glass">Kiritish ›</button>
+      </div>
+
+      <!-- Referral Program Card -->
+      <div class="card-box ref-card">
+        <div class="ref-header">
+          <div class="stat-icon-wrap yellow"><span class="sticker-emoji">🎁</span></div>
+          <div>
+            <div class="card-title-bold">Do‘stlarni taklif qiling</div>
+            <div class="card-sub-desc">Har bir to‘ldirishdan <b>2% naqd bonus</b> olasiz</div>
+          </div>
+        </div>
+        <div class="ref-stats-row">
+          <div class="ref-stat-item">
+            <div class="ref-stat-val" id="refCountVal">0 ta</div>
+            <div class="ref-stat-lbl">Taklif qilingan do'stlar</div>
+          </div>
+          <div class="ref-stat-item">
+            <div class="ref-stat-val" id="refPercentVal">2%</div>
+            <div class="ref-stat-lbl">Keshbek stavkasi</div>
+          </div>
+        </div>
+        <div class="ref-action-row">
+          <button type="button" class="btn-ref-copy" onclick="copyReferralLink()">
+            <span class="sticker-emoji">🔗</span> Havoladan nusxa olish
+          </button>
+          <button type="button" class="btn-ref-share" onclick="shareReferralLink()">
+            <span class="sticker-emoji">📤</span> Ulashish
+          </button>
+        </div>
+      </div>
+
+      <!-- Monthly Top 1 Contest Card -->
+      <div class="card-box contest-card">
+        <div class="contest-header">
+          <div class="contest-trophy sticker-emoji-lg">🏆</div>
+          <div class="contest-info">
+            <div class="contest-title">Oylik Reyting Tanlovi</div>
+            <div class="contest-desc">
+              1 oy ichida reytingda <b>Top 1</b> bo‘lgan g‘olibga <b>1 oylik Telegram Premium</b> bepul beriladi! 🎁
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-contest-view" onclick="switchScreen('top')">
+          <span class="sticker-emoji">🏆</span> Reytingni ko'rish
+        </button>
+      </div>
+
+      <!-- Live Support Card -->
+      <div class="card-box support-action-card" onclick="openLiveSupport()">
+        <div class="action-card-left">
+          <div class="stat-icon-wrap blue"><span class="sticker-emoji">💬</span></div>
+          <div>
+            <div class="card-title-bold">Jonli Qo'llab-quvvatlash</div>
+            <div class="card-sub-desc">Savol yoki muammolar bo'yicha admin (@gyro_pm)</div>
+          </div>
+        </div>
+        <button type="button" class="btn-sm-glass">Yozish ›</button>
       </div>
 
       <!-- Boost Card -->
@@ -400,11 +456,11 @@
         </div>
 
         <div class="quick-packages-grid">
-          <button type="button" class="pkg-chip" onclick="setDepositAmount(10000)">10 000</button>
-          <button type="button" class="pkg-chip" onclick="setDepositAmount(25000)">25 000</button>
-          <button type="button" class="pkg-chip" onclick="setDepositAmount(50000)">50 000</button>
-          <button type="button" class="pkg-chip" onclick="setDepositAmount(100000)">100 000</button>
-          <button type="button" class="pkg-chip" onclick="setDepositAmount(250000)">250 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(10000, this)">10 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(25000, this)">25 000</button>
+          <button type="button" class="pkg-chip active" onclick="setDepositAmount(50000, this)">50 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(100000, this)">100 000</button>
+          <button type="button" class="pkg-chip" onclick="setDepositAmount(250000, this)">250 000</button>
         </div>
 
         <button type="button" class="btn-primary-glow" onclick="submitDepositOrder()">
@@ -536,11 +592,62 @@
       </button>
     </nav>
 
+    <!-- Promocode Glass Modal -->
+    <div id="promoModal" class="glass-modal-backdrop" onclick="closePromoModal(event)">
+      <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <div class="modal-title"><span class="sticker-emoji">🎟</span> Promokod Faollashtirish</div>
+          <button type="button" class="modal-close-btn" onclick="closePromoModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Promokod nomini kiriting:</label>
+            <input type="text" id="promoCodeInput" class="input-field" placeholder="Masalan: YANGIYIL2026" style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;" autocomplete="off" />
+          </div>
+          <button type="button" class="btn-primary-glow" id="applyPromoBtn" onclick="submitPromoCode()">
+            <span class="sticker-emoji">✨</span> Promokodni faollashtirish
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipt Glass Modal -->
+    <div id="receiptModal" class="glass-modal-backdrop" onclick="closeReceiptModal(event)">
+      <div class="glass-modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <div class="modal-title"><span class="sticker-emoji">🧾</span> Elektron Kvitansiya</div>
+          <button type="button" class="modal-close-btn" onclick="closeReceiptModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="receipt-box" id="receiptContent">
+            <!-- Dynamically populated receipt details -->
+          </div>
+          <div class="receipt-actions-row" style="display: flex; gap: 8px; margin-top: 16px;">
+            <button type="button" class="btn-ref-copy" onclick="copyReceiptDetails()">
+              <span class="sticker-emoji">📋</span> Nusxalash
+            </button>
+            <button type="button" class="btn-ref-share" onclick="shareReceiptDetails()">
+              <span class="sticker-emoji">📤</span> Ulashish
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Interactive Toast Notification -->
     <div id="toastNotification" class="toast-notification"></div>
 
   </div>
 
-  <script src="/app.js"></script>
+  <script src="./app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

@@ -37,9 +37,10 @@ public class WebAppApiController {
     private final TransactionRepository transactionRepository;
     private final StarsTransactionRepository starsRepository;
     private final PremiumTransactionRepository premiumRepository;
-    private final PubgTransactionRepository pubgRepository;
     private final DepositOrderRepository depositOrderRepository;
     private final TelegramService telegramService;
+    private final CodeService codeService;
+    private final ru.lewis.leykabot.configuration.telegram.TelegramConfig telegramConfig;
 
     private PaymentCard resolveActiveCard() {
         return paymentCardService.getActiveCards().stream().findFirst()
@@ -48,53 +49,18 @@ public class WebAppApiController {
     }
 
     @GetMapping("/init")
-    public ResponseEntity<?> getInitData(@RequestParam(value = "userId", required = false) Long userId,
-                                        @RequestParam(value = "username", required = false) String username,
-                                        @RequestParam(value = "fullName", required = false) String fullName) {
-        if (userId == null || userId <= 0) {
-            // Guest / demo view
-            Map<String, Object> resp = new HashMap<>();
-            resp.put("user", Map.of(
-                    "userId", 0,
-                    "username", "Mijoz",
-                    "fullName", "Mehmon",
-                    "balance", 0,
-                    "verified", false
-            ));
-            resp.put("stats", Map.of(
-                    "balance", 0,
-                    "totalStars", 0,
-                    "totalSpent", 0,
-                    "totalPurchases", 0,
-                    "goalTarget", 1200000,
-                    "goalProgress", 0
-            ));
-            resp.put("prices", Map.of(
-                    "starUnitPrice", priceService.getPrice("STAR_PER_UNIT", 230),
-                    "starPackages", priceService.getAllStarPrices(),
-                    "premiumPackages", priceService.getAllPremiumPrices(),
-                    "pubgPackages", priceService.getAllPubgPrices()
-            ));
-            PaymentCard card = resolveActiveCard();
-            if (card != null) {
-                resp.put("card", Map.of(
-                        "cardNumber", card.getCardNumber(),
-                        "holderName", card.getHolderName(),
-                        "methodName", card.getMethodName()
-                ));
-            }
-            return ResponseEntity.ok(resp);
+    public ResponseEntity<?> getInitData(
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "fullName", required = false) String fullName
+    ) {
+        Long currentId = userId != null ? userId : 0L;
+        User user = null;
+        if (currentId > 0) {
+            user = userService.getUser(currentId).orElseGet(() -> userService.createUser(currentId));
         }
 
-        final Long currentId = userId;
-        User user = userService.getUser(currentId).orElseGet(() -> userService.createUser(currentId));
-        int balance = user.getBalance() != null ? user.getBalance() : 0;
-        long totalSpent = transactionRepository.sumRublesByTelegramId(currentId);
-        long starsTotal = starsRepository.sumStarsByTelegramId(currentId);
-        long starsCount = starsRepository.countByTelegramId(currentId);
-        long premiumCount = premiumRepository.countByTelegramId(currentId);
-        long pubgCount = pubgRepository.countByTelegramId(currentId);
-        long totalPurchases = starsCount + premiumCount + pubgCount;
+        int balance = user != null && user.getBalance() != null ? user.getBalance() : 0;
 
         PaymentCard card = resolveActiveCard();
 
@@ -111,118 +77,106 @@ public class WebAppApiController {
         String displayUsername = username;
         if (displayUsername == null || displayUsername.isBlank()) {
             try {
-                displayUsername = telegramService.getUsernameByUserId(currentId);
+                displayUsername = telegramService.getRawUsernameByUserId(currentId);
             } catch (Exception ignored) {}
+        }
+        if (displayUsername != null && displayUsername.startsWith("@")) {
+            displayUsername = displayUsername.substring(1).trim();
         }
         if (displayUsername == null) displayUsername = "";
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("user", Map.of(
-                "userId", user.getTelegramId(),
+                "userId", user != null ? user.getTelegramId() : currentId,
                 "username", displayUsername,
                 "fullName", displayName,
                 "balance", balance,
                 "verified", true
         ));
 
-        resp.put("stats", Map.of(
-                "balance", balance,
-                "totalStars", starsTotal,
-                "totalSpent", totalSpent,
-                "totalPurchases", totalPurchases,
-                "goalTarget", 1200000,
-                "goalProgress", Math.min(100, (int) ((totalSpent * 100) / 1200000))
-        ));
-
-        resp.put("prices", Map.of(
-                "starUnitPrice", priceService.getPrice("STAR_PER_UNIT", 230),
-                "starPackages", priceService.getAllStarPrices(),
-                "premiumPackages", priceService.getAllPremiumPrices(),
-                "pubgPackages", priceService.getAllPubgPrices()
-        ));
-
         if (card != null) {
             resp.put("card", Map.of(
                     "cardNumber", card.getCardNumber(),
                     "holderName", card.getHolderName(),
-                    "methodName", card.getMethodName()
+                    "methodName", card.getMethodName() != null ? card.getMethodName() : "HUMO"
             ));
         }
+
+        resp.put("prices", Map.of(
+                "starUnitPrice", 230,
+                "starPackages", priceService.getAllStarPrices(),
+                "premiumPackages", Map.of(
+                        1, priceService.getPremiumPrice(1),
+                        3, priceService.getPremiumPrice(3),
+                        6, priceService.getPremiumPrice(6),
+                        12, priceService.getPremiumPrice(12)
+                ),
+                "pubgPackages", Map.of(
+                        60, priceService.getPubgPrice(60, 11000),
+                        325, priceService.getPubgPrice(325, 55000),
+                        660, priceService.getPubgPrice(660, 110000),
+                        1800, priceService.getPubgPrice(1800, 275000),
+                        3850, priceService.getPubgPrice(3850, 545000),
+                        8100, priceService.getPubgPrice(8100, 1090000)
+                )
+        ));
+
+        long totalStars = currentId > 0 ? starsRepository.findTotalStarsByTelegramId(currentId) : 0;
+        long totalSpent = currentId > 0 ? transactionRepository.findTotalSpentByTelegramId(currentId) : 0;
+        long totalPurchases = currentId > 0 ? (starsRepository.countByTelegramId(currentId) + premiumRepository.countByTelegramId(currentId) + pubgRepository.countByTelegramId(currentId)) : 0;
+        int goalProgress = (int) Math.min(100, Math.round(((double) totalSpent / 1200000.0) * 100));
+
+        resp.put("stats", Map.of(
+                "totalStars", totalStars,
+                "totalSpent", totalSpent,
+                "totalPurchases", totalPurchases,
+                "goalTarget", 1200000,
+                "goalProgress", goalProgress
+        ));
 
         return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/top")
-    public ResponseEntity<?> getTopLeaderboard(@RequestParam(value = "period", defaultValue = "today") String period,
-                                              @RequestParam(value = "userId", required = false) Long userId) {
-        String periodKey = switch (period.toLowerCase()) {
-            case "week", "7days" -> "7days";
-            case "month", "30days" -> "30days";
-            default -> "today";
-        };
-
-        long queryId = userId != null && userId > 0 ? userId : 0L;
-        TopService.GlobalStats stats = topService.getGlobalStats(periodKey, queryId);
-
+    public ResponseEntity<?> getTopData(
+            @RequestParam(value = "period", defaultValue = "today") String period,
+            @RequestParam(value = "userId", required = false) Long userId
+    ) {
+        List<TopService.TopEntry> entries = topService.getTopByStars(0, 10);
         List<Map<String, Object>> topList = new ArrayList<>();
-        for (TopService.TopEntry entry : stats.top7()) {
-            String name = null;
-            try {
-                name = telegramService.getFullNameByUserId(entry.telegramId());
-            } catch (Exception ignored) {}
+        int rank = 1;
+        for (TopService.TopEntry e : entries) {
+            String name = telegramService.getUsernameByUserId(e.telegramId());
             if (name == null || name.isBlank()) {
-                try {
-                    name = telegramService.getUsernameByUserId(entry.telegramId());
-                } catch (Exception ignored) {}
+                name = "ID: " + e.telegramId();
             }
-            if (name == null || name.isBlank()) name = "Mijoz #" + entry.telegramId();
-
             topList.add(Map.of(
-                    "rank", entry.rank(),
+                    "rank", rank++,
                     "name", name,
-                    "total", entry.total(),
-                    "stars", entry.stars(),
-                    "premiumMonths", entry.premiumMonths(),
-                    "pubgUc", entry.pubgUc()
+                    "total", e.total(),
+                    "isMe", userId != null && userId.equals(e.telegramId())
             ));
         }
 
         List<String> recentBuyers = new ArrayList<>();
-        var recentTxList = transactionRepository.findTop10ByOrderByCreatedAtDesc();
-        for (var tx : recentTxList) {
-            String bName = null;
-            try {
-                bName = telegramService.getFullNameByUserId(tx.getTelegramId());
-            } catch (Exception ignored) {}
-            if (bName == null || bName.isBlank()) {
-                try {
-                    bName = telegramService.getUsernameByUserId(tx.getTelegramId());
-                } catch (Exception ignored) {}
-            }
-            if (bName != null && !bName.isBlank() && !recentBuyers.contains(bName)) {
-                recentBuyers.add(bName);
-            }
-        }
-        if (recentBuyers.isEmpty()) {
-            for (TopService.TopEntry entry : stats.top7()) {
-                String n = "Mijoz #" + entry.telegramId();
-                if (!recentBuyers.contains(n)) recentBuyers.add(n);
-            }
+        var recentTx = starsRepository.findAll();
+        for (int i = Math.max(0, recentTx.size() - 5); i < recentTx.size(); i++) {
+            var tx = recentTx.get(i);
+            String un = telegramService.getUsernameByUserId(tx.getTelegramId());
+            recentBuyers.add((un != null ? un : "Mijoz") + " · " + tx.getAmountStars() + " ⭐");
         }
 
         return ResponseEntity.ok(Map.of(
                 "period", period,
                 "top", topList,
-                "recentBuyers", recentBuyers,
-                "userRank", stats.userRank()
+                "recentBuyers", recentBuyers
         ));
     }
 
     @GetMapping("/history")
-    public ResponseEntity<?> getHistory(@RequestParam(value = "userId", required = false) Long userId,
-                                        @RequestParam(value = "status", defaultValue = "all") String status) {
+    public ResponseEntity<?> getHistory(@RequestParam("userId") Long userId) {
         if (userId == null || userId <= 0) {
-            return ResponseEntity.ok(List.of());
+            return ResponseEntity.badRequest().body(List.of());
         }
 
         List<Map<String, Object>> list = new ArrayList<>();
@@ -230,40 +184,51 @@ public class WebAppApiController {
         var stars = starsRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
         for (var s : stars) {
             list.add(Map.of(
-                    "id", "ST-" + s.getId(),
-                    "service", "Telegram Stars",
+                    "id", "STR-" + s.getId(),
+                    "service", "⭐ Stars",
                     "details", s.getAmountStars() + " Stars",
-                    "amount", s.getTransaction() != null ? s.getTransaction().getAmountRubles() : 0,
-                    "date", s.getCreatedAt().toString(),
-                    "status", "COMPLETED"
+                    "amount", Math.abs(s.getAmountRubles()),
+                    "status", "COMPLETED",
+                    "date", s.getCreatedAt().toString()
             ));
         }
 
         var prem = premiumRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
         for (var p : prem) {
             list.add(Map.of(
-                    "id", "PR-" + p.getId(),
-                    "service", "Telegram Premium",
+                    "id", "PRM-" + p.getId(),
+                    "service", "💎 Premium",
                     "details", p.getMonths() + " oy",
-                    "amount", p.getTransaction() != null ? p.getTransaction().getAmountRubles() : 0,
-                    "date", p.getCreatedAt().toString(),
-                    "status", "COMPLETED"
+                    "amount", Math.abs(p.getAmountRubles()),
+                    "status", "COMPLETED",
+                    "date", p.getCreatedAt().toString()
             ));
         }
 
         var pubg = pubgRepository.findByTelegramIdOrderByCreatedAtDesc(userId);
         for (var pb : pubg) {
             list.add(Map.of(
-                    "id", "PB-" + pb.getId(),
-                    "service", "PUBG Mobile UC",
-                    "details", pb.getUcAmount() + " UC",
-                    "amount", pb.getPriceRubles() != null ? pb.getPriceRubles() : 0,
-                    "date", pb.getCreatedAt().toString(),
-                    "status", pb.getStatus() != null ? pb.getStatus() : "COMPLETED"
+                    "id", "PBG-" + pb.getId(),
+                    "service", "🎮 PUBG UC",
+                    "details", pb.getUcAmount() + " UC (" + pb.getPlayerId() + ")",
+                    "amount", pb.getPriceRubles(),
+                    "status", pb.getStatus() != null ? pb.getStatus() : "COMPLETED",
+                    "date", pb.getCreatedAt().toString()
             ));
         }
 
-        // Sort by date descending
+        var deposits = depositOrderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        for (var d : deposits) {
+            list.add(Map.of(
+                    "id", "DEP-" + d.getId(),
+                    "service", "💳 Hisob to'ldirish",
+                    "details", d.getExactAmount() + " so'm",
+                    "amount", d.getBaseAmount(),
+                    "status", "PAID_AUTO".equals(d.getStatus()) ? "COMPLETED" : d.getStatus(),
+                    "date", d.getCreatedAt().toString()
+            ));
+        }
+
         list.sort((a, b) -> String.valueOf(b.get("date")).compareTo(String.valueOf(a.get("date"))));
 
         return ResponseEntity.ok(list);
@@ -276,47 +241,42 @@ public class WebAppApiController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<?> createDeposit(@RequestBody DepositRequest req) {
-        if (req.getAmount() == null || req.getAmount() < 1000) {
-            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Minimal summa 1 000 so'm"));
-        }
+    public ResponseEntity<?> createDepositOrder(@RequestBody DepositRequest req) {
         if (req.getUserId() == null || req.getUserId() <= 0) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
         }
+        if (req.getAmount() == null || req.getAmount() < 5000) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Minimal to'lov miqdori 5 000 so'm!"));
+        }
 
-        Long uid = req.getUserId();
         PaymentCard card = resolveActiveCard();
-
-        DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, req.getAmount(), card);
-
-        String cardNum = card != null ? card.getCardNumber() : "8600 0000 0000 0000";
-        String holder = card != null ? card.getHolderName() : "Admin";
-        String method = card != null ? card.getMethodName() : "HUMO";
+        DepositOrder order = autoPaymentService.createDepositOrder(req.getUserId(), req.getUserId(), req.getAmount(), card);
 
         return ResponseEntity.ok(Map.of(
                 "ok", true,
                 "orderId", order.getId(),
-                "orderCode", order.getOrderCode(),
                 "amount", order.getExactAmount(),
-                "cardNumber", cardNum,
-                "holderName", holder,
-                "methodName", method,
-                "createdAt", order.getCreatedAt().toString(),
+                "baseAmount", order.getBaseAmount(),
+                "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
+                "holderName", card != null ? card.getHolderName() : "Admin",
+                "methodName", card != null ? card.getMethodName() : "HUMO",
                 "expiresAt", order.getExpiresAt().toString()
         ));
     }
 
     @GetMapping("/deposit/check")
-    public ResponseEntity<?> checkDepositStatus(@RequestParam("orderId") Long orderId) {
-        Optional<DepositOrder> opt = autoPaymentService.getOrder(orderId);
-        if (opt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> checkDeposit(@RequestParam("orderId") Long orderId) {
+        Optional<DepositOrder> orderOpt = depositOrderRepository.findById(orderId);
+        if (orderOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Buyurtma topilmadi"));
         }
-        DepositOrder order = opt.get();
+        DepositOrder order = orderOpt.get();
+        boolean isPaid = "PAID_AUTO".equalsIgnoreCase(order.getStatus()) || "PAID".equalsIgnoreCase(order.getStatus()) || "APPROVED".equalsIgnoreCase(order.getStatus());
         return ResponseEntity.ok(Map.of(
+                "ok", true,
                 "orderId", order.getId(),
                 "status", order.getStatus(),
-                "isPaid", "PAID_AUTO".equals(order.getStatus()) || "PAID_MANUAL".equals(order.getStatus())
+                "isPaid", isPaid
         ));
     }
 
@@ -325,7 +285,7 @@ public class WebAppApiController {
         private Long userId;
         private Integer amount;
         private String targetUsername;
-        private String paymentMethod; // "card" or "balance"
+        private String paymentMethod;
     }
 
     @PostMapping("/buy/stars")
@@ -345,7 +305,6 @@ public class WebAppApiController {
                 return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Balansda mablag' yetarli emas!"));
             }
             starsTransactionService.create(uid, -price, stars);
-
             String cleanTarget = req.getTargetUsername().replace("@", "").trim();
             fragmentStarsService.buyStars(cleanTarget, stars);
 
@@ -353,24 +312,18 @@ public class WebAppApiController {
                 orderChannelService.sendOrderNotification("⭐ Telegram Stars", stars + " Stars", cleanTarget, price);
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "message", "✅ " + stars + " Stars muvaffaqiyatli xarid qilindi!",
-                    "newBalance", currentBalance - price
-            ));
+            telegramService.sendMessageAuto(uid,
+                    "🧾 <b>Xarid Kvitansiyasi: Telegram Stars</b>\n\n" +
+                    "⭐ <b>Miqdor:</b> " + stars + " Stars\n" +
+                    "👤 <b>Qabul qiluvchi:</b> @" + cleanTarget + "\n" +
+                    "💰 <b>To‘lov:</b> " + String.format("%,d", price).replace(',', ' ') + " so‘m\n" +
+                    "✅ <i>Buyurtmangiz muvaffaqiyatli yetkazildi!</i>");
+
+            return ResponseEntity.ok(Map.of("ok", true, "message", "✅ " + stars + " Stars muvaffaqiyatli xarid qilindi!", "newBalance", currentBalance - price));
         } else {
-            // Direct card invoice
             PaymentCard card = resolveActiveCard();
             DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "invoice", true,
-                    "orderId", order.getId(),
-                    "amount", order.getExactAmount(),
-                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
-                    "holderName", card != null ? card.getHolderName() : "Admin",
-                    "methodName", card != null ? card.getMethodName() : "HUMO"
-            ));
+            return ResponseEntity.ok(Map.of("ok", true, "invoice", true, "orderId", order.getId(), "amount", order.getExactAmount(), "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000", "holderName", card != null ? card.getHolderName() : "Admin", "methodName", card != null ? card.getMethodName() : "HUMO"));
         }
     }
 
@@ -379,7 +332,7 @@ public class WebAppApiController {
         private Long userId;
         private Integer months;
         private String targetUsername;
-        private String paymentMethod; // "card" or "balance"
+        private String paymentMethod;
     }
 
     @PostMapping("/buy/premium")
@@ -403,29 +356,23 @@ public class WebAppApiController {
             fragmentPremiumService.buyPremium(cleanTarget, months);
             premiumTransactionService.create(uid, -price, months);
 
+            String duration = months >= 12 ? (months / 12) + " yillik" : months + " oylik";
             if (orderChannelService != null) {
-                String duration = months >= 12 ? (months / 12) + " yillik" : months + " oylik";
                 orderChannelService.sendOrderNotification("💎 Telegram Premium", duration, cleanTarget, price);
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "message", "✅ " + months + " oylik Telegram Premium muvaffaqiyatli xarid qilindi!",
-                    "newBalance", currentBalance - price
-            ));
+            telegramService.sendMessageAuto(uid,
+                    "🧾 <b>Xarid Kvitansiyasi: Telegram Premium</b>\n\n" +
+                    "💎 <b>Muddat:</b> " + duration + "\n" +
+                    "👤 <b>Qabul qiluvchi:</b> @" + cleanTarget + "\n" +
+                    "💰 <b>To‘lov:</b> " + String.format("%,d", price).replace(',', ' ') + " so‘m\n" +
+                    "✅ <i>Telegram Premium faollashtirildi!</i>");
+
+            return ResponseEntity.ok(Map.of("ok", true, "message", "✅ " + months + " oylik Telegram Premium muvaffaqiyatli xarid qilindi!", "newBalance", currentBalance - price));
         } else {
-            // Direct card invoice
             PaymentCard card = resolveActiveCard();
             DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "invoice", true,
-                    "orderId", order.getId(),
-                    "amount", order.getExactAmount(),
-                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
-                    "holderName", card != null ? card.getHolderName() : "Admin",
-                    "methodName", card != null ? card.getMethodName() : "HUMO"
-            ));
+            return ResponseEntity.ok(Map.of("ok", true, "invoice", true, "orderId", order.getId(), "amount", order.getExactAmount(), "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000", "holderName", card != null ? card.getHolderName() : "Admin", "methodName", card != null ? card.getMethodName() : "HUMO"));
         }
     }
 
@@ -459,23 +406,72 @@ public class WebAppApiController {
                 orderChannelService.sendOrderNotification("🎮 PUBG Mobile UC", uc + " UC", "ID: " + req.getPlayerId(), price);
             }
 
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "message", "✅ " + uc + " PUBG UC muvaffaqiyatli yuborildi!",
-                    "newBalance", currentBalance - price
-            ));
+            telegramService.sendMessageAuto(uid,
+                    "🧾 <b>Xarid Kvitansiyasi: PUBG Mobile UC</b>\n\n" +
+                    "🎮 <b>Miqdor:</b> " + uc + " UC\n" +
+                    "👤 <b>Player ID:</b> " + req.getPlayerId() + "\n" +
+                    "💰 <b>To‘lov:</b> " + String.format("%,d", price).replace(',', ' ') + " so‘m\n" +
+                    "✅ <i>UC akkauntingizga yuborildi!</i>");
+
+            return ResponseEntity.ok(Map.of("ok", true, "message", "✅ " + uc + " PUBG UC muvaffaqiyatli yuborildi!", "newBalance", currentBalance - price));
         } else {
             PaymentCard card = resolveActiveCard();
             DepositOrder order = autoPaymentService.createDepositOrder(uid, uid, price, card);
-            return ResponseEntity.ok(Map.of(
-                    "ok", true,
-                    "invoice", true,
-                    "orderId", order.getId(),
-                    "amount", order.getExactAmount(),
-                    "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000",
-                    "holderName", card != null ? card.getHolderName() : "Admin",
-                    "methodName", card != null ? card.getMethodName() : "HUMO"
-            ));
+            return ResponseEntity.ok(Map.of("ok", true, "invoice", true, "orderId", order.getId(), "amount", order.getExactAmount(), "cardNumber", card != null ? card.getCardNumber() : "8600 0000 0000 0000", "holderName", card != null ? card.getHolderName() : "Admin", "methodName", card != null ? card.getMethodName() : "HUMO"));
         }
+    }
+
+    @Data
+    public static class PromoApplyRequest {
+        private Long userId;
+        private String code;
+    }
+
+    @PostMapping("/promocode/apply")
+    public ResponseEntity<?> applyPromo(@RequestBody PromoApplyRequest req) {
+        if (req.getUserId() == null || req.getUserId() <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Telegram ID aniqlanmadi!"));
+        }
+        if (req.getCode() == null || req.getCode().trim().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Promokodni kiriting!"));
+        }
+
+        CodeService.ActivationResult result = codeService.activateCode(req.getUserId(), req.getCode().trim().toUpperCase());
+        if (!result.isSuccess()) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", result.getMessage()));
+        }
+
+        User user = userService.getUser(req.getUserId()).orElseGet(() -> userService.createUser(req.getUserId()));
+        int newBalance = user.getBalance() != null ? user.getBalance() : 0;
+
+        telegramService.sendMessageAuto(req.getUserId(),
+                "🎟 <b>Promokod Muvaffaqiyatli Faollashtirildi!</b>\n\n" +
+                "➕ Balansingizga <b>+" + String.format("%,d", result.getAmount()).replace(',', ' ') + " so‘m</b> qo‘shildi!\n" +
+                "💰 Joriy balansingiz: <b>" + String.format("%,d", newBalance).replace(',', ' ') + " so‘m</b>");
+
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "message", "✅ Promokod faollashtirildi! +" + String.format("%,d", result.getAmount()).replace(',', ' ') + " so'm qo'shildi.",
+                "amount", result.getAmount(),
+                "newBalance", newBalance
+        ));
+    }
+
+    @GetMapping("/referral")
+    public ResponseEntity<?> getReferralInfo(@RequestParam("userId") Long userId) {
+        if (userId == null || userId <= 0) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "ID aniqlanmadi"));
+        }
+        long count = userService.getReferralsCount(userId);
+        String botUsername = telegramConfig.getUsername();
+        if (botUsername != null && botUsername.startsWith("@")) botUsername = botUsername.substring(1);
+        String link = "https://t.me/" + (botUsername != null ? botUsername : "GyroService_bot") + "?start=ref_" + userId;
+
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "link", link,
+                "count", count,
+                "percent", 2
+        ));
     }
 }

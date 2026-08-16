@@ -39,12 +39,12 @@ public class PaymentCardService {
     public void init() {
         if (paymentCardRepository.count() == 0) {
             PaymentCard defaultCard = new PaymentCard();
-            defaultCard.setCardNumber("8600 0000 0000 0000");
-            defaultCard.setHolderName("Bot Administrator");
-            defaultCard.setMethodName("💳 Uzcard / Humo");
+            defaultCard.setCardNumber("9860086603506261");
+            defaultCard.setHolderName("S R");
+            defaultCard.setMethodName("HUMO");
             defaultCard.setActive(true);
             paymentCardRepository.save(defaultCard);
-            log.info("Initialized default payment card");
+            log.info("Initialized default payment card with admin card 9860086603506261");
         }
     }
 

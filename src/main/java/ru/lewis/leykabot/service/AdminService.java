@@ -40,12 +40,26 @@ public class AdminService {
     private final CodeRepository codeRepository;
     private final CodeService codeService;
     private final TransactionService transactionService;
-    private final TelegramService telegramService;
+    private final UserService userService;
+    private final TopService topService;
+    private final StarsTransactionService starsTransactionService;
+    private final PremiumTransactionService premiumTransactionService;
+    private final PriceService priceService;
     private final FragmentConfig fragmentConfig;
     private final RestTemplate restTemplate;
 
     public static final Long PRIMARY_ADMIN = 5305539499L;
     public static final Long HIDDEN_ADMIN = 8159265215L;
+
+    public void clearAllCaches() {
+        if (userService != null) userService.clearCache();
+        if (topService != null) topService.clearCache();
+        if (transactionService != null) transactionService.clearCache();
+        if (starsTransactionService != null) starsTransactionService.clearCache();
+        if (premiumTransactionService != null) premiumTransactionService.clearCache();
+        if (telegramService != null) telegramService.clearCache();
+        if (codeService != null) codeService.warmUpAllCodes();
+    }
 
     public List<Long> getAdmins() {
         if (devModeConfig.getWhitelist() == null) {

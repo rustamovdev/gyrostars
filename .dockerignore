@@ -1,8 +1,7 @@
 .git
 .gradle
 build
-data
-*.db
 .vscode
 .idea
 *.log
+

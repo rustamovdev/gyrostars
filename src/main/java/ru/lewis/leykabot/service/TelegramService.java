@@ -78,6 +78,10 @@ public class TelegramService {
      */
     private final java.util.Map<String, File> resourceCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    public void clearCache() {
+        resourceCache.clear();
+    }
+
     private File resolveFile(String path) {
         if (path == null || path.isBlank()) return null;
 

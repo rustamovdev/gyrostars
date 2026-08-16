@@ -41,6 +41,10 @@ public class PremiumTransactionService {
                 .build();
     }
 
+    public void clearCache() {
+        if (cache != null) cache.invalidateAll();
+    }
+
     // -------------------------------------------------------------------------
     // Кэш
     // -------------------------------------------------------------------------

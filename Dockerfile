@@ -38,11 +38,12 @@ RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages 2>/d
 # Copy built production JAR from builder stage
 COPY --from=builder /app/build/libs/LeykaBot-1.0-SNAPSHOT.jar /app/app.jar
 
-# Copy runtime scripts and session
+# Copy runtime scripts, data directory, and session
 COPY payment_listener.py entrypoint.sh ./
 COPY humo_payment_session.session* ./
+COPY data ./data
 
-# Create data directory with full permissions and convert line endings
+# Ensure data directory has full permissions and convert line endings
 RUN mkdir -p /app/data && chmod -R 777 /app/data \
     && dos2unix /app/entrypoint.sh \
     && chmod +x /app/entrypoint.sh

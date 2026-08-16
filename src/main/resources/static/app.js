@@ -55,14 +55,28 @@ let state = {
   timerInterval: null
 };
 
+function cleanUsername(raw) {
+  if (!raw) return '';
+  raw = String(raw).trim();
+  while (raw.startsWith('@')) {
+    raw = raw.substring(1).trim();
+  }
+  return raw;
+}
+
+function formatUsername(raw) {
+  const clean = cleanUsername(raw);
+  return clean ? '@' + clean : '';
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Extract real user info from Telegram WebApp
   if (tg?.initDataUnsafe?.user) {
     const u = tg.initDataUnsafe.user;
     state.user.userId = u.id;
-    state.user.username = u.username || '';
-    state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (u.username ? '@' + u.username : 'Mijoz');
+    state.user.username = cleanUsername(u.username || '');
+    state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
     if (u.photo_url) {
       state.user.photoUrl = u.photo_url;
     }
@@ -72,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pId = params.get('userId') || params.get('user_id') || params.get('id');
     if (pId) {
       state.user.userId = parseInt(pId);
-      state.user.username = params.get('username') || '';
-      state.user.fullName = params.get('name') || (state.user.username ? '@' + state.user.username : 'Mijoz');
+      state.user.username = cleanUsername(params.get('username') || '');
+      state.user.fullName = params.get('name') || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
     }
   }
 
@@ -81,6 +95,15 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchInitData();
   fetchTopData('today');
   setStarsAmount(100);
+  setDepositAmount(50000);
+
+  if (state.user.username) {
+    const un = formatUsername(state.user.username);
+    const sInput = document.getElementById('targetUsernameInput');
+    const pInput = document.getElementById('premTargetUsername');
+    if (sInput && !sInput.value) sInput.value = un;
+    if (pInput && !pInput.value) pInput.value = un;
+  }
 });
 
 // Update Top User Header
@@ -92,14 +115,28 @@ function updateUserUI() {
   const accBal = document.getElementById('accountBalVal');
   const depBigBal = document.getElementById('depositBigBal');
 
-  if (nameEl) nameEl.innerText = state.user.fullName || (state.user.username ? '@' + state.user.username : 'Mijoz');
+  let cleanName = state.user.fullName;
+  if (!cleanName || cleanName === 'Mijoz' || cleanName.startsWith('@')) {
+    if (state.user.fullName && !state.user.fullName.startsWith('@') && state.user.fullName !== 'Mijoz') {
+      cleanName = state.user.fullName;
+    } else if (state.user.username) {
+      cleanName = formatUsername(state.user.username);
+    } else {
+      cleanName = 'Mijoz';
+    }
+  }
+  while (cleanName.startsWith('@@')) {
+    cleanName = cleanName.substring(1);
+  }
+
+  if (nameEl) nameEl.innerText = cleanName;
   if (idEl) idEl.innerText = state.user.userId ? state.user.userId : '---';
   if (avatarEl) {
     if (state.user.photoUrl) {
       avatarEl.innerHTML = `<img src="${state.user.photoUrl}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     } else {
-      const name = state.user.fullName || state.user.username || 'M';
-      const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'M';
+      const name = cleanName || 'M';
+      const initials = name.replace(/^@+/, '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'M';
       avatarEl.innerText = initials;
     }
   }
@@ -115,9 +152,8 @@ function fillOwnUsername(inputId) {
   triggerHaptic('medium');
   const input = document.getElementById(inputId);
   if (!input) return;
-  let un = state.user.username;
+  let un = formatUsername(state.user.username);
   if (un) {
-    if (!un.startsWith('@')) un = '@' + un;
     input.value = un;
     showToast("O'zingizning " + un + " kiritildi! 👤");
   } else {
@@ -155,12 +191,12 @@ async function fetchInitData() {
         state.prices = data.prices;
       }
       if (data.stats) {
-        document.getElementById('accountStarsVal').innerText = formatMoney(data.stats.totalStars || 0);
-        document.getElementById('accountSpentVal').innerText = formatMoney(data.stats.totalSpent || 0) + " so'm";
-        document.getElementById('accountPurchasesVal').innerText = data.stats.totalPurchases || 0;
-        document.getElementById('goalBarFill').style.width = Math.max(5, data.stats.goalProgress || 0) + '%';
-        const rem = Math.max(0, 1200000 - (data.stats.totalSpent || 0));
-        document.getElementById('goalSubText').innerText = formatMoney(rem) + " so'm qoldi · " + (data.stats.goalProgress || 0) + "% bajarildi";
+        const sVal = document.getElementById('accountStarsVal');
+        const spVal = document.getElementById('accountSpentVal');
+        const pVal = document.getElementById('accountPurchasesVal');
+        if (sVal) sVal.innerText = formatMoney(data.stats.totalStars || 0);
+        if (spVal) spVal.innerText = formatMoney(data.stats.totalSpent || 0) + " so'm";
+        if (pVal) pVal.innerText = data.stats.totalPurchases || 0;
       }
       updateUserUI();
       calculateStarsPrice();
@@ -196,6 +232,7 @@ function switchScreen(screenName) {
 
   if (screenName === 'top') fetchTopData('today');
   if (screenName === 'history') fetchHistoryData();
+  if (screenName === 'account') fetchReferralData();
 
   window.scrollTo(0, 0);
 }
@@ -222,13 +259,54 @@ function openServicesTab(serviceName) {
   switchHomeTab(serviceName);
 }
 
-// Stars Calculations
-function setStarsAmount(amount) {
+// Stars Calculations & Interactive Range Slider
+function onStarsSliderChange(val) {
+  triggerHaptic('light');
+  const amount = parseInt(val) || 50;
+  const input = document.getElementById('starsAmountInput');
+  if (input) input.value = amount;
+  setStarsAmount(amount);
+}
+
+function onStarsInputChange() {
+  const input = document.getElementById('starsAmountInput');
+  const slider = document.getElementById('starsRangeSlider');
+  const val = parseInt(input.value) || 50;
+  if (slider) slider.value = Math.min(2500, Math.max(50, val));
+  setStarsAmount(val);
+}
+
+function setStarsAmount(amount, el) {
   triggerHaptic('light');
   const input = document.getElementById('starsAmountInput');
-  if (input) {
+  const slider = document.getElementById('starsRangeSlider');
+  if (input && input.value != amount) {
     input.value = amount;
-    calculateStarsPrice();
+  }
+  if (slider && slider.value != amount) {
+    slider.value = Math.min(2500, Math.max(50, amount));
+  }
+  calculateStarsPrice();
+
+  document.querySelectorAll('#home-stars-view .pkg-chip').forEach(c => c.classList.remove('active'));
+  if (el) {
+    el.classList.add('active');
+  } else {
+    document.querySelectorAll('#home-stars-view .pkg-chip').forEach(c => {
+      if (c.innerText.startsWith(amount.toString()) || c.innerText.includes(amount.toString() + ' ⭐')) {
+        c.classList.add('active');
+      }
+    });
+  }
+}
+
+function openLiveSupport() {
+  triggerHaptic('medium');
+  const supportUrl = 'https://t.me/gyro_pm';
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(supportUrl);
+  } else {
+    window.open(supportUrl, '_blank');
   }
 }
 
@@ -459,9 +537,20 @@ async function submitPubgOrder() {
 }
 
 // DEPOSIT FORM
-function setDepositAmount(amount) {
+function setDepositAmount(amount, el) {
   triggerHaptic('light');
-  document.getElementById('depositAmountInput').value = amount;
+  const input = document.getElementById('depositAmountInput');
+  if (input) input.value = amount;
+  document.querySelectorAll('#screen-deposit .pkg-chip').forEach(c => c.classList.remove('active'));
+  if (el) {
+    el.classList.add('active');
+  } else {
+    document.querySelectorAll('#screen-deposit .pkg-chip').forEach(c => {
+      if (c.innerText.includes(formatMoney(amount))) {
+        c.classList.add('active');
+      }
+    });
+  }
 }
 
 async function submitDepositOrder() {
@@ -641,8 +730,8 @@ function renderHistoryList(items) {
     return;
   }
 
-  container.innerHTML = items.map(item => `
-    <div class="history-item-card">
+  container.innerHTML = items.map((item, idx) => `
+    <div class="history-item-card" onclick="openReceiptModal(${idx})">
       <div>
         <div class="history-service-title">${escapeHtml(item.service)} — ${escapeHtml(item.details)}</div>
         <div class="history-date">${item.date ? item.date.substring(0, 16).replace('T', ' ') : ''}</div>
@@ -653,6 +742,8 @@ function renderHistoryList(items) {
       </div>
     </div>
   `).join('');
+
+  state.historyItems = items;
 }
 
 function filterHistory(status, el) {
@@ -660,6 +751,111 @@ function filterHistory(status, el) {
   document.querySelectorAll('.h-tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   fetchHistoryData();
+}
+
+// PROMOCODE MODAL & ACTIONS
+function openPromoModal() {
+  triggerHaptic('medium');
+  const modal = document.getElementById('promoModal');
+  if (modal) {
+    modal.classList.add('active');
+    const input = document.getElementById('promoCodeInput');
+    if (input) {
+      input.value = '';
+      setTimeout(() => input.focus(), 200);
+    }
+  }
+}
+
+function closePromoModal(e) {
+  if (e && e.target && !e.target.classList.contains('glass-modal-backdrop') && !e.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  triggerHaptic('light');
+  const modal = document.getElementById('promoModal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function submitPromoCode() {
+  triggerHaptic('medium');
+  if (!state.user.userId) {
+    showToast("Telegram orqali kiring!");
+    triggerHaptic('warning');
+    return;
+  }
+
+  const input = document.getElementById('promoCodeInput');
+  const code = input ? input.value.trim().toUpperCase() : '';
+  if (!code) {
+    showToast("Promokodni kiriting!");
+    triggerHaptic('warning');
+    return;
+  }
+
+  const btn = document.getElementById('applyPromoBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/webapp/promocode/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: state.user.userId, code: code })
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      triggerHaptic('success');
+      showToast(data.message || "🎉 Promokod faollashtirildi!");
+      state.user.balance = data.newBalance;
+      updateUserUI();
+      closePromoModal();
+    } else {
+      triggerHaptic('error');
+      showToast(data.error || "Xatolik yuz berdi!");
+    }
+  } catch (e) {
+    showToast("Server bilan ulanishda xatolik!");
+    triggerHaptic('error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// REFERRAL ACTIONS
+let referralData = { link: '', count: 0, percent: 2 };
+
+async function fetchReferralData() {
+  if (!state.user.userId) return;
+  try {
+    const res = await fetch(`/api/webapp/referral?userId=${state.user.userId}`);
+    if (res.ok) {
+      const data = await res.json();
+      referralData = data;
+      const countEl = document.getElementById('refCountVal');
+      const pctEl = document.getElementById('refPercentVal');
+      if (countEl) countEl.innerText = (data.count || 0) + " ta";
+      if (pctEl) pctEl.innerText = (data.percent || 2) + "%";
+    }
+  } catch (e) {}
+}
+
+function copyReferralLink() {
+  triggerHaptic('success');
+  const link = referralData.link || `https://t.me/GyroService_bot?start=ref_${state.user.userId || ''}`;
+  copyText(link, "Referal havolasi nusxalandi! 🔗");
+}
+
+function shareReferralLink() {
+  triggerHaptic('medium');
+  const link = referralData.link || `https://t.me/GyroService_bot?start=ref_${state.user.userId || ''}`;
+  const text = encodeURIComponent("⭐️ Telegram Stars va Premium xizmatlari eng arzon narxlarda!\nDo'stlarim uchun havola: " + link);
+  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
+  
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, '_blank');
+  }
 }
 
 // UTILITIES
@@ -690,11 +886,108 @@ function formatMoney(num) {
   return String(num || 0).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
 
-function pad(n) {
-  return n < 10 ? '0' + n : n;
-}
-
 function escapeHtml(text) {
   if (!text) return '';
   return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+// RECEIPT MODAL & ACTIONS
+let currentReceiptItem = null;
+
+function openReceiptModal(index) {
+  triggerHaptic('medium');
+  const items = state.historyItems || [];
+  const item = items[index];
+  if (!item) return;
+  currentReceiptItem = item;
+
+  const content = document.getElementById('receiptContent');
+  if (content) {
+    content.innerHTML = `
+      <div class="receipt-row">
+        <span class="receipt-lbl">Xarid ID:</span>
+        <span class="receipt-val">${escapeHtml(item.id)}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Xizmat turi:</span>
+        <span class="receipt-val">${escapeHtml(item.service)}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Tafsilot:</span>
+        <span class="receipt-val">${escapeHtml(item.details)}</span>
+      </div>
+      <div class="receipt-divider"></div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">To'langan summa:</span>
+        <span class="receipt-val" style="color: #60a5fa; font-size: 15px;">${formatMoney(item.amount)} so'm</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Holati:</span>
+        <span class="receipt-val text-green">✅ Bajarildi</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-lbl">Sana va vaqt:</span>
+        <span class="receipt-val" style="font-size: 12px; color: var(--text-sub);">${item.date ? item.date.substring(0, 19).replace('T', ' ') : ''}</span>
+      </div>
+    `;
+  }
+
+  const modal = document.getElementById('receiptModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeReceiptModal(e) {
+  if (e && e.target && !e.target.classList.contains('glass-modal-backdrop') && !e.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  triggerHaptic('light');
+  const modal = document.getElementById('receiptModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function copyReceiptDetails() {
+  if (!currentReceiptItem) return;
+  const text = `🧾 Elektron Xarid Kvitansiyasi\n` +
+    `ID: ${currentReceiptItem.id}\n` +
+    `Xizmat: ${currentReceiptItem.service} (${currentReceiptItem.details})\n` +
+    `Summa: ${formatMoney(currentReceiptItem.amount)} so'm\n` +
+    `Holati: Bajarildi ✅\n` +
+    `Sana: ${currentReceiptItem.date ? currentReceiptItem.date.substring(0, 16).replace('T', ' ') : ''}\n` +
+    `Bot: @GyroService_bot`;
+  copyText(text, "Kvitansiya nusxalandi! 📋");
+}
+
+function shareReceiptDetails() {
+  if (!currentReceiptItem) return;
+  const text = encodeURIComponent(`🧾 Mening xarid kvitansiyam:\n` +
+    `Xizmat: ${currentReceiptItem.service} (${currentReceiptItem.details})\n` +
+    `Summa: ${formatMoney(currentReceiptItem.amount)} so'm\n` +
+    `Muvaffaqiyatli yetkazildi! @GyroService_bot`);
+  const shareUrl = `https://t.me/share/url?text=${text}`;
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(shareUrl);
+  } else {
+    window.open(shareUrl, '_blank');
+  }
+}
+
+// MULTI-LANGUAGE SYSTEM (UZ / RU)
+let currentLang = localStorage.getItem('app_lang') || 'UZ';
+
+function toggleLanguage() {
+  triggerHaptic('medium');
+  currentLang = currentLang === 'UZ' ? 'RU' : 'UZ';
+  localStorage.setItem('app_lang', currentLang);
+  applyLanguage();
+  showToast(currentLang === 'UZ' ? "Til o'zgartirildi: O'zbekcha 🇺🇿" : "Язык изменен: Русский 🇷🇺");
+}
+
+function applyLanguage() {
+  const btn = document.getElementById('langSwitchBtn');
+  if (btn) btn.innerText = currentLang === 'UZ' ? '🇺🇿 UZ' : '🇷🇺 RU';
+}
+
+// Init language on load
+applyLanguage();
+
+

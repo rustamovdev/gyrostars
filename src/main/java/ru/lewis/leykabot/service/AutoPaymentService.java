@@ -188,6 +188,22 @@ public class AutoPaymentService {
 
             telegramService.sendMessageAuto(order.getChatId(), userMessage);
 
+            // 2% Referal bonusini hisoblash va berish
+            try {
+                if (user.getReferrerId() != null && user.getReferrerId() > 0 && !user.getReferrerId().equals(user.getTelegramId())) {
+                    int refBonus = (int) Math.round(creditAmount * 0.02);
+                    if (refBonus > 0) {
+                        transactionService.create(user.getReferrerId(), refBonus);
+                        telegramService.sendMessageAuto(user.getReferrerId(),
+                                "🎁 <b>Do‘stingiz hisobini to‘ldirdi!</b>\n\n" +
+                                "➕ Sizga <b>2% doimiy keshbek bonusi</b> qo‘shildi: <b>+" + String.format("%,d", refBonus).replace(',', ' ') + " so‘m</b>\n" +
+                                "👥 Referal dasturimizda ishtirok etayotganingiz uchun rahmat!");
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Referral bonus processing failed: {}", e.getMessage());
+            }
+
             // Buyurtmalar kanaliga xabar yuborish
             orderChannelService.sendOrderNotification(
                     "<tg-emoji emoji-id=\"5436171485578308032\">💸</tg-emoji> Avto-To‘lov (Balans)",
@@ -198,6 +214,18 @@ public class AutoPaymentService {
 
             // Adminga xabarnoma yuborish
             notifyAdminsAutoSuccess(order, creditAmount, username);
+
+            // Katta aylanma xavfsizlik ogohlantirishi (10 mln so'mdan oshganda)
+            try {
+                long todaySum = depositOrderRepository.findAll().stream()
+                        .filter(d -> d.getCreatedAt() != null && d.getCreatedAt().isAfter(LocalDateTime.now().toLocalDate().atStartOfDay()))
+                        .filter(d -> "PAID_AUTO".equalsIgnoreCase(d.getStatus()) || "PAID".equalsIgnoreCase(d.getStatus()))
+                        .mapToLong(d -> d.getBaseAmount() != null ? d.getBaseAmount() : 0)
+                        .sum();
+                if (todaySum >= 10000000) {
+                    sendToAdmins("🔔 <b>Karta Xavfsizlik Eslatmasi:</b>\n\nBugungi aylanma hajmi <b>" + String.format("%,d", todaySum).replace(',', ' ') + " so‘m</b>ga yetdi. Kartadagi mablag‘ni yechib olishingiz tavsiya etiladi.");
+                }
+            } catch (Exception ignored) {}
 
             log.info("Auto-payment matched and processed for user {} (Order #{})", order.getUserId(), order.getId());
 
@@ -236,11 +264,11 @@ public class AutoPaymentService {
         String formattedAmount = String.format("%,d", amount).replace(',', ' ');
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
 
-        String adminMsg = "⚠️ <b>Noma'lum Avto-To‘lov Qabul Qilindi!</b>\n\n" +
+        String adminMsg = "📥 <b>Kartaga to‘lov kelib tushdi</b>\n\n" +
                 "<tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Summa:</b> <b>" + formattedAmount + " so‘m</b>\n" +
                 "<tg-emoji emoji-id=\"5438193302778192083\">🕒</tg-emoji> <b>Vaqt:</b> " + dateStr + "\n" +
-                "📄 <b>Matn:</b> <code>" + (rawText != null ? rawText : "Mavjud emas") + "</code>\n\n" +
-                "<i>Eslatma: Botda ushbu summaga mos faol buyurtma topilmadi. Agar kerak bo'lsa, foydalanuvchining balansini qo'lda to'ldirishingiz mumkin.</i>";
+                "📄 <b>Tafsilot:</b> <code>" + (rawText != null ? rawText.replace("\n", " ").trim() : "Mavjud emas") + "</code>\n\n" +
+                "<i>(Ushbu to'lov uchun botda avvaldan buyurtma yaratilmagan)</i>";
 
         sendToAdmins(adminMsg);
     }

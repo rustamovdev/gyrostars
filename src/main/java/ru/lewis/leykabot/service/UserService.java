@@ -43,6 +43,11 @@ public class UserService {
                 .build();
     }
 
+    public void clearCache() {
+        if (userCache != null) userCache.invalidateAll();
+        if (activatedCodeCache != null) activatedCodeCache.invalidateAll();
+    }
+
     // -------------------------------------------------------------------------
     // Вспомогательные методы загрузки в кэш
     // -------------------------------------------------------------------------

@@ -27,6 +27,11 @@ public class ScreenManager {
         this.telegramService = telegramService;
     }
 
+    public void clearCache() {
+        activeScreens.clear();
+        lastMessageIds.clear();
+    }
+
     /**
      * Создает новый экран и отправляет его в чат
      */

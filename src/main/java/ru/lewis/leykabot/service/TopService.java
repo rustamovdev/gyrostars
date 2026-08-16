@@ -50,6 +50,12 @@ public class TopService {
         premiumCache = buildCache();
     }
 
+    public void clearCache() {
+        if (rulesCache != null) rulesCache.invalidateAll();
+        if (starsCache != null) starsCache.invalidateAll();
+        if (premiumCache != null) premiumCache.invalidateAll();
+    }
+
     public CompletableFuture<Void> preloadAll(int totalLimit) {
         return CompletableFuture.runAsync(() -> {
             int pages = totalLimit / onePageLimit;

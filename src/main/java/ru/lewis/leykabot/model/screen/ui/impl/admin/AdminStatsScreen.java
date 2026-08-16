@@ -22,17 +22,20 @@ public class AdminStatsScreen extends AbstractScreen {
     private final ScreenFactory screenFactory;
     private final AdminService adminService;
     private final ReportService reportService;
+    private final DailyReportService dailyReportService;
 
     public AdminStatsScreen(Long chatId, Long userId,
                             ScreenManager screenManager,
                             ScreenFactory screenFactory,
                             AdminService adminService,
-                            ReportService reportService) {
+                            ReportService reportService,
+                            DailyReportService dailyReportService) {
         super(chatId, userId);
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
         this.adminService = adminService;
         this.reportService = reportService;
+        this.dailyReportService = dailyReportService;
     }
 
     @Override
@@ -41,6 +44,11 @@ public class AdminStatsScreen extends AbstractScreen {
 
         switch (callback) {
             case "refresh" -> screenManager.updateScreen(chatId, this);
+            case "send_daily_now" -> {
+                if (dailyReportService != null) {
+                    dailyReportService.sendDailyReportNow();
+                }
+            }
             case "download_pdf" -> {
                 LocalDate now = LocalDate.now();
                 LocalDateTime from = now.withDayOfMonth(1).atStartOfDay();
@@ -86,6 +94,9 @@ public class AdminStatsScreen extends AbstractScreen {
                 .style("success")
                 .build());
 
+        InlineKeyboardRow rowDaily = new InlineKeyboardRow();
+        rowDaily.add(InlineKeyboardButton.builder().text("📊 Kunlik Hisobotni Olish").callbackData("send_daily_now").build());
+
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(InlineKeyboardButton.builder().text("🔄 Yangilash").callbackData("refresh").build());
         row1.add(StyledInlineButton.styledBuilder()
@@ -95,6 +106,7 @@ public class AdminStatsScreen extends AbstractScreen {
                 .build());
 
         keyboard.add(rowPdf);
+        keyboard.add(rowDaily);
         keyboard.add(row1);
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }

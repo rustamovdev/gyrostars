@@ -22,19 +22,22 @@ public class AdminMainScreen extends AbstractScreen {
     private final AdminService adminService;
     private final FragmentStarsService fragmentStarsService;
     private final TelegramService telegramService;
+    private final BackupService backupService;
 
     public AdminMainScreen(Long chatId, Long userId,
                            ScreenManager screenManager,
                            ScreenFactory screenFactory,
                            AdminService adminService,
                            FragmentStarsService fragmentStarsService,
-                           TelegramService telegramService) {
+                           TelegramService telegramService,
+                           BackupService backupService) {
         super(chatId, userId);
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
         this.adminService = adminService;
         this.fragmentStarsService = fragmentStarsService;
         this.telegramService = telegramService;
+        this.backupService = backupService;
     }
 
     @Override
@@ -44,6 +47,8 @@ public class AdminMainScreen extends AbstractScreen {
         switch (callback) {
             case "admin_stats" -> screenManager.updateScreen(chatId, screenFactory.createAdminStatsScreen(chatId, userId));
             case "admin_broadcast" -> screenManager.updateScreen(chatId, screenFactory.createAdminBroadcastScreen(chatId, userId));
+            case "admin_promos" -> screenManager.updateScreen(chatId, screenFactory.createAdminPromoScreen(chatId, userId));
+            case "admin_users" -> screenManager.updateScreen(chatId, screenFactory.createAdminUserManageScreen(chatId, userId));
             case "admin_admins" -> screenManager.updateScreen(chatId, screenFactory.createAdminAdminsScreen(chatId, userId));
             case "admin_order_channel" -> screenManager.updateScreen(chatId, screenFactory.createAdminOrderChannelScreen(chatId, userId));
             case "admin_prices" -> screenManager.updateScreen(chatId, screenFactory.createAdminPriceScreen(chatId, userId));
@@ -69,9 +74,23 @@ public class AdminMainScreen extends AbstractScreen {
                     }
                 });
             }
+            case "admin_backup" -> {
+                telegramService.sendMessageAuto(chatId, "⏳ Baza zaxirasi yuborilmoqda...");
+                boolean ok = backupService.sendBackupToAdmins("💾 <b>Qo‘lda yuborilgan Baza Backup</b>");
+                if (ok) {
+                    telegramService.sendMessageAuto(chatId, "✅ <b>Baza zaxira nusxasi (botdb.mv.db) adminga yuborildi!</b>");
+                } else {
+                    telegramService.sendMessageAuto(chatId, "❌ Backup faylini yuborishda xatolik yuz berdi!");
+                }
+            }
             case "admin_maintenance" -> {
                 adminService.toggleMaintenance();
                 screenManager.updateScreen(chatId, this);
+            }
+            case "admin_clear_cache" -> {
+                adminService.clearAllCaches();
+                screenManager.clearCache();
+                telegramService.sendMessageAuto(chatId, "🧹 <b>Bot keshi to'liq tozalandi!</b>\n\n✅ Profil ma'lumotlari, narxlar, reyting va tranzaksiya keshlar yangilandi.");
             }
             case "admin_exit" -> screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
         }
@@ -98,16 +117,24 @@ public class AdminMainScreen extends AbstractScreen {
         row2.add(InlineKeyboardButton.builder().text("💳 To‘lov Kartalari").callbackData("admin_cards").build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();
-        row3.add(InlineKeyboardButton.builder().text("📣 Order Kanal").callbackData("admin_order_channel").build());
-        row3.add(InlineKeyboardButton.builder().text("👥 Adminlar").callbackData("admin_admins").build());
+        row3.add(InlineKeyboardButton.builder().text("🎟 Promokodlar").callbackData("admin_promos").build());
+        row3.add(InlineKeyboardButton.builder().text("👤 Foydalanuvchilar").callbackData("admin_users").build());
 
         InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(InlineKeyboardButton.builder().text("💎 Fragment Hamyon").callbackData("admin_wallet").build());
-        boolean maint = adminService.isMaintenanceMode();
-        row4.add(InlineKeyboardButton.builder().text(maint ? "🟢 Ochish" : "🔴 Texnik ish").callbackData("admin_maintenance").build());
+        row4.add(InlineKeyboardButton.builder().text("📣 Order Kanal").callbackData("admin_order_channel").build());
+        row4.add(InlineKeyboardButton.builder().text("👥 Adminlar").callbackData("admin_admins").build());
 
         InlineKeyboardRow row5 = new InlineKeyboardRow();
-        row5.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row5.add(InlineKeyboardButton.builder().text("💎 Fragment Hamyon").callbackData("admin_wallet").build());
+        row5.add(InlineKeyboardButton.builder().text("💾 Baza Backup").callbackData("admin_backup").build());
+
+        InlineKeyboardRow row6 = new InlineKeyboardRow();
+        row6.add(InlineKeyboardButton.builder().text("🧹 Keshni tozalash").callbackData("admin_clear_cache").build());
+        boolean maint = adminService.isMaintenanceMode();
+        row6.add(InlineKeyboardButton.builder().text(maint ? "🟢 Ochish" : "🔴 Texnik ish").callbackData("admin_maintenance").build());
+
+        InlineKeyboardRow row7 = new InlineKeyboardRow();
+        row7.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Asosiy menyuga qaytish")
                 .callbackData("admin_exit")
                 .iconCustomEmojiId("5258236805890710909")
@@ -118,6 +145,8 @@ public class AdminMainScreen extends AbstractScreen {
         keyboard.add(row3);
         keyboard.add(row4);
         keyboard.add(row5);
+        keyboard.add(row6);
+        keyboard.add(row7);
 
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }

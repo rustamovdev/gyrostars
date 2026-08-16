@@ -52,6 +52,8 @@ public class ScreenFactory {
     private final PubgService pubgService;
     private final PubgTransactionService pubgTransactionService;
     private final ReportService reportService;
+    private final BackupService backupService;
+    private final DailyReportService dailyReportService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
         return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, userService, this);
@@ -116,11 +118,11 @@ public class ScreenFactory {
     }
 
     public AdminMainScreen createAdminMainScreen(Long chatId, Long userId) {
-        return new AdminMainScreen(chatId, userId, screenManager, this, adminService, fragmentStarsService, telegramService);
+        return new AdminMainScreen(chatId, userId, screenManager, this, adminService, fragmentStarsService, telegramService, backupService);
     }
 
     public AdminStatsScreen createAdminStatsScreen(Long chatId, Long userId) {
-        return new AdminStatsScreen(chatId, userId, screenManager, this, adminService, reportService);
+        return new AdminStatsScreen(chatId, userId, screenManager, this, adminService, reportService, dailyReportService);
     }
 
     public AdminBroadcastScreen createAdminBroadcastScreen(Long chatId, Long userId) {
@@ -149,6 +151,14 @@ public class ScreenFactory {
 
     public GiftSelectScreen createGiftSelectScreen(Long chatId, Long userId) {
         return new GiftSelectScreen(chatId, userId, screenManager, this);
+    }
+
+    public AdminPromoScreen createAdminPromoScreen(Long chatId, Long userId) {
+        return new AdminPromoScreen(chatId, userId, screenManager, this, adminService, telegramService);
+    }
+
+    public AdminUserManageScreen createAdminUserManageScreen(Long chatId, Long userId) {
+        return new AdminUserManageScreen(chatId, userId, screenManager, this, adminService, telegramService);
     }
 
     public ru.lewis.leykabot.model.screen.ui.impl.pubg.PubgBuyScreen createPubgBuyScreen(Long chatId, Long userId) {
