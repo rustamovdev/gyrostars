@@ -268,8 +268,13 @@ async def main():
                 poll_task = asyncio.create_task(poll_recent_humo_messages())
             await client.run_until_disconnected()
         except Exception as e:
-            logger.error("Xatolik: %s. 5 soniyadan so'ng qayta ulanadi...", e)
-            await asyncio.sleep(5)
+            err_msg = str(e)
+            if "USER_DEACTIVATED" in err_msg or "401" in err_msg or "deactivated" in err_msg.lower():
+                logger.error("❌ Telegram akkaunt sessiyasi bekor qilingan (USER_DEACTIVATED). Humo tinglovchisi to'xtatildi. Asosiy Java Bot to'liq faoliyat yuritmoqda.")
+                await asyncio.sleep(3600)
+            else:
+                logger.error("Xatolik: %s. 10 soniyadan so'ng qayta ulanadi...", e)
+                await asyncio.sleep(10)
 
 
 if __name__ == "__main__":
