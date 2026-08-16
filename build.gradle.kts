@@ -1,9 +1,9 @@
 import org.gradle.api.file.DuplicatesStrategy
 
 plugins {
-    id("java")
-    alias(libs.plugins.spring.boot)
-    alias(libs.plugins.spring.dependency.management)
+    java
+    id("org.springframework.boot") version "3.4.2"
+    id("io.spring.dependency-management") version "1.1.7"
 }
 
 group = "ru.lewis.leykabot"
@@ -20,26 +20,25 @@ repositories {
 }
 
 dependencies {
-    // Spring
-    implementation(libs.spring.boot.starter)
-    implementation(libs.spring.boot.starter.data.jpa)
+    // Spring Boot
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-cache")
 
     // Database
-    runtimeOnly(libs.postgresql)
+    runtimeOnly("org.postgresql:postgresql:42.7.3")
     runtimeOnly("com.h2database:h2:2.3.232")
 
     // Lombok
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
 
     // Telegram
-    implementation(libs.telegram.client)
-    implementation(libs.telegram.longpolling)
+    implementation("org.telegram:telegrambots-client:9.2.1")
+    implementation("org.telegram:telegrambots-longpolling:9.2.1")
 
     implementation("org.ton.ton4j:smartcontract:1.3.5")
-
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
     implementation("com.itextpdf:itextpdf:5.5.13.3")
 }
