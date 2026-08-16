@@ -41,7 +41,6 @@ public class WebAppApiController {
     private final DepositOrderRepository depositOrderRepository;
     private final TelegramService telegramService;
     private final CodeService codeService;
-    private final ru.lewis.leykabot.configuration.telegram.TelegramConfig telegramConfig;
 
     private PaymentCard resolveActiveCard() {
         return paymentCardService.getActiveCards().stream().findFirst()
@@ -464,9 +463,8 @@ public class WebAppApiController {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "ID aniqlanmadi"));
         }
         long count = userService.getReferralsCount(userId);
-        String botUsername = telegramConfig.getUsername();
-        if (botUsername != null && botUsername.startsWith("@")) botUsername = botUsername.substring(1);
-        String link = "https://t.me/" + (botUsername != null ? botUsername : "GyroService_bot") + "?start=ref_" + userId;
+        String botUsername = "GyroService_bot";
+        String link = "https://t.me/" + botUsername + "?start=ref_" + userId;
 
         return ResponseEntity.ok(Map.of(
                 "ok", true,
