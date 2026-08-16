@@ -446,13 +446,13 @@ public class WebAppApiController {
 
         telegramService.sendMessageAuto(req.getUserId(),
                 "🎟 <b>Promokod Muvaffaqiyatli Faollashtirildi!</b>\n\n" +
-                "➕ Balansingizga <b>+" + String.format("%,d", result.getAmount()).replace(',', ' ') + " so‘m</b> qo‘shildi!\n" +
+                "➕ Balansingizga <b>+" + String.format("%,d", result.bonusAmount()).replace(',', ' ') + " so‘m</b> qo‘shildi!\n" +
                 "💰 Joriy balansingiz: <b>" + String.format("%,d", newBalance).replace(',', ' ') + " so‘m</b>");
 
         return ResponseEntity.ok(Map.of(
                 "ok", true,
-                "message", "✅ Promokod faollashtirildi! +" + String.format("%,d", result.getAmount()).replace(',', ' ') + " so'm qo'shildi.",
-                "amount", result.getAmount(),
+                "message", "✅ Promokod faollashtirildi! +" + String.format("%,d", result.bonusAmount()).replace(',', ' ') + " so'm qo'shildi.",
+                "amount", result.bonusAmount(),
                 "newBalance", newBalance
         ));
     }
