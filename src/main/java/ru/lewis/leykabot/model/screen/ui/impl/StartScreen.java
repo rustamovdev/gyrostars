@@ -175,10 +175,16 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
 
-        // Row 6: Do'stlarga ulashish (Eng pastda)
+        // Row 6: Referral & Ulashish
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
-                .text("Do‘stlarga ulashish")
+                .text("🔗 Referral (Bonus olish)")
+                .callbackData("referral")
+                .style("primary")
+                .iconCustomEmojiId("5422736199343168249")
+                .build());
+        row6.add(StyledInlineButton.styledBuilder()
+                .text("📤 Ulashish")
                 .url(shareUrl)
                 .iconCustomEmojiId("5271604874419647061")
                 .build());

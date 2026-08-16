@@ -72,6 +72,10 @@ public class ProfileScreen extends AbstractScreen {
                 isWaitingPromo = true;
                 telegramService.sendMessageAuto(chatId, "🎟 <b>Promokod faollashtirish:</b>\n\nIltimos, promokod matnini yozib yuboring (Masalan: <code>GYRO2026</code>):");
             }
+            case "referral" -> {
+                isWaitingPromo = false;
+                screenManager.updateScreen(chatId, screenFactory.createReferralScreen(chatId, userId));
+            }
         }
     }
 
@@ -112,6 +116,12 @@ public class ProfileScreen extends AbstractScreen {
         rowPromo.add(StyledInlineButton.styledBuilder()
                 .text("🎟 Promokod faollashtirish")
                 .callbackData("promo")
+                .build());
+        rowPromo.add(StyledInlineButton.styledBuilder()
+                .text("🔗 Referral")
+                .callbackData("referral")
+                .style("primary")
+                .iconCustomEmojiId("5422736199343168249")
                 .build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
