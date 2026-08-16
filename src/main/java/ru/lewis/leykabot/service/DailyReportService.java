@@ -19,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DailyReportService {
 
-    private final TelegramClient telegramClient;
     private final TelegramService telegramService;
     private final DevModeConfig devModeConfig;
     private final DepositOrderRepository depositOrderRepository;

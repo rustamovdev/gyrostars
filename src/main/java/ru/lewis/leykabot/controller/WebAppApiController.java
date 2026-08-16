@@ -37,6 +37,7 @@ public class WebAppApiController {
     private final TransactionRepository transactionRepository;
     private final StarsTransactionRepository starsRepository;
     private final PremiumTransactionRepository premiumRepository;
+    private final PubgTransactionRepository pubgRepository;
     private final DepositOrderRepository depositOrderRepository;
     private final TelegramService telegramService;
     private final CodeService codeService;
