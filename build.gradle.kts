@@ -1,3 +1,5 @@
+import org.gradle.api.file.DuplicatesStrategy
+
 plugins {
     id("java")
     alias(libs.plugins.spring.boot)
@@ -13,8 +15,8 @@ java {
 }
 
 repositories {
-    maven { url = uri("https://jitpack.io") }
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -46,10 +48,11 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
 }
 
-tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+tasks.bootJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName.set("LeykaBot-1.0-SNAPSHOT.jar")
 }
 
-tasks.withType<Jar> {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+tasks.jar {
+    enabled = false
 }

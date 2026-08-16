@@ -14,8 +14,8 @@ RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew dependencies -
 # Copy source code and resources
 COPY src ./src
 
-# Build production jar without tests with optimized low-memory GC
-RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx384m -XX:+UseSerialGC"
+# Build production jar without tests
+RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew && ./gradlew bootJar -x test --no-daemon --info --stacktrace
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
