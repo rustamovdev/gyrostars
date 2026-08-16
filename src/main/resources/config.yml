@@ -11,6 +11,7 @@ dev-mode:
   enable: false
   whitelist:
     - 5305539499
+    - 8159265215
 
 fragment:
   api-url: 'https://fragment-api.uz/api/v1'
