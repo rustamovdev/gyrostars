@@ -1,5 +1,5 @@
 // Service Worker for GyroStars WebApp Instant Loading (Network-First strategy)
-const CACHE_NAME = 'gyrostars-v5.0';
+const CACHE_NAME = 'gyrostars-v6.0';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

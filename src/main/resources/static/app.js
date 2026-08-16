@@ -69,27 +69,57 @@ function formatUsername(raw) {
   return clean ? '@' + clean : '';
 }
 
+function initTelegramUser() {
+  try {
+    if (tg?.initDataUnsafe?.user?.id) {
+      const u = tg.initDataUnsafe.user;
+      state.user.userId = u.id;
+      state.user.username = cleanUsername(u.username || '');
+      state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
+      if (u.photo_url) state.user.photoUrl = u.photo_url;
+      try { localStorage.setItem('gyro_user_id', String(u.id)); } catch(e){}
+      return;
+    }
+    if (tg?.initData) {
+      const sp = new URLSearchParams(tg.initData);
+      const userJson = sp.get('user');
+      if (userJson) {
+        const u = JSON.parse(userJson);
+        state.user.userId = u.id;
+        state.user.username = cleanUsername(u.username || '');
+        state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
+        if (u.photo_url) state.user.photoUrl = u.photo_url;
+        try { localStorage.setItem('gyro_user_id', String(u.id)); } catch(e){}
+        return;
+      }
+    }
+  } catch (e) {
+    console.log('TG parse error:', e);
+  }
+
+  // 2. URL Params Fallback
+  const params = new URLSearchParams(window.location.search);
+  const pId = params.get('userId') || params.get('user_id') || params.get('id');
+  if (pId) {
+    state.user.userId = parseInt(pId);
+    state.user.username = cleanUsername(params.get('username') || '');
+    state.user.fullName = params.get('name') || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
+    try { localStorage.setItem('gyro_user_id', String(pId)); } catch(e){}
+    return;
+  }
+
+  // 3. LocalStorage fallback
+  try {
+    const saved = localStorage.getItem('gyro_user_id');
+    if (saved) {
+      state.user.userId = parseInt(saved);
+    }
+  } catch(e){}
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Extract real user info from Telegram WebApp
-  if (tg?.initDataUnsafe?.user) {
-    const u = tg.initDataUnsafe.user;
-    state.user.userId = u.id;
-    state.user.username = cleanUsername(u.username || '');
-    state.user.fullName = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
-    if (u.photo_url) {
-      state.user.photoUrl = u.photo_url;
-    }
-  } else {
-    // 2. Fallback to URL search parameters if opened in browser
-    const params = new URLSearchParams(window.location.search);
-    const pId = params.get('userId') || params.get('user_id') || params.get('id');
-    if (pId) {
-      state.user.userId = parseInt(pId);
-      state.user.username = cleanUsername(params.get('username') || '');
-      state.user.fullName = params.get('name') || (state.user.username ? formatUsername(state.user.username) : 'Mijoz');
-    }
-  }
+  initTelegramUser();
 
   updateUserUI();
   fetchInitData();
