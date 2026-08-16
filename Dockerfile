@@ -9,8 +9,14 @@ COPY settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle ./gradle
 COPY src ./src
 
-# Build production jar without tests
-RUN gradle bootJar -x test --no-daemon --stacktrace 2>&1
+# Build production jar - capture errors explicitly
+RUN gradle compileJava --no-daemon 2>&1 | tee /tmp/build_out.txt; \
+    if grep -q "error:" /tmp/build_out.txt; then \
+        echo "=== COMPILATION ERRORS ==="; \
+        grep -A3 "error:" /tmp/build_out.txt; \
+        exit 1; \
+    fi
+RUN gradle bootJar -x test --no-daemon
 
 # -------------------------------------------------------------
 # Stage 2: Production Runtime image (Ultra Fast & Lightweight)
