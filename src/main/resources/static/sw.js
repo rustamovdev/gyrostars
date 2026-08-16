@@ -1,18 +1,8 @@
-// Service Worker for GyroStars WebApp Instant Loading
-const CACHE_NAME = 'gyrostars-v2';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/app.css',
-  '/app.js'
-];
+// Service Worker for GyroStars WebApp Instant Loading (Network-First strategy)
+const CACHE_NAME = 'gyrostars-v3';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
@@ -26,17 +16,15 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Only cache static GET requests, bypass API calls
   if (e.request.method === 'GET' && !e.request.url.includes('/api/')) {
     e.respondWith(
-      caches.match(e.request).then((cached) => {
-        return cached || fetch(e.request).then((res) => {
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, res.clone());
-            return res;
-          });
-        });
-      }).catch(() => fetch(e.request))
+      fetch(e.request).then((networkRes) => {
+        if (networkRes && networkRes.status === 200) {
+          const resClone = networkRes.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+        }
+        return networkRes;
+      }).catch(() => caches.match(e.request))
     );
   }
 });
