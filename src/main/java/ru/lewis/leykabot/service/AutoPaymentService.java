@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.configuration.DevModeConfig;
 import ru.lewis.leykabot.model.database.entity.DepositOrder;
 import ru.lewis.leykabot.model.database.entity.PaymentCard;
+import ru.lewis.leykabot.model.database.entity.User;
 import ru.lewis.leykabot.repository.DepositOrderRepository;
 
 import java.time.LocalDateTime;
