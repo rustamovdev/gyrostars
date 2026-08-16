@@ -33,6 +33,8 @@ public class CodeService {
     private final UserRepository userRepository;
     private final TelegramService telegramService;
     private final LogMessageConfig logMessageConfig;
+    private final TransactionService transactionService;
+    private final UserService userService;
 
     // Кэш: codeStr -> Code (без Optional — Caffeine не хранит null)
     private Cache<String, Code> codeCache;
@@ -174,18 +176,18 @@ public class CodeService {
         codeRepository.save(code);
         codeCache.put(codeStr, code);
 
-        // Обновляем баланс
-        user.setBalance(user.getBalance() + code.getAmount());
-        userRepository.save(user);
+        // Balansni oshiramiz va tranzaksiyani saqlaymiz (userCache va baza 100% yangilanadi)
+        transactionService.create(telegramId, code.getAmount());
+        userService.getUser(telegramId).ifPresent(userService::updateUserCache);
 
         // Инвалидируем список активаций — он изменился
         userActivatedCodesCache.invalidate(telegramId);
 
-        log.info("Пользователь {} активировал промокод {} и получил {} звёзд",
+        log.info("Foydalanuvchi {} promokod {} ni faollashtirdi: +{} so'm",
                 telegramId, codeStr, code.getAmount());
 
         return new ActivationResult(true,
-                "Промокод активирован! Вам начислено " + code.getAmount() + " звёзд",
+                "Promokod muvaffaqiyatli faollashtirildi! Balansingizga +" + code.getAmount() + " so'm qo'shildi.",
                 code.getAmount());
     }
 
