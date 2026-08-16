@@ -261,6 +261,7 @@ async def poll_recent_humo_messages():
 
 async def main():
     logger.info("🚀 @HUMOcardbot Tezkor Payment Listener ishga tushmoqda...")
+    poll_task = None
     while True:
         try:
             await client.connect()
@@ -271,7 +272,8 @@ async def main():
             me = await client.get_me()
             logger.info("✅ Akkaunt muvaffaqiyatli ulandi: %s (@%s)", me.first_name, me.username)
             logger.info("🎯 Faqat @HUMOcardbot xabarlari tezkor tinglanmoqda...")
-            asyncio.create_task(poll_recent_humo_messages())
+            if poll_task is None or poll_task.done():
+                poll_task = asyncio.create_task(poll_recent_humo_messages())
             await client.run_until_disconnected()
         except Exception as e:
             logger.error("Xatolik: %s. 5 soniyadan so'ng qayta ulanadi...", e)

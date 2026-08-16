@@ -20,6 +20,7 @@ fi
 echo "=========================================================="
 echo "🚀 [2/2] Spring Boot Java Bot & WebApp ishga tushirilmoqda..."
 echo "🌐 Server PORT: $PORT"
+echo "🌐 RENDER_EXTERNAL_URL: ${RENDER_EXTERNAL_URL:-'Not set'}"
 echo "=========================================================="
 
 if [ -f "/app/app.jar" ]; then
@@ -33,4 +34,5 @@ fi
 echo "📦 Executable JAR: $JAR_PATH"
 echo "=========================================================="
 
-exec java -Xmx350m -Xms128m -XX:+UseG1GC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
+# Low-overhead memory tuning for Render 512MB RAM + Keep-Alive
+exec java -Xmx260m -Xms64m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -Dserver.port="$PORT" -Dserver.address="0.0.0.0" -jar "$JAR_PATH"
