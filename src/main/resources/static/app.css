@@ -313,24 +313,56 @@ body {
   width: 100%;
 }
 
-.input-wrap input {
+.input-wrap input,
+.form-group input,
+.input-field,
+#promoCodeInput,
+#starsAmountInput,
+#targetUsernameInput,
+#premTargetUsername,
+#pubgPlayerIdInput,
+#depAmountInput {
   width: 100%;
-  background: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  outline: none;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  padding: 14px 16px !important;
+  color: #ffffff !important;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px;
+  outline: none !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-sizing: border-box;
 }
 
-.input-wrap input:focus {
-  border-color: var(--primary-blue);
+.input-wrap input:focus,
+.form-group input:focus,
+.input-field:focus,
+#promoCodeInput:focus,
+#starsAmountInput:focus,
+#targetUsernameInput:focus,
+#premTargetUsername:focus,
+#pubgPlayerIdInput:focus,
+#depAmountInput:focus {
+  border-color: #38bdf8 !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  box-shadow: 0 0 0 3.5px rgba(56, 189, 248, 0.22), inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+}
+
+.input-wrap input::placeholder,
+.form-group input::placeholder,
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.38) !important;
+  font-weight: 500 !important;
 }
 
 .input-wrap.icon-right input {
-  padding-right: 44px;
+  padding-right: 48px !important;
 }
 
 .input-right-icon {
@@ -338,9 +370,21 @@ body {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.18s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.input-right-icon:hover, .input-right-icon:active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateY(-50%) scale(1.05);
 }
 
 /* QUICK CHIPS */

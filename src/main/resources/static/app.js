@@ -69,8 +69,172 @@ function formatUsername(raw) {
   return clean ? '@' + clean : '';
 }
 
+// BILINGUAL LOCALIZATION (UZ / RU)
+const I18N = {
+  uz: {
+    langBtn: "🇺🇿 UZ",
+    starsTab: "⭐ Stars",
+    premTab: "💎 Premium",
+    pubgTab: "🎮 PUBG UC",
+    homeTitle: "Bosh sahifa",
+    topTitle: "Top Reyting",
+    servicesTitle: "Xizmatlar",
+    accountTitle: "Shaxsiy Kabinet",
+    historyTitle: "Tranzaksiyalar Tarixi",
+    starsSub: "Tezkor va arzon Stars xaridi",
+    premSub: "1, 3, 6 va 12 oylik rasmiy obunalar",
+    pubgSub: "Tezkor va arzon o'yin donatlari",
+    amountLabel: "⭐ Stars miqdori (Minimal 50):",
+    targetUserLabel: "👤 Qabul qiluvchi @username:",
+    ownUserHint: "O'zingizning username'ni kiritish",
+    pubgIdLabel: "🆔 PUBG Player ID (Raqamli ID):",
+    payMethodLabel: "💳 To'lov turi:",
+    payCard: "Karta orqali",
+    payBalance: "Balansdan to'lash",
+    buyStarsBtn: "⭐ Stars xarid qilish",
+    buyPremBtn: "💎 Premium xarid qilish",
+    buyPubgBtn: "🎮 UC xarid qilish",
+    depositTitle: "Hisobni to'ldirish",
+    currBal: "Joriy balans",
+    totStars: "Jami Stars",
+    totSpent: "Jami sarflangan",
+    totPurchases: "Xaridlar soni",
+    depositBtn: "💳 + Hisobni to'ldirish",
+    promoBtn: "Promokod kiritish",
+    promoSub: "Maxsus bonus yoki sovg'alarga ega bo'ling",
+    refTitle: "Do‘stlarni taklif qiling",
+    refSub: "Har bir to‘ldirishdan 2% naqd bonus olasiz",
+    refCopyBtn: "🔗 Havoladan nusxa olish",
+    refShareBtn: "📤 Ulashish",
+    contestTitle: "Oylik Reyting Tanlovi",
+    contestDesc: "1 oy ichida reytingda Top 1 bo‘lgan g‘olibga 1 oylik Telegram Premium bepul beriladi! 🎁",
+    contestViewBtn: "🏆 Reytingni ko'rish",
+    supportTitle: "Jonli Qo'llab-quvvatlash",
+    supportSub: "Savol yoki muammolar bo'yicha admin (@gyro_pm)",
+    supportBtn: "Yozish ›",
+    boostTitle: "Kanalimiz uchun ovoz bering!",
+    boostSub: "Kanalimizga boost berib, chegirmalarga ega bo'ling.",
+    boostBtn: "⚡ Ovoz berish (Boost)",
+    todayTab: "Bugun",
+    weekTab: "7 kun",
+    monthTab: "30 kun",
+    allTab: "Hammasi",
+    recentBuyers: "🔥 So'nggi faol xaridorlar:",
+    navHome: "Bosh sahifa",
+    navTop: "Top",
+    navServices: "Xizmatlar",
+    navAccount: "Kabinet",
+    navHistory: "Tarix",
+    promoModalTitle: "🎟 Promokod Faollashtirish",
+    promoInputLabel: "Promokod nomini kiriting:",
+    promoApplyBtn: "✨ Promokodni faollashtirish",
+    receiptModalTitle: "🧾 Elektron Kvitansiya",
+    copyBtn: "📋 Nusxalash",
+    shareBtn: "📤 Ulashish"
+  },
+  ru: {
+    langBtn: "🇷🇺 RU",
+    starsTab: "⭐ Stars",
+    premTab: "💎 Premium",
+    pubgTab: "🎮 PUBG UC",
+    homeTitle: "Главная",
+    topTitle: "Топ Рейтинг",
+    servicesTitle: "Услуги",
+    accountTitle: "Личный Кабинет",
+    historyTitle: "История Транзакций",
+    starsSub: "Быстрая и выгодная покупка Stars",
+    premSub: "Официальные подписки на 1, 3, 6 и 12 месяцев",
+    pubgSub: "Быстрый донат в любимые игры",
+    amountLabel: "⭐ Количество Stars (Минимум 50):",
+    targetUserLabel: "👤 Получатель @username:",
+    ownUserHint: "Вставить свой username",
+    pubgIdLabel: "🆔 PUBG Player ID (Цифровой ID):",
+    payMethodLabel: "💳 Способ оплаты:",
+    payCard: "Картой (HUMO/UZCARD)",
+    payBalance: "С баланса бота",
+    buyStarsBtn: "⭐ Купить Stars",
+    buyPremBtn: "💎 Купить Premium",
+    buyPubgBtn: "🎮 Купить UC",
+    depositTitle: "Пополнение баланса",
+    currBal: "Текущий баланс",
+    totStars: "Всего Stars",
+    totSpent: "Всего потрачено",
+    totPurchases: "Количество покупок",
+    depositBtn: "💳 + Пополнить баланс",
+    promoBtn: "Ввести промокод",
+    promoSub: "Получите бонусы и подарки",
+    refTitle: "Приглашайте друзей",
+    refSub: "Получайте 2% кешбэк со всех пополнений",
+    refCopyBtn: "🔗 Скопировать ссылку",
+    refShareBtn: "📤 Поделиться",
+    contestTitle: "Ежемесячный Конкурс Рейтинга",
+    contestDesc: "Победителю Топ-1 за месяц дарим 1 месяц Telegram Premium бесплатно! 🎁",
+    contestViewBtn: "🏆 Смотреть рейтинг",
+    supportTitle: "Живая Поддержка",
+    supportSub: "По всем вопросам и помощи (@gyro_pm)",
+    supportBtn: "Написать ›",
+    boostTitle: "Проголосуйте за канал!",
+    boostSub: "Дайте буст нашему каналу и получайте скидки.",
+    boostBtn: "⚡ Голосовать (Boost)",
+    todayTab: "Сегодня",
+    weekTab: "7 дней",
+    monthTab: "30 дней",
+    allTab: "Все время",
+    recentBuyers: "🔥 Недавние покупатели:",
+    navHome: "Главная",
+    navTop: "Топ",
+    navServices: "Услуги",
+    navAccount: "Кабинет",
+    navHistory: "История",
+    promoModalTitle: "🎟 Активация Промокода",
+    promoInputLabel: "Введите промокод:",
+    promoApplyBtn: "✨ Активировать промокод",
+    receiptModalTitle: "🧾 Электронный Чек",
+    copyBtn: "📋 Скопировать",
+    shareBtn: "📤 Поделиться"
+  }
+};
+
+let currentLang = localStorage.getItem('gyro_lang') || 'uz';
+
+function toggleLanguage() {
+  currentLang = currentLang === 'uz' ? 'ru' : 'uz';
+  localStorage.setItem('gyro_lang', currentLang);
+  triggerHaptic('medium');
+  applyLanguage();
+  showToast(currentLang === 'uz' ? "Til o'zgartirildi: O'zbekcha 🇺🇿" : "Язык изменен: Русский 🇷🇺");
+}
+
+function applyLanguage() {
+  const dict = I18N[currentLang] || I18N.uz;
+  const btn = document.getElementById('langSwitchBtn');
+  if (btn) btn.innerText = dict.langBtn;
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) {
+      el.innerText = dict[key];
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (dict[key]) {
+      el.innerHTML = dict[key];
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (dict[key]) {
+      el.placeholder = dict[key];
+    }
+  });
+}
+
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
+  applyLanguage();
   // 1. Extract real user info from Telegram WebApp
   if (tg?.initDataUnsafe?.user) {
     const u = tg.initDataUnsafe.user;

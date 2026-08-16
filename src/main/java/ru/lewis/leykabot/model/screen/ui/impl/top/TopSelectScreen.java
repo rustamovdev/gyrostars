@@ -124,6 +124,8 @@ public class TopSelectScreen extends AbstractScreen {
         String userRankStr = (stats.userRank() > 0) ? stats.userRank() + "-o'rin" : "yo'q";
 
         return "📊 <b>Global Statistika (" + periodTitle + ")</b>\n\n" +
+                "<blockquote>🎁 <b>OYLIK REYTING TANLOVI:</b>\n" +
+                "Har oy davomida reytingda <b>Top 1</b> bo‘lgan g‘olibga <b>1 oylik Telegram Premium</b> bepul beriladi! 🏆</blockquote>\n\n" +
                 "<blockquote><tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Umumiy aylanma:</b> " + formattedTurnover + " so'm\n" +
                 "🛒 <b>Jami xaridlar:</b> " + stats.totalPurchases() + " ta\n" +
                 "├ <tg-emoji emoji-id=\"5985826831591281620\">⭐️</tg-emoji> <b>Stars:</b> " + stats.starsTxCount() + " ta (" + formattedStars + " stars)\n" +

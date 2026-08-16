@@ -567,31 +567,31 @@
         <div class="nav-icon-wrap">
           <span class="sticker-emoji">⭐</span>
         </div>
-        <span>Bosh sahifa</span>
+        <span data-i18n="navHome">Bosh sahifa</span>
       </button>
       <button type="button" class="nav-item" data-screen="top" onclick="switchScreen('top')">
         <div class="nav-icon-wrap">
           <span class="sticker-emoji">🏆</span>
         </div>
-        <span>Top</span>
+        <span data-i18n="navTop">Top</span>
       </button>
       <button type="button" class="nav-item" data-screen="services" onclick="switchScreen('services')">
         <div class="nav-icon-wrap">
           <span class="sticker-emoji">⚡</span>
         </div>
-        <span>Xizmatlar</span>
+        <span data-i18n="navServices">Xizmatlar</span>
       </button>
       <button type="button" class="nav-item" data-screen="account" onclick="switchScreen('account')">
         <div class="nav-icon-wrap">
           <span class="sticker-emoji">👤</span>
         </div>
-        <span>Kabinet</span>
+        <span data-i18n="navAccount">Kabinet</span>
       </button>
       <button type="button" class="nav-item" data-screen="history" onclick="switchScreen('history')">
         <div class="nav-icon-wrap">
           <span class="sticker-emoji">📜</span>
         </div>
-        <span>Tarix</span>
+        <span data-i18n="navHistory">Tarix</span>
       </button>
     </nav>
 
@@ -600,16 +600,16 @@
       <div class="glass-modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
         <div class="modal-header">
-          <div class="modal-title"><span class="sticker-emoji">🎟</span> Promokod Faollashtirish</div>
+          <div class="modal-title"><span class="sticker-emoji">🎟</span> <span data-i18n="promoModalTitle">Promokod Faollashtirish</span></div>
           <button type="button" class="modal-close-btn" onclick="closePromoModal()">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Promokod nomini kiriting:</label>
+            <label class="form-label" data-i18n="promoInputLabel">Promokod nomini kiriting:</label>
             <input type="text" id="promoCodeInput" class="input-field" placeholder="Masalan: YANGIYIL2026" style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;" autocomplete="off" />
           </div>
           <button type="button" class="btn-primary-glow" id="applyPromoBtn" onclick="submitPromoCode()">
-            <span class="sticker-emoji">✨</span> Promokodni faollashtirish
+            <span class="sticker-emoji">✨</span> <span data-i18n="promoApplyBtn">Promokodni faollashtirish</span>
           </button>
         </div>
       </div>
@@ -620,7 +620,7 @@
       <div class="glass-modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
         <div class="modal-header">
-          <div class="modal-title"><span class="sticker-emoji">🧾</span> Elektron Kvitansiya</div>
+          <div class="modal-title"><span class="sticker-emoji">🧾</span> <span data-i18n="receiptModalTitle">Elektron Kvitansiya</span></div>
           <button type="button" class="modal-close-btn" onclick="closeReceiptModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -629,10 +629,10 @@
           </div>
           <div class="receipt-actions-row" style="display: flex; gap: 8px; margin-top: 16px;">
             <button type="button" class="btn-ref-copy" onclick="copyReceiptDetails()">
-              <span class="sticker-emoji">📋</span> Nusxalash
+              <span class="sticker-emoji">📋</span> <span data-i18n="copyBtn">Nusxalash</span>
             </button>
             <button type="button" class="btn-ref-share" onclick="shareReceiptDetails()">
-              <span class="sticker-emoji">📤</span> Ulashish
+              <span class="sticker-emoji">📤</span> <span data-i18n="shareBtn">Ulashish</span>
             </button>
           </div>
         </div>

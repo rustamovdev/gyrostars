@@ -54,6 +54,7 @@ public class ScreenFactory {
     private final ReportService reportService;
     private final BackupService backupService;
     private final DailyReportService dailyReportService;
+    private final CodeService codeService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
         return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, userService, this);
@@ -61,7 +62,7 @@ public class ScreenFactory {
 
     public ProfileScreen createProfileScreen(Long chatId, Long userId) {
         return new ProfileScreen(chatId, userId, buttonsLocConfig, clientMessageConfig, screenManager, telegramService, userService,
-                transactionService, starsTransactionService, premiumTransactionService, this);
+                transactionService, starsTransactionService, premiumTransactionService, codeService, this);
     }
 
     public SupportScreen createSupportScreen(Long chatId, Long userId) {

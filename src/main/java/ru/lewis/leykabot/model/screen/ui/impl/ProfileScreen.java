@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.lewis.leykabot.configuration.loc.ButtonsLocConfig;
 import ru.lewis.leykabot.configuration.loc.ClientMessageConfig;
+import ru.lewis.leykabot.model.button.StyledInlineButton;
 import ru.lewis.leykabot.model.screen.ui.AbstractScreen;
 import ru.lewis.leykabot.model.screen.ui.ScreenFactory;
 import ru.lewis.leykabot.model.screen.ui.ScreenManager;
@@ -25,6 +26,9 @@ public class ProfileScreen extends AbstractScreen {
     private final TransactionService transactionService;
     private final StarsTransactionService starsTransactionService;
     private final PremiumTransactionService premiumTransactionService;
+    private final CodeService codeService;
+
+    private boolean isWaitingPromo = false;
 
     public ProfileScreen(Long chatId, Long userId, ButtonsLocConfig buttonsLocConfig,
                          ClientMessageConfig clientMessageConfig,
@@ -34,6 +38,7 @@ public class ProfileScreen extends AbstractScreen {
                          TransactionService transactionService,
                          StarsTransactionService starsTransactionService,
                          PremiumTransactionService premiumTransactionService,
+                         CodeService codeService,
                          ScreenFactory screenFactory) {
         super(chatId, userId);
         this.buttonsLocConfig = buttonsLocConfig;
@@ -44,54 +49,80 @@ public class ProfileScreen extends AbstractScreen {
         this.transactionService = transactionService;
         this.starsTransactionService = starsTransactionService;
         this.premiumTransactionService = premiumTransactionService;
+        this.codeService = codeService;
         this.screenFactory = screenFactory;
     }
 
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
         switch (callback) {
-            case "back": {
+            case "back" -> {
+                isWaitingPromo = false;
                 screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
-                break;
             }
-            case "deposit": {
+            case "deposit" -> {
+                isWaitingPromo = false;
                 screenManager.updateScreen(chatId, screenFactory.createDepositRublesScreen(chatId, userId));
-                break;
             }
-            case "top": {
+            case "top" -> {
+                isWaitingPromo = false;
                 screenManager.updateScreen(chatId, screenFactory.createTopSelectScreen(chatId, userId));
-                break;
             }
-            default:
-                break;
+            case "promo" -> {
+                isWaitingPromo = true;
+                telegramService.sendMessageAuto(chatId, "🎟 <b>Promokod faollashtirish:</b>\n\nIltimos, promokod matnini yozib yuboring (Masalan: <code>GYRO2026</code>):");
+            }
+        }
+    }
+
+    @Override
+    public void handleMessage(String text, TelegramClient bot) {
+        if (isWaitingPromo && text != null && !text.isBlank()) {
+            isWaitingPromo = false;
+            CodeService.ActivationResult res = codeService.activateCode(userId, text.trim().toUpperCase());
+            if (res.success()) {
+                String bonusFormatted = String.format("%,d", res.bonusAmount()).replace(',', ' ');
+                telegramService.sendMessageAuto(chatId, "✅ <b>Promokod muvaffaqiyatli faollashtirildi!</b>\n\n🎁 Balansingizga <b>+" + bonusFormatted + " so‘m</b> qo‘shildi!");
+            } else {
+                telegramService.sendMessageAuto(chatId, "❌ " + res.message());
+            }
+            screenManager.updateScreen(chatId, this);
         }
     }
 
     @Override
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
+
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("Balansni to‘ldirish")
                 .callbackData("deposit")
                 .style("success")
                 .iconCustomEmojiId("5890848474563352982")
                 .build());
-        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("Reyting")
                 .callbackData("top")
                 .style("primary")
                 .iconCustomEmojiId("5436201215341930329")
                 .build());
 
+        InlineKeyboardRow rowPromo = new InlineKeyboardRow();
+        rowPromo.add(StyledInlineButton.styledBuilder()
+                .text("🎟 Promokod faollashtirish")
+                .callbackData("promo")
+                .build());
+
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row2.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 
         keyboard.add(row1);
+        keyboard.add(rowPromo);
         keyboard.add(row2);
 
         return InlineKeyboardMarkup.builder()
