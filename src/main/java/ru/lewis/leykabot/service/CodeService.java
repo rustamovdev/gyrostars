@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.lewis.leykabot.configuration.loc.LogMessageConfig;
 import ru.lewis.leykabot.model.database.entity.ActivatedCode;
 import ru.lewis.leykabot.model.database.entity.Code;
+import ru.lewis.leykabot.model.database.entity.Transaction;
 import ru.lewis.leykabot.model.database.entity.User;
 import ru.lewis.leykabot.repository.ActivatedCodeRepository;
 import ru.lewis.leykabot.repository.CodeRepository;
+import ru.lewis.leykabot.repository.TransactionRepository;
 import ru.lewis.leykabot.repository.UserRepository;
 
 import java.text.MessageFormat;
@@ -35,7 +37,7 @@ public class CodeService {
     private final LogMessageConfig logMessageConfig;
     private final TransactionService transactionService;
     private final UserService userService;
-    private final ru.lewis.leykabot.repository.TransactionRepository transactionRepository;
+    private final TransactionRepository transactionRepository;
     private final TopService topService;
 
     // Кэш: codeStr -> Code (без Optional — Caffeine не хранит null)
@@ -185,7 +187,7 @@ public class CodeService {
         userRepository.save(user);
         userService.updateUserCache(user);
 
-        ru.lewis.leykabot.model.database.entity.Transaction tx = new ru.lewis.leykabot.model.database.entity.Transaction();
+        Transaction tx = new Transaction();
         tx.setTelegramId(telegramId);
         tx.setAmountRubles(code.getAmount());
         transactionRepository.save(tx);

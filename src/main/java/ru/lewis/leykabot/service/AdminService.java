@@ -13,17 +13,11 @@ import ru.lewis.leykabot.configuration.FragmentConfig;
 import ru.lewis.leykabot.model.database.entity.Code;
 import ru.lewis.leykabot.model.database.entity.User;
 import ru.lewis.leykabot.model.dto.fragment.FragmentApiResponse;
-import ru.lewis.leykabot.repository.CodeRepository;
-import ru.lewis.leykabot.repository.PremiumTransactionRepository;
-import ru.lewis.leykabot.repository.StarsTransactionRepository;
-import ru.lewis.leykabot.repository.TransactionRepository;
-import ru.lewis.leykabot.repository.UserRepository;
+import ru.lewis.leykabot.repository.*;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import ru.lewis.leykabot.repository.PubgTransactionRepository;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -37,9 +31,9 @@ public class AdminService {
     private final StarsTransactionRepository starsTransactionRepository;
     private final PremiumTransactionRepository premiumTransactionRepository;
     private final PubgTransactionRepository pubgTransactionRepository;
-    private final ru.lewis.leykabot.repository.DepositOrderRepository depositOrderRepository;
-    private final ru.lewis.leykabot.repository.DepositReceiptRepository depositReceiptRepository;
-    private final ru.lewis.leykabot.repository.ActivatedCodeRepository activatedCodeRepository;
+    private final DepositOrderRepository depositOrderRepository;
+    private final DepositReceiptRepository depositReceiptRepository;
+    private final ActivatedCodeRepository activatedCodeRepository;
     private final CodeRepository codeRepository;
     private final CodeService codeService;
     private final TransactionService transactionService;
