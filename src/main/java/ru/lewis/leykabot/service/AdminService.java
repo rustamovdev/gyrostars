@@ -37,6 +37,9 @@ public class AdminService {
     private final StarsTransactionRepository starsTransactionRepository;
     private final PremiumTransactionRepository premiumTransactionRepository;
     private final PubgTransactionRepository pubgTransactionRepository;
+    private final ru.lewis.leykabot.repository.DepositOrderRepository depositOrderRepository;
+    private final ru.lewis.leykabot.repository.DepositReceiptRepository depositReceiptRepository;
+    private final ru.lewis.leykabot.repository.ActivatedCodeRepository activatedCodeRepository;
     private final CodeRepository codeRepository;
     private final CodeService codeService;
     private final TransactionService transactionService;
@@ -190,6 +193,28 @@ public class AdminService {
 
     public boolean isMaintenanceMode() {
         return devModeConfig.isEnable();
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void wipeAllDatabase() {
+        log.warn("⚠️ FULL DATABASE WIPE TRIGGERED...");
+        try {
+            starsTransactionRepository.deleteAll();
+            premiumTransactionRepository.deleteAll();
+            pubgTransactionRepository.deleteAll();
+            if (activatedCodeRepository != null) activatedCodeRepository.deleteAll();
+            transactionRepository.deleteAll();
+            if (depositReceiptRepository != null) depositReceiptRepository.deleteAll();
+            if (depositOrderRepository != null) depositOrderRepository.deleteAll();
+            
+            // Delete all users and reset all balances
+            userRepository.deleteAll();
+            
+            clearAllCaches();
+            log.info("✅ FULL DATABASE WIPE FINISHED. All users, balances, and transactions are 0.");
+        } catch (Exception e) {
+            log.error("❌ Error during database wipe: {}", e.getMessage(), e);
+        }
     }
 
     public FragmentApiResponse getFragmentProfile() {

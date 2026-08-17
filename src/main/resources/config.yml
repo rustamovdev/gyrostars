@@ -8,7 +8,7 @@ telegram:
     name: 'leykabot'
 
 dev-mode:
-  enable: false
+  enable: true
   whitelist:
     - 5305539499
     - 8159265215

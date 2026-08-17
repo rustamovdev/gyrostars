@@ -78,6 +78,18 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
                 return;
             }
 
+            // Maintenance mode tekshiruvi (Bot o'chirilgan holat)
+            if (adminService.isMaintenanceMode() && !adminService.isAdmin(fromId)) {
+                try {
+                    telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
+                            .callbackQueryId(callback.getId())
+                            .text("🛠 Botda texnik ishlar olib borilmoqda! Bot vaqtincha to‘xtatilgan.")
+                            .showAlert(true)
+                            .build());
+                } catch (Exception ignored) {}
+                return;
+            }
+
             try {
                 telegramClient.execute(org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery.builder()
                         .callbackQueryId(callback.getId())
@@ -141,6 +153,12 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
 
         // Flood tekshiruvi
         if (antiFloodService.isFlooding(userId, chatId)) {
+            return;
+        }
+
+        // Maintenance mode tekshiruvi (Bot o'chirilgan holat)
+        if (adminService.isMaintenanceMode() && !adminService.isAdmin(userId)) {
+            telegramService.sendMessageAuto(chatId, "🛠 <b>Botda texnik ishlar olib borilmoqda!</b>\n\nBot vaqtincha to‘xtatilgan. Tez orada qayta ishga tushadi.");
             return;
         }
 

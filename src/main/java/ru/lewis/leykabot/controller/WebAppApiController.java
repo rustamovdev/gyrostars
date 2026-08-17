@@ -85,7 +85,12 @@ public class WebAppApiController {
         }
         if (displayUsername == null) displayUsername = "";
 
+        boolean isMaint = adminService.isMaintenanceMode() && !adminService.isAdmin(currentId);
         Map<String, Object> resp = new HashMap<>();
+        resp.put("maintenance", isMaint);
+        if (isMaint) {
+            resp.put("maintenanceMessage", "🛠 WebApp va Botda texnik ishlar olib borilmoqda! Xizmatlar vaqtincha to‘xtatilgan.");
+        }
         resp.put("user", Map.of(
                 "userId", user != null ? user.getTelegramId() : currentId,
                 "username", displayUsername,
