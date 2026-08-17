@@ -151,12 +151,12 @@ public class TopSelectScreen extends AbstractScreen {
         row1.add(StyledInlineButton.styledBuilder()
                 .text("Bugun" + (isToday ? " ◼️" : ""))
                 .callbackData("period_today")
-                .style(isToday ? "primary" : null)
+                .style(isToday ? "success" : "primary")
                 .build());
         row1.add(StyledInlineButton.styledBuilder()
                 .text("Umumiy" + (isAll ? " ◼️" : ""))
                 .callbackData("period_all")
-                .style(isAll ? "primary" : null)
+                .style(isAll ? "success" : "primary")
                 .build());
 
         // Row 2: 3 kun | 7 kun | 30 kun
@@ -164,17 +164,17 @@ public class TopSelectScreen extends AbstractScreen {
         row2.add(StyledInlineButton.styledBuilder()
                 .text("3 kun" + (is3Days ? " ◼️" : ""))
                 .callbackData("period_3days")
-                .style(is3Days ? "primary" : null)
+                .style(is3Days ? "success" : "primary")
                 .build());
         row2.add(StyledInlineButton.styledBuilder()
                 .text("7 kun" + (is7Days ? " ◼️" : ""))
                 .callbackData("period_7days")
-                .style(is7Days ? "primary" : null)
+                .style(is7Days ? "success" : "primary")
                 .build());
         row2.add(StyledInlineButton.styledBuilder()
                 .text("30 kun" + (is30Days ? " ◼️" : ""))
                 .callbackData("period_30days")
-                .style(is30Days ? "primary" : null)
+                .style(is30Days ? "success" : "primary")
                 .build());
 
         // Row 3: Orqaga
@@ -182,6 +182,7 @@ public class TopSelectScreen extends AbstractScreen {
         row3.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

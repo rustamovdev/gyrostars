@@ -110,34 +110,35 @@ public class AdminMainScreen extends AbstractScreen {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(InlineKeyboardButton.builder().text("📊 Statistika").callbackData("admin_stats").build());
-        row1.add(InlineKeyboardButton.builder().text("📢 Xabar yuborish").callbackData("admin_broadcast").build());
+        row1.add(StyledInlineButton.styledBuilder().text("📊 Statistika").callbackData("admin_stats").style("primary").build());
+        row1.add(StyledInlineButton.styledBuilder().text("📢 Xabar yuborish").callbackData("admin_broadcast").style("primary").build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
-        row2.add(InlineKeyboardButton.builder().text("💰 Narxlar").callbackData("admin_prices").build());
-        row2.add(InlineKeyboardButton.builder().text("💳 To‘lov Kartalari").callbackData("admin_cards").build());
+        row2.add(StyledInlineButton.styledBuilder().text("💰 Narxlar").callbackData("admin_prices").style("primary").build());
+        row2.add(StyledInlineButton.styledBuilder().text("💳 To‘lov Kartalari").callbackData("admin_cards").style("primary").build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();
-        row3.add(InlineKeyboardButton.builder().text("🎟 Promokodlar").callbackData("admin_promos").build());
-        row3.add(InlineKeyboardButton.builder().text("👤 Foydalanuvchilar").callbackData("admin_users").build());
+        row3.add(StyledInlineButton.styledBuilder().text("🎟 Promokodlar").callbackData("admin_promos").style("primary").build());
+        row3.add(StyledInlineButton.styledBuilder().text("👤 Foydalanuvchilar").callbackData("admin_users").style("primary").build());
 
         InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(InlineKeyboardButton.builder().text("📣 Order Kanal").callbackData("admin_order_channel").build());
-        row4.add(InlineKeyboardButton.builder().text("👥 Adminlar").callbackData("admin_admins").build());
+        row4.add(StyledInlineButton.styledBuilder().text("📣 Order Kanal").callbackData("admin_order_channel").style("primary").build());
+        row4.add(StyledInlineButton.styledBuilder().text("👥 Adminlar").callbackData("admin_admins").style("primary").build());
 
         InlineKeyboardRow row5 = new InlineKeyboardRow();
-        row5.add(InlineKeyboardButton.builder().text("💎 Fragment Hamyon").callbackData("admin_wallet").build());
-        row5.add(InlineKeyboardButton.builder().text("💾 Baza Backup").callbackData("admin_backup").build());
+        row5.add(StyledInlineButton.styledBuilder().text("💎 Fragment Hamyon").callbackData("admin_wallet").style("primary").build());
+        row5.add(StyledInlineButton.styledBuilder().text("💾 Baza Backup").callbackData("admin_backup").style("primary").build());
 
         InlineKeyboardRow row6 = new InlineKeyboardRow();
-        row6.add(InlineKeyboardButton.builder().text("🧹 Keshni tozalash").callbackData("admin_clear_cache").build());
+        row6.add(StyledInlineButton.styledBuilder().text("🧹 Keshni tozalash").callbackData("admin_clear_cache").style("primary").build());
         boolean maint = adminService.isMaintenanceMode();
-        row6.add(InlineKeyboardButton.builder().text(maint ? "🟢 Ochish" : "🔴 Texnik ish").callbackData("admin_maintenance").build());
+        row6.add(StyledInlineButton.styledBuilder().text(maint ? "🟢 Ochish" : "🔴 Texnik ish").callbackData("admin_maintenance").style(maint ? "success" : "danger").build());
 
         InlineKeyboardRow row7 = new InlineKeyboardRow();
-        row7.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
+        row7.add(StyledInlineButton.styledBuilder()
                 .text("Asosiy menyuga qaytish")
                 .callbackData("admin_exit")
+                .style("danger")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

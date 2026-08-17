@@ -32,9 +32,10 @@ public class CodeService {
     private final ActivatedCodeRepository activatedCodeRepository;
     private final UserRepository userRepository;
     private final TelegramService telegramService;
-    private final LogMessageConfig logMessageConfig;
     private final TransactionService transactionService;
     private final UserService userService;
+    private final ru.lewis.leykabot.repository.TransactionRepository transactionRepository;
+    private final TopService topService;
 
     // Кэш: codeStr -> Code (без Optional — Caffeine не хранит null)
     private Cache<String, Code> codeCache;
@@ -177,17 +178,28 @@ public class CodeService {
         codeCache.put(codeStr, code);
 
         // Balansni oshiramiz va tranzaksiyani saqlaymiz (userCache va baza 100% yangilanadi)
-        transactionService.create(telegramId, code.getAmount());
-        userService.getUser(telegramId).ifPresent(userService::updateUserCache);
+        int curBal = user.getBalance() != null ? user.getBalance() : 0;
+        int newBal = curBal + code.getAmount();
+        user.setBalance(newBal);
+        userRepository.save(user);
+        userService.updateUserCache(user);
+
+        ru.lewis.leykabot.model.database.entity.Transaction tx = new ru.lewis.leykabot.model.database.entity.Transaction();
+        tx.setTelegramId(telegramId);
+        tx.setAmountRubles(code.getAmount());
+        transactionRepository.save(tx);
+        if (topService != null) {
+            topService.updateRublesTop(telegramId, code.getAmount());
+        }
 
         // Инвалидируем список активаций — он изменился
         userActivatedCodesCache.invalidate(telegramId);
 
-        log.info("Foydalanuvchi {} promokod {} ni faollashtirdi: +{} so'm",
-                telegramId, codeStr, code.getAmount());
+        log.info("Foydalanuvchi {} promokod {} ni faollashtirdi: +{} so'm (Yangi balans: {} so'm)",
+                telegramId, codeStr, code.getAmount(), newBal);
 
         return new ActivationResult(true,
-                "Promokod muvaffaqiyatli faollashtirildi! Balansingizga +" + code.getAmount() + " so'm qo'shildi.",
+                "Promokod muvaffaqiyatli faollashtirildi! Balansingizga +" + code.getAmount() + " so‘m qo‘shildi.",
                 code.getAmount());
     }
 

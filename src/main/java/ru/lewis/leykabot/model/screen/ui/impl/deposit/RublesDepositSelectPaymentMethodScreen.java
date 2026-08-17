@@ -89,6 +89,7 @@ public class RublesDepositSelectPaymentMethodScreen extends AbstractScreen {
         backRow.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
         keyboard.add(backRow);

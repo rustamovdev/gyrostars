@@ -68,15 +68,18 @@ public class ReferralScreen extends AbstractScreen {
                 + "&text=" + URLEncoder.encode(shareText, StandardCharsets.UTF_8);
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(InlineKeyboardButton.builder()
+        row1.add(StyledInlineButton.styledBuilder()
                 .text("🚀 Do‘stlarga ulashish")
                 .url(shareUrl)
+                .style("success")
+                .iconCustomEmojiId("5271604874419647061")
                 .build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
         row2.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

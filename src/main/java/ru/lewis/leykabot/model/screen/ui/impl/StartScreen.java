@@ -104,21 +104,6 @@ public class StartScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
-        String botUsername = telegramService.getBotUsername();
-        String shareUrl = "https://t.me/share/url?url=" +
-                java.net.URLEncoder.encode("https://t.me/" + botUsername, java.nio.charset.StandardCharsets.UTF_8) +
-                "&text=" + java.net.URLEncoder.encode("Telegram Stars, Premium va PUBG UC sotib olish uchun eng qulay va ishonchli bot!", java.nio.charset.StandardCharsets.UTF_8);
-
-        // Row 0: Mini App (WebApp)
-        InlineKeyboardRow row0 = new InlineKeyboardRow();
-        String webAppUrl = "https://gyrostars.onrender.com?userId=" + userId;
-        row0.add(StyledInlineButton.styledBuilder()
-                .text("WebApp ochish")
-                .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo(webAppUrl))
-                .style("success")
-                .iconCustomEmojiId("5219672182870785225")
-                .build());
-
         // Row 1: STARS (Full width)
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
@@ -176,21 +161,15 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
 
-        // Row 6: Referral & Ulashish
+        // Row 6: Referral (Full width with custom emoji from Ulashish)
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
                 .text("🔗 Referral (Bonus olish)")
                 .callbackData("referral")
-                .style("primary")
-                .iconCustomEmojiId("5422736199343168249")
-                .build());
-        row6.add(StyledInlineButton.styledBuilder()
-                .text("📤 Ulashish")
-                .url(shareUrl)
+                .style("success")
                 .iconCustomEmojiId("5271604874419647061")
                 .build());
 
-        keyboard.add(row0);
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);

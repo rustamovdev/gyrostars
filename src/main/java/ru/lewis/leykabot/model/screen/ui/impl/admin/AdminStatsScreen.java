@@ -103,13 +103,14 @@ public class AdminStatsScreen extends AbstractScreen {
                 .build());
 
         InlineKeyboardRow rowDaily = new InlineKeyboardRow();
-        rowDaily.add(InlineKeyboardButton.builder().text("📊 Kunlik Hisobotni Olish").callbackData("send_daily_now").build());
+        rowDaily.add(StyledInlineButton.styledBuilder().text("📊 Kunlik Hisobotni Olish").callbackData("send_daily_now").style("primary").build());
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(InlineKeyboardButton.builder().text("🔄 Yangilash").callbackData("refresh").build());
+        row1.add(StyledInlineButton.styledBuilder().text("🔄 Yangilash").callbackData("refresh").style("success").build());
         row1.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back_admin")
+                .style("danger")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

@@ -170,7 +170,7 @@ public class RublesDepositOrderScreen extends AbstractScreen {
         row1.add(StyledInlineButton.styledBuilder()
                 .text("To‘lovni tekshirish")
                 .callbackData("check_payment")
-                .style("primary")
+                .style("success")
                 .iconCustomEmojiId("5436406725232074977")
                 .build());
 
@@ -183,6 +183,7 @@ public class RublesDepositOrderScreen extends AbstractScreen {
         row2.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

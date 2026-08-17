@@ -90,7 +90,7 @@ public class ProfileScreen extends AbstractScreen {
             } else {
                 telegramService.sendMessageAuto(chatId, "❌ " + res.message());
             }
-            screenManager.updateScreen(chatId, this);
+            screenManager.updateScreen(chatId, screenFactory.createProfileScreen(chatId, userId));
         }
     }
 
@@ -116,18 +116,20 @@ public class ProfileScreen extends AbstractScreen {
         rowPromo.add(StyledInlineButton.styledBuilder()
                 .text("🎟 Promokod faollashtirish")
                 .callbackData("promo")
+                .style("primary")
                 .build());
         rowPromo.add(StyledInlineButton.styledBuilder()
                 .text("🔗 Referral")
                 .callbackData("referral")
-                .style("primary")
-                .iconCustomEmojiId("5422736199343168249")
+                .style("success")
+                .iconCustomEmojiId("5271604874419647061")
                 .build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
         row2.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 
