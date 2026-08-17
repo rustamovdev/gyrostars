@@ -32,6 +32,7 @@ public class CodeService {
     private final ActivatedCodeRepository activatedCodeRepository;
     private final UserRepository userRepository;
     private final TelegramService telegramService;
+    private final LogMessageConfig logMessageConfig;
     private final TransactionService transactionService;
     private final UserService userService;
     private final ru.lewis.leykabot.repository.TransactionRepository transactionRepository;

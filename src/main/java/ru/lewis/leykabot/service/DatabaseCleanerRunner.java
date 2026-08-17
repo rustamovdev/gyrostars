@@ -14,8 +14,12 @@ public class DatabaseCleanerRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("?? Initiating requested full database cleanup & balance reset on startup...");
-        adminService.wipeAllDatabase();
-        log.info("? Database successfully wiped clean. All balances, orders, and stats are 0.");
+        try {
+            log.info("🧹 Initiating requested database reset on startup...");
+            adminService.wipeAllDatabase();
+            log.info("✅ Database reset complete.");
+        } catch (Throwable t) {
+            log.warn("⚠️ Database wipe warning: {}", t.getMessage());
+        }
     }
 }
