@@ -41,6 +41,7 @@ public class WebAppApiController {
     private final DepositOrderRepository depositOrderRepository;
     private final TelegramService telegramService;
     private final CodeService codeService;
+    private final AdminService adminService;
 
     private PaymentCard resolveActiveCard() {
         return paymentCardService.getActiveCards().stream().findFirst()
