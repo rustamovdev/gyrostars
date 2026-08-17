@@ -2,6 +2,7 @@
 # Stage 1: Build Java application with official Gradle image
 # -------------------------------------------------------------
 FROM gradle:8.12-jdk21 AS builder
+USER root
 WORKDIR /app
 
 # Copy gradle config files and dependencies
