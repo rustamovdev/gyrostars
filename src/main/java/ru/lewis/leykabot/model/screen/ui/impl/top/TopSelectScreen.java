@@ -37,7 +37,7 @@ public class TopSelectScreen extends AbstractScreen {
         this.screenFactory = screenFactory;
         this.topService = topService;
         this.telegramService = telegramService;
-        this.currentPeriod = (period != null && !period.isBlank()) ? period : "today";
+        this.currentPeriod = (period != null && !period.isBlank()) ? period : "all";
     }
 
     public TopSelectScreen(Long chatId, Long userId,
@@ -45,7 +45,7 @@ public class TopSelectScreen extends AbstractScreen {
                            ScreenFactory screenFactory,
                            TopService topService,
                            TelegramService telegramService) {
-        this(chatId, userId, screenManager, screenFactory, topService, telegramService, "today");
+        this(chatId, userId, screenManager, screenFactory, topService, telegramService, "all");
     }
 
     @Override

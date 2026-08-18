@@ -84,15 +84,15 @@ public class TopService {
     // -------------------------------------------------------------------------
 
     public List<TopEntry> getTopByRubles(int offset, int limit) {
-        return rulesCache.get(key(offset, limit), k -> fetchTopByRubles(offset, limit));
+        return fetchTopByRubles(offset, limit);
     }
 
     public List<TopEntry> getTopByStars(int offset, int limit) {
-        return starsCache.get(key(offset, limit), k -> fetchTopByStars(offset, limit));
+        return fetchTopByStars(offset, limit);
     }
 
     public List<TopEntry> getTopByPremium(int offset, int limit) {
-        return premiumCache.get(key(offset, limit), k -> fetchTopByPremium(offset, limit));
+        return fetchTopByPremium(offset, limit);
     }
 
     // -------------------------------------------------------------------------
