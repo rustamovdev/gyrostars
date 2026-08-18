@@ -195,13 +195,13 @@ public class TopService {
     ) {}
 
     public GlobalStats getGlobalStats(String period, Long currentUserId) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().plusDays(1);
         LocalDateTime from;
         switch (period) {
-            case "today" -> from = now.toLocalDate().atStartOfDay();
-            case "3days" -> from = now.minusDays(3);
-            case "7days" -> from = now.minusDays(7);
-            case "30days" -> from = now.minusDays(30);
+            case "today" -> from = LocalDateTime.now().toLocalDate().atStartOfDay();
+            case "3days" -> from = LocalDateTime.now().minusDays(3);
+            case "7days" -> from = LocalDateTime.now().minusDays(7);
+            case "30days" -> from = LocalDateTime.now().minusDays(30);
             default -> from = LocalDateTime.of(2020, 1, 1, 0, 0); // all
         }
 
