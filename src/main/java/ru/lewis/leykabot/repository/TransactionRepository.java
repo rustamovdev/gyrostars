@@ -26,21 +26,22 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
 
-    @Query("SELECT t.telegramId, COALESCE(SUM(CASE WHEN t.amountRubles < 0 THEN -t.amountRubles ELSE t.amountRubles END), 0) AS total " +
-            "FROM Transaction t GROUP BY t.telegramId ORDER BY total DESC")
+    @Query("SELECT t.telegramId, COALESCE(SUM(-t.amountRubles), 0) AS total " +
+            "FROM Transaction t WHERE t.amountRubles < 0 " +
+            "GROUP BY t.telegramId ORDER BY total DESC")
     List<Object[]> findTopByRubles(Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(t.amountRubles), 0) FROM Transaction t WHERE t.amountRubles > 0")
     long sumAllDepositedRubles();
 
-    @Query("SELECT COALESCE(SUM(CASE WHEN t.amountRubles < 0 THEN -t.amountRubles ELSE t.amountRubles END), 0) FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to")
+    @Query("SELECT COALESCE(SUM(-t.amountRubles), 0) FROM Transaction t WHERE t.amountRubles < 0 AND t.createdAt BETWEEN :from AND :to")
     long sumRublesBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to")
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.amountRubles < 0 AND t.createdAt BETWEEN :from AND :to")
     long countBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
-    @Query("SELECT t.telegramId, COALESCE(SUM(CASE WHEN t.amountRubles < 0 THEN -t.amountRubles ELSE t.amountRubles END), 0) AS total " +
-            "FROM Transaction t WHERE t.createdAt BETWEEN :from AND :to " +
+    @Query("SELECT t.telegramId, COALESCE(SUM(-t.amountRubles), 0) AS total " +
+            "FROM Transaction t WHERE t.amountRubles < 0 AND t.createdAt BETWEEN :from AND :to " +
             "GROUP BY t.telegramId ORDER BY total DESC")
     List<Object[]> findTopByRublesBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to, Pageable pageable);
 }

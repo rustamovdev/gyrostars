@@ -161,10 +161,10 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
 
-        // Row 6: Referral (Full width with custom emoji from Ulashish)
+        // Row 6: Referral (Full width with custom emoji)
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
-                .text("🔗 Referral (Bonus olish)")
+                .text("Referral (Bonus olish)")
                 .callbackData("referral")
                 .style("success")
                 .iconCustomEmojiId("5271604874419647061")

@@ -114,12 +114,13 @@ public class ProfileScreen extends AbstractScreen {
 
         InlineKeyboardRow rowPromo = new InlineKeyboardRow();
         rowPromo.add(StyledInlineButton.styledBuilder()
-                .text("🎟 Promokod faollashtirish")
+                .text("Promokod faollashtirish")
                 .callbackData("promo")
                 .style("primary")
+                .iconCustomEmojiId("5443015509589138475")
                 .build());
         rowPromo.add(StyledInlineButton.styledBuilder()
-                .text("🔗 Referral")
+                .text("Referral")
                 .callbackData("referral")
                 .style("success")
                 .iconCustomEmojiId("5271604874419647061")

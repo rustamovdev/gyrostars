@@ -69,7 +69,7 @@ public class ReferralScreen extends AbstractScreen {
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
-                .text("🚀 Do‘stlarga ulashish")
+                .text("Do‘stlarga ulashish")
                 .url(shareUrl)
                 .style("success")
                 .iconCustomEmojiId("5271604874419647061")
