@@ -31,6 +31,9 @@ public interface PremiumTransactionRepository extends JpaRepository<PremiumTrans
     @Query("SELECT COUNT(p) FROM PremiumTransaction p WHERE p.createdAt BETWEEN :from AND :to")
     long countPremiumBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
+    @Query("SELECT COALESCE(SUM(p.months), 0) FROM PremiumTransaction p WHERE p.createdAt BETWEEN :from AND :to")
+    long sumMonthsBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
     @Query("SELECT COALESCE(SUM(p.months), 0) FROM PremiumTransaction p WHERE p.telegramId = :telegramId AND p.createdAt BETWEEN :from AND :to")
     long sumMonthsByTelegramIdBetween(@Param("telegramId") Long telegramId, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 

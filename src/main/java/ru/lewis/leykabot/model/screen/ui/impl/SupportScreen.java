@@ -63,6 +63,7 @@ public class SupportScreen extends AbstractScreen {
         ru.lewis.leykabot.model.button.StyledInlineButton backButton = ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build();
         row1.add(backButton);

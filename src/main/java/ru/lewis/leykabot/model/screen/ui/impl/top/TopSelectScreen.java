@@ -23,7 +23,13 @@ public class TopSelectScreen extends AbstractScreen {
     private String currentPeriod;
 
     private static final String[] RANK_EMOJIS = {
-            "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣"
+            "<tg-emoji emoji-id=\"5193091523629037038\">1️⃣</tg-emoji>",
+            "<tg-emoji emoji-id=\"5193097682612140985\">2️⃣</tg-emoji>",
+            "<tg-emoji emoji-id=\"5192991596919930332\">3️⃣</tg-emoji>",
+            "<tg-emoji emoji-id=\"5195073127050129140\">4️⃣</tg-emoji>",
+            "<tg-emoji emoji-id=\"5192763753199843285\">5️⃣</tg-emoji>",
+            "<tg-emoji emoji-id=\"5192724424184316515\">6️⃣</tg-emoji>",
+            "7️⃣"
     };
 
     public TopSelectScreen(Long chatId, Long userId,
@@ -123,13 +129,13 @@ public class TopSelectScreen extends AbstractScreen {
 
         String userRankStr = (stats.userRank() > 0) ? stats.userRank() + "-o'rin" : "yo'q";
 
-        return "📊 <b>Global Statistika (" + periodTitle + ")</b>\n\n" +
-                "<blockquote>🎁 <b>OYLIK REYTING TANLOVI:</b>\n" +
-                "Har oy davomida reytingda <b>Top 1</b> bo‘lgan g‘olibga <b>1 oylik Telegram Premium</b> bepul beriladi! 🏆</blockquote>\n\n" +
+        return "<tg-emoji emoji-id=\"5231200819986047254\">📊</tg-emoji> <b>Global Statistika (" + periodTitle + ")</b>\n\n" +
+                "<blockquote><tg-emoji emoji-id=\"5438491562487079729\">🎁</tg-emoji> <b>OYLIK REYTING TANLOVI:</b>\n" +
+                "Har oy davomida reytingda <b>Top 1</b> bo‘lgan g‘olibga <b>1 oylik Telegram Premium</b> bepul beriladi! <tg-emoji emoji-id=\"5438491562487079729\">🏆</tg-emoji></blockquote>\n\n" +
                 "<blockquote><tg-emoji emoji-id=\"5436107628004549969\">💰</tg-emoji> <b>Umumiy aylanma:</b> " + formattedTurnover + " so'm\n" +
-                "🛒 <b>Jami xaridlar:</b> " + stats.totalPurchases() + " ta\n" +
+                "<tg-emoji emoji-id=\"5271783639548441015\">🛒</tg-emoji> <b>Jami xaridlar:</b> " + stats.totalPurchases() + " ta\n" +
                 "├ <tg-emoji emoji-id=\"5985826831591281620\">⭐️</tg-emoji> <b>Stars:</b> " + stats.starsTxCount() + " ta (" + formattedStars + " stars)\n" +
-                "├ <tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Premium:</b> " + stats.premiumTxCount() + " ta\n" +
+                "├ <tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> <b>Premium:</b> " + stats.premiumTxCount() + " ta (" + stats.premiumTotalMonths() + " oy)\n" +
                 "└ <tg-emoji emoji-id=\"5204252919565657978\">🎮</tg-emoji> <b>PUBG UC:</b> " + stats.pubgTxCount() + " ta</blockquote>\n\n" +
                 "<tg-emoji emoji-id=\"5436201215341930329\">🏆</tg-emoji> <b>Top 7 Xaridorlar:</b>\n" +
                 "<blockquote>" + topListBuilder + "\n" +
@@ -152,6 +158,7 @@ public class TopSelectScreen extends AbstractScreen {
                 .text("Bugun" + (isToday ? " ◼️" : ""))
                 .callbackData("period_today")
                 .style(isToday ? "success" : "primary")
+                .iconCustomEmojiId("5197410310813674118")
                 .build());
         row1.add(StyledInlineButton.styledBuilder()
                 .text("Umumiy" + (isAll ? " ◼️" : ""))

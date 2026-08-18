@@ -216,6 +216,7 @@ public class UserSelectPremiumScreen extends AbstractScreen {
         row2.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

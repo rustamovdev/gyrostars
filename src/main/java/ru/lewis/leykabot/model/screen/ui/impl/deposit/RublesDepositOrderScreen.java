@@ -159,7 +159,7 @@ public class RublesDepositOrderScreen extends AbstractScreen {
                 "<b>To‘lash:</b> <code>" + formattedExactSum + " so‘m</code>\n" +
                 "<b>Karta:</b> <code>" + cardNum + "</code>\n\n" +
                 "<tg-emoji emoji-id=\"5420323339723881652\">⚠️</tg-emoji> <b>Aynan " + formattedExactSum + " so‘m o‘tkazing!</b> Kam yoki ko‘p pul tashasangiz pulingiz balance tushmay qoladi va bu holatda admin javobgar emas!\n\n" +
-                "🕒 <b>Yaratildi:</b> " + createdTimeStr + "  ⏳ <b>Tugaydi:</b> " + expireTimeStr;
+                "<tg-emoji emoji-id=\"5258258882022612173\">🕒</tg-emoji> <b>Yaratildi:</b> " + createdTimeStr + "  <tg-emoji emoji-id=\"5778605968208170641\">⏳</tg-emoji> <b>Tugaydi:</b> " + expireTimeStr;
     }
 
     @Override

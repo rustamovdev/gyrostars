@@ -189,6 +189,7 @@ public class TopService {
             long starsTxCount,
             long starsTotalAmount,
             long premiumTxCount,
+            long premiumTotalMonths,
             long pubgTxCount,
             List<TopEntry> top7,
             int userRank
@@ -209,6 +210,7 @@ public class TopService {
         long starsCount = starsRepository.countStarsBetween(from, now);
         long starsTotal = starsRepository.sumStarsBetween(from, now);
         long premiumCount = premiumRepository.countPremiumBetween(from, now);
+        long premiumMonthsTotal = premiumRepository.sumMonthsBetween(from, now);
         long pubgCount = pubgRepository.countBetween(from, now);
         long totalPurchases = starsCount + premiumCount + pubgCount;
 
@@ -231,6 +233,6 @@ public class TopService {
             }
         }
 
-        return new GlobalStats(turnover, totalPurchases, starsCount, starsTotal, premiumCount, pubgCount, top7, userRank);
+        return new GlobalStats(turnover, totalPurchases, starsCount, starsTotal, premiumCount, premiumMonthsTotal, pubgCount, top7, userRank);
     }
 }

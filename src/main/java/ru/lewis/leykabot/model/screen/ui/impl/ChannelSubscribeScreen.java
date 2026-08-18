@@ -59,11 +59,12 @@ public class ChannelSubscribeScreen extends AbstractScreen {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
-        InlineKeyboardButton goChannelButton = InlineKeyboardButton.builder()
+        row1.add(ru.lewis.leykabot.model.button.StyledInlineButton.styledBuilder()
                 .text(buttonsLocConfig.getGoChannel())
                 .url(telegramConfig.getChannelCheckSubscribeUrl())
-                .build();
-        row1.add(goChannelButton);
+                .style("primary")
+                .iconCustomEmojiId("5435973805413538278")
+                .build());
 
         keyboard.add(row1);
 

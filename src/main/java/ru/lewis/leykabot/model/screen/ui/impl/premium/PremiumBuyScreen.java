@@ -105,6 +105,7 @@ public class PremiumBuyScreen extends AbstractScreen {
             row.add(StyledInlineButton.styledBuilder()
                     .text(label)
                     .callbackData("prem_" + months)
+                    .style("primary")
                     .iconCustomEmojiId("5938420017665152105")
                     .build());
             keyboard.add(row);
@@ -114,6 +115,7 @@ public class PremiumBuyScreen extends AbstractScreen {
         backRow.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
         keyboard.add(backRow);

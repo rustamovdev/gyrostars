@@ -73,6 +73,7 @@ public class GiftSelectScreen extends AbstractScreen {
         row4.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
 

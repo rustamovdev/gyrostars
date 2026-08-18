@@ -205,6 +205,7 @@ public class PubgBuyScreen extends AbstractScreen {
             row2.add(StyledInlineButton.styledBuilder()
                     .text("Orqaga")
                     .callbackData("back_select")
+                    .style("primary")
                     .iconCustomEmojiId("5258236805890710909")
                     .build());
 
@@ -242,6 +243,7 @@ public class PubgBuyScreen extends AbstractScreen {
         backRow.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
+                .style("primary")
                 .iconCustomEmojiId("5258236805890710909")
                 .build());
         keyboard.add(backRow);
