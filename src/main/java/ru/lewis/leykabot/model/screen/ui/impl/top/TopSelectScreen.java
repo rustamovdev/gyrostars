@@ -105,9 +105,18 @@ public class TopSelectScreen extends AbstractScreen {
                 if (name == null || name.isBlank()) {
                     name = "Mijoz #" + entry.telegramId();
                 }
-                long starsAmount = entry.stars();
-                String starsDisplay = (starsAmount > 0) ? String.format("%,d", starsAmount).replace(',', ' ') + " Stars" : entry.total() + " so'm";
-                topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — <b>⭐️ ").append(starsDisplay).append("</b>\n");
+                List<String> items = new ArrayList<>();
+                if (entry.stars() > 0) {
+                    items.add("⭐️ " + String.format("%,d", entry.stars()).replace(',', ' ') + " Stars");
+                }
+                if (entry.premiumMonths() > 0) {
+                    items.add("💎 " + entry.premiumMonths() + " oylik Premium");
+                }
+                if (entry.pubgUc() > 0) {
+                    items.add("🎮 " + String.format("%,d", entry.pubgUc()).replace(',', ' ') + " UC");
+                }
+                String display = items.isEmpty() ? "⭐️ 0 Stars" : String.join(", ", items);
+                topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — <b>").append(display).append("</b>\n");
             }
         }
 
