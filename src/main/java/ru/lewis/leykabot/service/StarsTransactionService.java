@@ -153,10 +153,18 @@ public class StarsTransactionService {
         return !warmUp(telegramId).isEmpty();
     }
 
+    public long getCurrentMonthStars(Long telegramId) {
+        LocalDateTime startOfMonth = java.time.YearMonth.now().atDay(1).atStartOfDay();
+        return warmUp(telegramId).stream()
+                .filter(t -> t.getCreatedAt().isAfter(startOfMonth) || t.getCreatedAt().isEqual(startOfMonth))
+                .mapToLong(StarsTransaction::getAmountStars)
+                .sum();
+    }
+
     public StarsStats getMonthlyStats(Long telegramId) {
-        LocalDateTime monthAgo = LocalDateTime.now().minusMonths(1);
+        LocalDateTime startOfMonth = java.time.YearMonth.now().atDay(1).atStartOfDay();
         return buildStats(warmUp(telegramId).stream()
-                .filter(t -> t.getCreatedAt().isAfter(monthAgo))
+                .filter(t -> t.getCreatedAt().isAfter(startOfMonth) || t.getCreatedAt().isEqual(startOfMonth))
                 .toList());
     }
 

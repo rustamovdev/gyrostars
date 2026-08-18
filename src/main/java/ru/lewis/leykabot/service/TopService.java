@@ -162,11 +162,13 @@ public class TopService {
     }
 
     private List<TopEntry> fetchTopByStars(int offset, int limit) {
-        List<Object[]> rows = starsRepository.findTopByStars(PageRequest.of(offset / limit, limit));
+        java.time.LocalDateTime startOfMonth = java.time.YearMonth.now().atDay(1).atStartOfDay();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        List<Object[]> rows = starsRepository.findTopByStarsBetween(startOfMonth, now, PageRequest.of(offset / limit, limit));
         List<TopEntry> result = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             Object[] row = rows.get(i);
-            result.add(new TopEntry(offset + i + 1, (Long) row[0], (Long) row[1]));
+            result.add(new TopEntry(offset + i + 1, (Long) row[0], ((Number) row[1]).longValue()));
         }
         return result;
     }

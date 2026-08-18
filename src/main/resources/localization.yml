@@ -173,14 +173,12 @@ localization:
       🤖 Bot: <i>@your-bot</i>
       📢 Rasmiy kanal: <i>@your-channel</i>
     profile-command: |-
-      <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> {5}
-      <tg-emoji emoji-id="5436172829903068620">🆔</tg-emoji> <b>ID:</b> <code>{6}</code>
+      <tg-emoji emoji-id="5256143829672672750">👤</tg-emoji> <b>Profilingiz:</b> {0}
+      <tg-emoji emoji-id="5436172829903068620">🆔</tg-emoji> <b>ID:</b> <code>{1}</code>
       
-      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> Asosiy balans: <b>{0} so‘m</b>
-      <tg-emoji emoji-id="5438193302778192083">⏳</tg-emoji> Jami tranzaksiyalar: <b>{1} ta</b>
-      <tg-emoji emoji-id="5436203328465838905">💳</tg-emoji> Jami to‘ldirilgan: <b>{2} so‘m</b>
-      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Sotib olingan Stars: <b>{3} Stars</b>
-      <tg-emoji emoji-id="5938420017665152105">💎</tg-emoji> Sotib olingan Premium: <b>{4} oy</b>
+      <tg-emoji emoji-id="5436107628004549969">💰</tg-emoji> Asosiy balans: <b>{2} so‘m</b>
+      <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Oylik xarid qilingan Stars: <b>{3} Stars</b>
+      <i>(Statistika har oy boshida yangilanadi)</i>
     start-command: |-
       <tg-emoji emoji-id="5436173070421238756">👋</tg-emoji> <b>Assalomu alaykum!</b>
       <tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> <b>Telegram Stars, Premium va PUBG UC Do‘koni</b>ga xush kelibsiz!
@@ -218,4 +216,5 @@ top:
   stars:
     format: '{0}-o‘rin, foydalanuvchi {1} - {2} Stars'
     message: |-
-      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Sotib olingan Stars bo‘yicha reyting:</b>
+      <tg-emoji emoji-id="5436201215341930329">🏆</tg-emoji> <b><tg-emoji emoji-id="5985826831591281620">⭐️</tg-emoji> Oylik sotib olingan Stars reytingi:</b>
+      <i>(Reyting har oy boshida yangilanadi)</i>

@@ -145,18 +145,12 @@ public class ProfileScreen extends AbstractScreen {
     @Override
     public String getText() {
         long balance = userService.getBalance(userId).orElse(0);
-        long totalDeposited = transactionService.getAllTimeStats(userId).totalRubles();
-        long totalStars = starsTransactionService.getAllTimeStats(userId).totalStars();
-        long totalPremium = premiumTransactionService.getAllTimeStats(userId).totalMonths();
-        long txCount = transactionService.getCount(userId);
+        long monthlyStars = starsTransactionService.getCurrentMonthStars(userId);
 
         return MessageFormat.format(clientMessageConfig.getProfileCommand(),
-                String.format("%,d", balance).replace(',', ' '),
-                String.format("%,d", txCount).replace(',', ' '),
-                String.format("%,d", totalDeposited).replace(',', ' '),
-                String.format("%,d", totalStars).replace(',', ' '),
-                String.format("%,d", totalPremium).replace(',', ' '),
                 telegramService.getUsernameByUserId(userId),
-                String.valueOf(userId));
+                String.valueOf(userId),
+                String.format("%,d", balance).replace(',', ' '),
+                String.format("%,d", monthlyStars).replace(',', ' '));
     }
 }
