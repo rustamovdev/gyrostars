@@ -131,7 +131,7 @@ public class UserSelectPremiumScreen extends AbstractScreen {
                         // Post to order channel
                         if (orderChannelService != null) {
                             String duration = months >= 12 ? (months / 12) + " yillik" : months + " oylik";
-                            orderChannelService.sendOrderNotification("<tg-emoji emoji-id=\"5938420017665152105\">💎</tg-emoji> Telegram Premium", duration, username, rubles);
+                            orderChannelService.sendOrderNotification("💎 Telegram Premium", duration, username, rubles);
                         }
 
                         screenManager.updateScreen(chatId,

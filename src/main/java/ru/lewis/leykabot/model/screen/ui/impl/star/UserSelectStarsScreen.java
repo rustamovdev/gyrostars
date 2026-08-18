@@ -119,7 +119,7 @@ public class UserSelectStarsScreen extends AbstractScreen {
 
                         // Post order to order channel
                         if (orderChannelService != null) {
-                            orderChannelService.sendOrderNotification("<tg-emoji emoji-id=\"5436050603723760533\">⭐️</tg-emoji> Telegram Stars", stars + " Stars", username, rubles);
+                            orderChannelService.sendOrderNotification("⭐️ Telegram Stars", stars + " Stars", username, rubles);
                         }
 
                         screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));

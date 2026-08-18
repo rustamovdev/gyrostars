@@ -198,7 +198,7 @@ public class AutoPaymentService {
 
             // Buyurtmalar kanaliga xabar yuborish
             orderChannelService.sendOrderNotification(
-                    "<tg-emoji emoji-id=\"5436171485578308032\">💸</tg-emoji> Avto-To‘lov (Balans)",
+                    "💳 Avto-To‘lov (Balans)",
                     "+" + formattedCredit + " so‘m",
                     username != null ? username : "ID:" + order.getUserId(),
                     creditAmount
