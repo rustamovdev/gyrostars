@@ -115,7 +115,8 @@ public class TopSelectScreen extends AbstractScreen {
                 if (entry.pubgUc() > 0) {
                     items.add("🎮 " + String.format("%,d", entry.pubgUc()).replace(',', ' ') + " UC");
                 }
-                String display = items.isEmpty() ? "⭐️ 0 Stars" : String.join(", ", items);
+                String products = items.isEmpty() ? "⭐️ 0 Stars" : String.join(", ", items);
+                String display = products + " - " + formatK(entry.total());
                 topListBuilder.append(emoji).append(" <b>").append(name).append("</b> — <b>").append(display).append("</b>\n");
             }
         }
@@ -190,5 +191,16 @@ public class TopSelectScreen extends AbstractScreen {
         keyboard.add(row3);
 
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
+    }
+
+    private String formatK(long amount) {
+        if (amount <= 0) return "0k";
+        if (amount % 1000 == 0) {
+            return (amount / 1000) + "k";
+        } else if (amount % 100 == 0) {
+            return String.format(java.util.Locale.US, "%.1fk", amount / 1000.0);
+        } else {
+            return String.format(java.util.Locale.US, "%.2fk", amount / 1000.0);
+        }
     }
 }
