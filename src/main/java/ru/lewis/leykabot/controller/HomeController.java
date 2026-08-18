@@ -11,8 +11,9 @@ import java.util.Map;
 public class HomeController {
 
     @GetMapping("/")
-    public String index() {
-        return "forward:/index.html";
+    @ResponseBody
+    public ResponseEntity<?> index() {
+        return ResponseEntity.ok(Map.of("status", "ONLINE", "service", "GyroStars Telegram Bot"));
     }
 
     @GetMapping("/api/status")
