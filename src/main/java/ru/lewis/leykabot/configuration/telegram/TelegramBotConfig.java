@@ -14,16 +14,16 @@ public class TelegramBotConfig {
     }
 
     public String getToken() {
-        if (token != null && !token.isBlank()) {
-            return token;
+        String envTgToken = System.getenv("TELEGRAM_BOT_TOKEN");
+        if (envTgToken != null && !envTgToken.isBlank()) {
+            return envTgToken.trim();
         }
         String envToken = System.getenv("BOT_TOKEN");
         if (envToken != null && !envToken.isBlank()) {
-            return envToken;
+            return envToken.trim();
         }
-        String envTgToken = System.getenv("TELEGRAM_BOT_TOKEN");
-        if (envTgToken != null && !envTgToken.isBlank()) {
-            return envTgToken;
+        if (token != null && !token.isBlank()) {
+            return token.trim();
         }
         return "8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc";
     }

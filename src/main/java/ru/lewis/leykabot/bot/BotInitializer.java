@@ -90,13 +90,31 @@ public class BotInitializer {
             }
         });
 
+        // Telegram Webhook tozalash (Long Polling ishlashi uchun zarur)
+        try {
+            log.info("🧹 Telegram Webhook tozalanmoqda (Long Polling rejimiga o'tish)...");
+            telegramClient.execute(org.telegram.telegrambots.meta.api.methods.updates.DeleteWebhook.builder()
+                    .dropPendingUpdates(false)
+                    .build());
+            log.info("✅ Telegram Webhook tozalandi.");
+        } catch (Exception e) {
+            log.warn("⚠️ Telegram Webhook tozalashda xatolik (davom etiladi): {}", e.getMessage());
+        }
+
         // Long Polling Botni ro'yxatdan o'tkazish (qayta urinishlar bilan)
         int maxRetries = 5;
+        boolean registered = false;
         for (int i = 1; i <= maxRetries; i++) {
             try {
+                if (botApp != null) {
+                    try {
+                        botApp.close();
+                    } catch (Exception ignored) {}
+                }
                 botApp = new TelegramBotsLongPollingApplication();
                 botApp.registerBot(config.getToken(), telegramBot);
                 log.info("🚀 Telegram Bot Long Polling muvaffaqiyatli ISHGA TUSHDI (Urinish {}/{})!", i, maxRetries);
+                registered = true;
                 break;
             } catch (Exception e) {
                 log.error("❌ Botni ro'yxatdan o'tkazishda xatolik (Urinish {}/{}): {}", i, maxRetries, e.getMessage(), e);
@@ -106,6 +124,10 @@ public class BotInitializer {
                     } catch (InterruptedException ignored) {}
                 }
             }
+        }
+
+        if (!registered) {
+            log.error("🛑 DIQQAT: Telegram Bot Long Polling ro'yxatdan o'ta olmadi! Ehtimol boshqa joyda xuddi shu bot tokeni ishlamoqda yoki token noto'g'ri.");
         }
     }
 
