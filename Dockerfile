@@ -36,7 +36,7 @@ COPY --from=builder /app/build/libs/LeykaBot-1.0-SNAPSHOT.jar /app/app.jar
 
 # Copy runtime scripts, data directory, and session
 COPY payment_listener.py entrypoint.sh ./
-COPY humo_payment_session.session* ./
+COPY humo_payment_session.session* userbot_local.session* ./
 COPY data ./data
 
 # Ensure data directory has full permissions and convert line endings

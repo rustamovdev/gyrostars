@@ -156,15 +156,11 @@ public class AutoPaymentService {
                     .findTopByBaseAmountAndStatusOrderByIdDesc(amount, "PENDING");
         }
 
-        // 4. Oxirgi 2 soat ichida EXPIRED bo'lib qolgan bo'lsa ham foydalanuvchi balansini to'ldirish
+        // 5. Kichik farq (suffiks) bilan PENDING buyurtmani qidirish (+/- 99 so'm)
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
-                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
-        }
-
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
+                    .findTopByStatusAndExpiresAtAfterAndExactAmountBetweenOrderByIdDesc(
+                            "PENDING", now, Math.max(0, amount - 99), amount + 99);
         }
 
         if (orderOpt.isPresent()) {
@@ -172,8 +168,8 @@ public class AutoPaymentService {
             order.setStatus("PAID_AUTO");
             depositOrderRepository.save(order);
 
-            // Balansni to'ldirish
-            int creditAmount = order.getBaseAmount();
+            // Balansni to'ldirish (agar foydalanuvchi ko'proq to'lagan bo'lsa, to'langan summani berish)
+            int creditAmount = order.getBaseAmount() != null ? Math.max(order.getBaseAmount(), amount) : amount;
             transactionService.create(order.getUserId(), creditAmount);
 
             long updatedBalance = userService.getBalance(order.getUserId()).orElse(0);

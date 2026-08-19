@@ -11,6 +11,7 @@ import ru.lewis.leykabot.model.screen.ui.ScreenManager;
 import ru.lewis.leykabot.service.AdminService;
 import ru.lewis.leykabot.service.BackupService;
 import ru.lewis.leykabot.service.FragmentStarsService;
+import ru.lewis.leykabot.service.GiftService;
 import ru.lewis.leykabot.service.TelegramService;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class AdminMainScreen extends AbstractScreen {
     private final FragmentStarsService fragmentStarsService;
     private final TelegramService telegramService;
     private final BackupService backupService;
+    private final GiftService giftService;
 
     public AdminMainScreen(Long chatId, Long userId,
                            ScreenManager screenManager,
@@ -32,7 +34,8 @@ public class AdminMainScreen extends AbstractScreen {
                            AdminService adminService,
                            FragmentStarsService fragmentStarsService,
                            TelegramService telegramService,
-                           BackupService backupService) {
+                           BackupService backupService,
+                           GiftService giftService) {
         super(chatId, userId);
         this.screenManager = screenManager;
         this.screenFactory = screenFactory;
@@ -40,6 +43,7 @@ public class AdminMainScreen extends AbstractScreen {
         this.fragmentStarsService = fragmentStarsService;
         this.telegramService = telegramService;
         this.backupService = backupService;
+        this.giftService = giftService;
     }
 
     @Override
@@ -94,6 +98,7 @@ public class AdminMainScreen extends AbstractScreen {
                 screenManager.clearCache();
                 telegramService.sendMessageAuto(chatId, "🧹 <b>Bot keshi to'liq tozalandi!</b>\n\n✅ Profil ma'lumotlari, narxlar, reyting va tranzaksiya keshlar yangilandi.");
             }
+            case "admin_gift_info" -> giftService.sendGiftHelpMessage(chatId);
             case "admin_exit" -> screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
         }
     }
@@ -131,12 +136,15 @@ public class AdminMainScreen extends AbstractScreen {
         row5.add(StyledInlineButton.styledBuilder().text("💾 Baza Backup").callbackData("admin_backup").style("primary").build());
 
         InlineKeyboardRow row6 = new InlineKeyboardRow();
-        row6.add(StyledInlineButton.styledBuilder().text("🧹 Keshni tozalash").callbackData("admin_clear_cache").style("primary").build());
-        boolean maint = adminService.isMaintenanceMode();
-        row6.add(StyledInlineButton.styledBuilder().text(maint ? "🟢 Ochish" : "🔴 Texnik ish").callbackData("admin_maintenance").style(maint ? "success" : "danger").build());
+        row6.add(StyledInlineButton.styledBuilder().text("🎁 Sovg‘a (Gift) IDlar").callbackData("admin_gift_info").style("primary").build());
+        row6.add(StyledInlineButton.styledBuilder().text("🧹 Keshlarni tozalash").callbackData("admin_clear_cache").style("primary").build());
 
         InlineKeyboardRow row7 = new InlineKeyboardRow();
-        row7.add(StyledInlineButton.styledBuilder()
+        boolean maint = adminService.isMaintenanceMode();
+        row7.add(StyledInlineButton.styledBuilder().text(maint ? "🟢 Botni ochish" : "🔴 Texnik ish rejimi").callbackData("admin_maintenance").style(maint ? "success" : "danger").build());
+
+        InlineKeyboardRow row8 = new InlineKeyboardRow();
+        row8.add(StyledInlineButton.styledBuilder()
                 .text("Asosiy menyuga qaytish")
                 .callbackData("admin_exit")
                 .style("danger")
@@ -150,6 +158,7 @@ public class AdminMainScreen extends AbstractScreen {
         keyboard.add(row5);
         keyboard.add(row6);
         keyboard.add(row7);
+        keyboard.add(row8);
 
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }

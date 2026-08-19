@@ -41,5 +41,8 @@ public interface DepositOrderRepository extends JpaRepository<DepositOrder, Long
     boolean existsByExactAmountAndStatusAndExpiresAtAfter(
             Integer exactAmount, String status, LocalDateTime now);
 
+    Optional<DepositOrder> findTopByStatusAndExpiresAtAfterAndExactAmountBetweenOrderByIdDesc(
+            String status, LocalDateTime now, Integer minAmount, Integer maxAmount);
+
     List<DepositOrder> findAllByStatusAndExpiresAtBefore(String status, LocalDateTime now);
 }

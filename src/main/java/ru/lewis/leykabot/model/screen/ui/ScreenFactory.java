@@ -55,6 +55,7 @@ public class ScreenFactory {
     private final BackupService backupService;
     private final DailyReportService dailyReportService;
     private final CodeService codeService;
+    private final GiftService giftService;
 
     public StartScreen createStartScreen(Long chatId, Long userId) {
         return new StartScreen(chatId, userId, clientMessageConfig, buttonsLocConfig, screenManager, telegramService, telegramConfig, adminService, userService, this);
@@ -119,7 +120,7 @@ public class ScreenFactory {
     }
 
     public AdminMainScreen createAdminMainScreen(Long chatId, Long userId) {
-        return new AdminMainScreen(chatId, userId, screenManager, this, adminService, fragmentStarsService, telegramService, backupService);
+        return new AdminMainScreen(chatId, userId, screenManager, this, adminService, fragmentStarsService, telegramService, backupService, giftService);
     }
 
     public AdminStatsScreen createAdminStatsScreen(Long chatId, Long userId) {
@@ -152,6 +153,14 @@ public class ScreenFactory {
 
     public GiftSelectScreen createGiftSelectScreen(Long chatId, Long userId) {
         return new GiftSelectScreen(chatId, userId, screenManager, this);
+    }
+
+    public GiftCatalogScreen createGiftCatalogScreen(Long chatId, Long userId, String category) {
+        return new GiftCatalogScreen(chatId, userId, category, screenManager, this, giftService, priceService);
+    }
+
+    public GiftOrderScreen createGiftOrderScreen(Long chatId, Long userId, String giftId) {
+        return new GiftOrderScreen(chatId, userId, giftId, screenManager, this, giftService, priceService, userService, transactionService, telegramService, orderChannelService);
     }
 
     public AdminPromoScreen createAdminPromoScreen(Long chatId, Long userId) {

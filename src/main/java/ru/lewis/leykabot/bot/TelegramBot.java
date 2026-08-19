@@ -38,6 +38,7 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
     private final AdminService adminService;
     private final PaymentCardService paymentCardService;
     private final AntiFloodService antiFloodService;
+    private final GiftService giftService;
 
     @Override
     public void consume(Update update) {
@@ -179,6 +180,11 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
 
         if (lower.startsWith("/admin") && adminService.isAdmin(userId)) {
             screenManager.createScreen(chatId, screenFactory.createAdminMainScreen(chatId, userId));
+            return;
+        }
+
+        if (lower.startsWith("/gift")) {
+            giftService.handleGiftCommand(chatId, userId, trimmed);
             return;
         }
 

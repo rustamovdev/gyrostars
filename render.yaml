@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: gyrostars-bot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SPRING_DATASOURCE_URL
+        value: "jdbc:postgresql://aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0"
+      - key: SPRING_DATASOURCE_USERNAME
+        value: "postgres.ttnvounwqjjhyyumcwul"
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: "samirbek2010!"
+      - key: TELEGRAM_BOT_TOKEN
+        value: "8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc"
+      - key: TG_API_ID
+        value: "39467356"
+      - key: TG_API_HASH
+        value: "44a1a557b46f67a7b65861d97db7c8e0"
+      - key: TG_SESSION_STRING
+        sync: false
+      - key: FRAGMENT_API_URL
+        value: "https://fragment-api.uz/api/v1"
+      - key: FRAGMENT_API_KEY
+        value: "004430c4af6c0b9f42ef24f6540a8eee6c8b1ccf"
+      - key: BOT_API_URL
+        value: "http://127.0.0.1:10000/api/v1/payment/notify-card"
+      - key: USERBOT_API_URL
+        value: "http://127.0.0.1:8089/api/v1/gift/send"
+      - key: USERBOT_HTTP_PORT
+        value: "8089"

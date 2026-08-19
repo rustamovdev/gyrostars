@@ -27,6 +27,8 @@ public class GiftSelectScreen extends AbstractScreen {
     @Override
     public void handleCallback(String callback, TelegramClient bot) {
         switch (callback) {
+            case "gift_unlimited" -> screenManager.updateScreen(chatId, screenFactory.createGiftCatalogScreen(chatId, userId, "unlimited"));
+            case "gift_unique" -> screenManager.updateScreen(chatId, screenFactory.createGiftCatalogScreen(chatId, userId, "unique"));
             case "gift_stars" -> screenManager.updateScreen(chatId, screenFactory.createBuyStarsScreen(chatId, userId));
             case "gift_pubg" -> screenManager.updateScreen(chatId, screenFactory.createPubgBuyScreen(chatId, userId));
             case "gift_premium" -> screenManager.updateScreen(chatId, screenFactory.createBuyPremiumScreen(chatId, userId));
@@ -36,9 +38,9 @@ public class GiftSelectScreen extends AbstractScreen {
 
     @Override
     public String getText() {
-        return "<tg-emoji emoji-id=\"5938420017665152105\">🎁</tg-emoji> <b>Sovg‘a yuborish (Gift)</b>\n\n" +
-                "Do‘stingizga <b>Telegram Stars</b>, <b>PUBG UC</b> yoki <b>Telegram Premium</b> sovg‘a qiling!\n\n" +
-                "Kerakli xizmat turini tanlang 👇";
+        return "<tg-emoji emoji-id=\"5938420017665152105\">🎁</tg-emoji> <b>Sovg‘a yuborish (Gift) Do‘koni</b>\n\n" +
+                "Do‘stingizga yoki o‘zingizga <b>Telegram Sovg‘alari</b>, <b>Stars</b> yoki <b>Premium</b> sovg‘a qiling!\n\n" +
+                "Kerakli bo‘limni tanlang 👇";
     }
 
     @Override
@@ -47,30 +49,46 @@ public class GiftSelectScreen extends AbstractScreen {
 
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()
-                .text("⭐️ Stars Sovg‘a qilish")
-                .callbackData("gift_stars")
-                .style("primary")
-                .iconCustomEmojiId("5985826831591281620")
+                .text("🎁 Telegram Sovg‘alari (Gifts)")
+                .callbackData("gift_unlimited")
+                .style("success")
+                .iconCustomEmojiId("5938420017665152105")
                 .build());
 
         InlineKeyboardRow row2 = new InlineKeyboardRow();
         row2.add(StyledInlineButton.styledBuilder()
-                .text("🎮 PUBG UC Sovg‘a qilish")
-                .callbackData("gift_pubg")
+                .text("💎 Noyob (Unique NFT) Sovg‘alar")
+                .callbackData("gift_unique")
                 .style("primary")
                 .iconCustomEmojiId("5436050603723760533")
                 .build());
 
         InlineKeyboardRow row3 = new InlineKeyboardRow();
         row3.add(StyledInlineButton.styledBuilder()
+                .text("⭐️ Stars Sovg‘a qilish")
+                .callbackData("gift_stars")
+                .style("primary")
+                .iconCustomEmojiId("5985826831591281620")
+                .build());
+
+        InlineKeyboardRow row4 = new InlineKeyboardRow();
+        row4.add(StyledInlineButton.styledBuilder()
                 .text("💎 Premium Sovg‘a qilish")
                 .callbackData("gift_premium")
                 .style("primary")
                 .iconCustomEmojiId("5938420017665152105")
                 .build());
 
-        InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(StyledInlineButton.styledBuilder()
+        InlineKeyboardRow row5 = new InlineKeyboardRow();
+        row5.add(StyledInlineButton.styledBuilder()
+                .text("🎮 PUBG UC Sovg‘a qilish")
+                .callbackData("gift_pubg")
+                .style("primary")
+                .iconCustomEmojiId("5436050603723760533")
+                .build());
+
+        InlineKeyboardRow row6 = new InlineKeyboardRow();
+        row6.add(StyledInlineButton.styledBuilder()
                 .text("Orqaga")
                 .callbackData("back")
                 .style("primary")
@@ -81,6 +99,8 @@ public class GiftSelectScreen extends AbstractScreen {
         keyboard.add(row2);
         keyboard.add(row3);
         keyboard.add(row4);
+        keyboard.add(row5);
+        keyboard.add(row6);
 
         return InlineKeyboardMarkup.builder().keyboard(keyboard).build();
     }
