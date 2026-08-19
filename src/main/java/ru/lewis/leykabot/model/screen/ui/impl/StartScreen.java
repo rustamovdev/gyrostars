@@ -62,7 +62,6 @@ public class StartScreen extends AbstractScreen {
             case "buy-stars" -> screenManager.updateScreen(chatId, screenFactory.createBuyStarsScreen(chatId, userId));
             case "buy-pubg" -> screenManager.updateScreen(chatId, screenFactory.createPubgBuyScreen(chatId, userId));
             case "buy-premium" -> screenManager.updateScreen(chatId, screenFactory.createBuyPremiumScreen(chatId, userId));
-            case "gift" -> screenManager.updateScreen(chatId, screenFactory.createGiftSelectScreen(chatId, userId));
             case "referral" -> screenManager.updateScreen(chatId, screenFactory.createReferralScreen(chatId, userId));
             case "deposit" -> screenManager.updateScreen(chatId, screenFactory.createDepositRublesScreen(chatId, userId));
             case "profile" -> screenManager.updateScreen(chatId, screenFactory.createProfileScreen(chatId, userId));
@@ -131,16 +130,7 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5938420017665152105")
                 .build());
 
-        // Row 4: Sovg'a yuborish (Gift)
-        InlineKeyboardRow rowGift = new InlineKeyboardRow();
-        rowGift.add(StyledInlineButton.styledBuilder()
-                .text("🎁 Sovg‘a (Gift) yuborish")
-                .callbackData("gift")
-                .style("success")
-                .iconCustomEmojiId("5938420017665152105")
-                .build());
-
-        // Row 5: Hisob to'ldirish & Kabinet
+        // Row 4: Hisob to'ldirish & Kabinet
         InlineKeyboardRow row4 = new InlineKeyboardRow();
         row4.add(StyledInlineButton.styledBuilder()
                 .text("Hisob to‘ldirish")
@@ -155,7 +145,7 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5256143829672672750")
                 .build());
 
-        // Row 6: Reyting & Yordam
+        // Row 5: Reyting & Yordam
         InlineKeyboardRow row5 = new InlineKeyboardRow();
         row5.add(StyledInlineButton.styledBuilder()
                 .text("Reyting")
@@ -170,7 +160,7 @@ public class StartScreen extends AbstractScreen {
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
 
-        // Row 7: Referral (Full width with custom emoji)
+        // Row 6: Referral (Full width with custom emoji)
         InlineKeyboardRow row6 = new InlineKeyboardRow();
         row6.add(StyledInlineButton.styledBuilder()
                 .text("Referral (Bonus olish)")
@@ -182,7 +172,6 @@ public class StartScreen extends AbstractScreen {
         keyboard.add(row1);
         keyboard.add(row2);
         keyboard.add(row3);
-        keyboard.add(rowGift);
         keyboard.add(row4);
         keyboard.add(row5);
         keyboard.add(row6);

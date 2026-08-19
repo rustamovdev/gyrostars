@@ -183,11 +183,6 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             return;
         }
 
-        if (lower.startsWith("/gift")) {
-            giftService.handleGiftCommand(chatId, userId, trimmed);
-            return;
-        }
-
         if (lower.startsWith("/start")) {
             start(trimmed, userId, chatId);
             return;
