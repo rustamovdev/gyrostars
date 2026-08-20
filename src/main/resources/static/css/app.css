@@ -1,0 +1,263 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg-main: #0B1120;
+  --bg-card: #162032;
+  --bg-card-hover: #1E293B;
+  --accent-blue: #3B82F6;
+  --accent-blue-glow: rgba(59, 130, 246, 0.4);
+  --accent-cyan: #06B6D4;
+  --accent-purple: #8B5CF6;
+  --accent-green: #10B981;
+  --accent-amber: #F59E0B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border-color: rgba(51, 65, 85, 0.65);
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: 96px;
+}
+
+/* Background dynamic ambient glow */
+.ambient-glow {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  height: 320px;
+  background: radial-gradient(circle at top, rgba(59, 130, 246, 0.22) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(11, 17, 32, 0) 75%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Liquid glassmorphic cards */
+.glass-card {
+  background: rgba(22, 32, 50, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  border-radius: var(--radius-xl);
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.glass-card-interactive {
+  background: rgba(22, 32, 50, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.glass-card-interactive:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+}
+
+.glass-card-interactive:active {
+  transform: scale(0.95);
+}
+
+/* Selected active state with liquid glow */
+.card-selected {
+  background: rgba(30, 41, 59, 0.98) !important;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.35), inset 0 0 14px rgba(59, 130, 246, 0.18) !important;
+}
+
+/* Primary Button Liquid Glow */
+.btn-primary {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
+  color: #FFFFFF;
+  font-weight: 800;
+  border-radius: 18px;
+  box-shadow: 0 6px 25px rgba(37, 99, 235, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: all 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn-secondary {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(51, 65, 85, 0.85);
+  color: #F8FAFC;
+  font-weight: 700;
+  border-radius: 14px;
+  transition: all 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-secondary:active {
+  background: rgba(51, 65, 85, 0.9);
+  transform: scale(0.95);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.6);
+  border-radius: 10px;
+}
+
+/* Hide scrollbar for horizontal scroll tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Liquid Animation Classes */
+@keyframes liquidFadeIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes liquidPulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 32px rgba(59, 130, 246, 0.65); }
+}
+
+@keyframes liquidFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+
+.animate-fade-in {
+  animation: liquidFadeIn 0.26s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-float {
+  animation: liquidFloat 3.2s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: liquidPulseGlow 2.5s infinite;
+}
+
+/* Toast styling */
+#toast-container {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  width: 90%;
+  max-width: 380px;
+}
+
+.toast {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  color: #FFFFFF;
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+  animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-18px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-sheet {
+  background: #111B2E;
+  border: 1px solid rgba(51, 65, 85, 0.85);
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 22px 20px 38px 20px;
+  transform: translateY(100%);
+  transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -12px 50px rgba(0, 0, 0, 0.7);
+}
+
+.modal-backdrop.active .modal-sheet {
+  transform: translateY(0);
+}
+
+.sheet-handle {
+  width: 44px;
+  height: 5px;
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 10px;
+  margin: 0 auto 16px auto;
+}

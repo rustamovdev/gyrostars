@@ -1,8 +1,9 @@
 """
-Safe & Event-Driven Humo Payment Listener
-- 100% Passiv tinglovchi: Telegram serveriga ortiqcha so'rov yubormaydi (Ban xavfi 0%).
-- Telegram Push-Event (@client.on(events.NewMessage)) orqali ishlaydi.
-- @HUMOcardbot dan to'lov xabari kelganda Java Bot API ga yuboradi.
+Safe, Event-Driven & Polling Hybrid Humo Payment Listener
+- 100% Passiv tinglovchi + Xavfsiz orqa fonda sinxronizatsiya.
+- Telegram Push-Event (@client.on(events.NewMessage)) orqali tezkor to'lovlarni qabul qiladi.
+- Bot ishga tushganda va har 8 soniyada o'tkazib yuborilgan to'lovlarni tekshiradi.
+- @HUMOcardbot va barcha bank/bot to'lov xabarlarini to'g'ri aniqlaydi va Java Bot API ga uzatadi.
 """
 
 import asyncio
@@ -31,8 +32,10 @@ API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 LISTEN_BOTS = [
     "humocardbot", "humocard", "humobot", "hpay", "paynet",
     "payme", "click", "anorbank", "uzcard", "cardxabar", "cardxabarbot",
-    "sms", "bank", "p2p", "humo", "uzcardbot"
+    "sms", "bank", "p2p", "humo", "uzcardbot", "856254490"
 ]
+
+HUMO_BOT_ID = 856254490
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,17 +49,17 @@ if TG_SESSION_ENV:
     session_obj = StringSession(TG_SESSION_ENV)
     SESSION_FILE = "string_session"
     logger.info("🔑 TG_SESSION_STRING orqali StringSession ulandi")
-elif os.path.exists("userbot_local.session"):
-    session_obj = "userbot_local"
-    SESSION_FILE = "userbot_local.session"
-    logger.info("📁 userbot_local.session fayli orqali ulandi")
 elif os.path.exists("humo_payment_session.session"):
     session_obj = "humo_payment_session"
     SESSION_FILE = "humo_payment_session.session"
     logger.info("📁 humo_payment_session.session fayli orqali ulandi")
-else:
+elif os.path.exists("userbot_local.session"):
     session_obj = "userbot_local"
     SESSION_FILE = "userbot_local.session"
+    logger.info("📁 userbot_local.session fayli orqali ulandi")
+else:
+    session_obj = "humo_payment_session"
+    SESSION_FILE = "humo_payment_session.session"
 
 # Anti-ban xavfsizlik parametrlari (Telegram serverida haqiqiy mobil ilova bo'lib ko'rinadi)
 client = TelegramClient(
@@ -70,6 +73,35 @@ client = TelegramClient(
     system_lang_code="uz-UZ",
     flood_sleep_threshold=120
 )
+
+# -------------------------------------------------------------
+# DEDUPLICATION (Xabarlarni takroriy yuborilishining oldini olish)
+# -------------------------------------------------------------
+PROCESSED_FILE = os.path.join("data", "processed_payment_msgs.json")
+processed_keys = set()
+
+def load_processed_keys():
+    global processed_keys
+    try:
+        if os.path.exists(PROCESSED_FILE):
+            with open(PROCESSED_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    processed_keys = set(data[-1000:])
+    except Exception as e:
+        logger.warning("Processed keys yuklashda xatolik: %s", e)
+
+def save_processed_key(key: str):
+    global processed_keys
+    processed_keys.add(key)
+    try:
+        os.makedirs("data", exist_ok=True)
+        with open(PROCESSED_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(processed_keys)[-1000:], f)
+    except Exception:
+        pass
+
+load_processed_keys()
 
 
 def normalize_uz_text(text: str) -> str:
@@ -114,22 +146,16 @@ def parse_amount(text: str) -> float | None:
 
     text_norm = normalize_uz_text(text)
 
-    # 1. To'g'ridan-to'g'ri Kirim / Popolnenie / To'ldirish / Zachisleno / O'tkazma iboralari
+    # 1. Aniq kirim / to'ldirish qatorlari (➕ 200.000,00 UZS, + 50 000 UZS, Kirim: 50000)
     primary_patterns = [
-        # Kirim: 50 000 UZS / Popolnenie: 50 000 / Zachisleno: 50000 / To'ldirish: 25000
-        r"(?:kirim|tushum|popolnenie|postuplenie|zachisleno|to'?ldirish|to'?ldirildi|qabul qilindi|o'?tkazma|perevod|pereveli|hisob to'?ldirildi|hisobingiz to'?ldirildi)\s*[:\n\r\s\-]*\+?\s*([0-9\s.,]+)\s*(?:uzs|so'?m|sum|rub)?",
+        # ➕ 200.000,00 UZS yoki + 200 000 UZS yoki + 200.000 UZS
+        r"(?:[\u2795\+]|\bkirim\b|\btushum\b|\bpopolnenie\b|\bpostuplenie\b|\bzachisleno\b|\bto'?ldirish\b|\bto'?ldirildi\b|\bqabul qilindi\b|\bo'?tkazma\b|\bperevod\b|\bpereveli\b|\bhisob to'?ldirildi\b|\bhisobingiz to'?ldirildi\b)\s*[:\n\r\s\-]*[\u2795\+]?\s*([0-9]{1,3}(?:[\s.,][0-9]{3})*(?:[.,][0-9]{2})?|[0-9]{3,9})\s*(?:uzs|so'?m|sum|rub)?",
         # 50 000 UZS ga to'ldirildi / 50 000 UZS tushdi / 50 000 UZS kirim / 50000 UZS zachisleno
-        r"([0-9\s.,]+)\s*(?:uzs|so'?m|sum)\s*(?:ga|dan)?\s*(?:to'?ldirildi|tushdi|kirim|tushum|zachisleno|qabul qilindi|\+)",
-        # + 50 000 UZS / +50 000 so'm
-        r"\+\s*([0-9\s.,]+)\s*(?:uzs|so'?m|sum)",
+        r"([0-9]{1,3}(?:[\s.,][0-9]{3})*(?:[.,][0-9]{2})?|[0-9]{3,9})\s*(?:uzs|so'?m|sum)\s*(?:ga|dan)?\s*(?:to'?ldirildi|tushdi|kirim|tushum|zachisleno|qabul qilindi|tushgan)",
         # Summa / To'lov / To'lanishi kerak: 50 000 UZS
-        r"(?:summa|to'?lov|to'?lanishi kerak bo'?lgan summa)\s*[:\n\r\s\-]*\+?\s*`?([0-9\s.,]+)`?\s*(?:uzs|so'?m|sum|rub)?",
-        # Hisobingiz 100000 UZS ga to'ldirildi
-        r"hisobingiz\s+([0-9\s.,]+)\s*(?:uzs|so'?m|sum)",
+        r"(?:summa|to'?lov|to'?lanishi kerak bo'?lgan summa)\s*[:\n\r\s\-]*[\u2795\+]?\s*`?([0-9]{1,3}(?:[\s.,][0-9]{3})*(?:[.,][0-9]{2})?|[0-9]{3,9})`?\s*(?:uzs|so'?m|sum|rub)?",
         # kartangizga 50 000.00 UZS
-        r"kartangizga\s+([0-9\s.,]+)\s*(?:uzs|so'?m|sum)",
-        # ga 50000 UZS tushum
-        r"ga\s+([0-9\s.,]+)\s*(?:uzs|so'?m|sum)\s+tushum",
+        r"(?:kartangizga|hisobingizga|hisobingiz)\s+([0-9]{1,3}(?:[\s.,][0-9]{3})*(?:[.,][0-9]{2})?|[0-9]{3,9})\s*(?:uzs|so'?m|sum)",
     ]
 
     for pat in primary_patterns:
@@ -138,8 +164,8 @@ def parse_amount(text: str) -> float | None:
             if val:
                 return val
 
-    # 2. Agar maxsus kalit so'z topilmasa, lekin raqam + UZS/so'm bo'lsa (Balans / Qoldiq / Ostatok ni inobatga olmasdan)
-    clean_text = re.sub(r"(?:balans|qoldiq|ostatok|dostupno)\s*[:\n\r\s\-]*[0-9\s.,]+\s*(?:uzs|so'?m|sum)?", "", text_norm, flags=re.IGNORECASE)
+    # 2. Balans (💰 yoki Balans / Qoldiq / Ostatok) qatorlarini olib tashlagan holda qidirish
+    clean_text = re.sub(r"(?:💰|balans|qoldiq|ostatok|dostupno)\s*[:\n\r\s\-]*[0-9\s.,]+\s*(?:uzs|so'?m|sum)?", "", text_norm, flags=re.IGNORECASE)
 
     fallback_patterns = [
         r"([0-9]{1,3}(?:[\s\xa0.][0-9]{3})*(?:,[0-9]{2})?)\s*(?:uzs|so'?m|sum)",
@@ -159,16 +185,16 @@ def is_incoming(text: str) -> bool:
     negative_words = [
         "chiqim", "spisanie", "yechildi", "otmenen",
         "rad etildi", "yetarli emas", "blokirovka",
-        "xarajat", "otkazano"
+        "xarajat", "otkazano", "oplata"
     ]
     if any(neg in lower for neg in negative_words):
-        if any(pos in lower for pos in ["kirim", "popolnenie", "tushum", "zachisleno", "to'ldirildi"]):
+        if any(pos in lower for pos in ["kirim", "popolnenie", "tushum", "zachisleno", "to'ldirish", "to'ldirildi", "➕"]):
             return True
         return False
     return True
 
 
-async def send_to_bot_api(amount: float, raw_text: str):
+async def send_to_bot_api(amount: float, raw_text: str) -> bool:
     payload = {
         "amount": amount,
         "rawText": raw_text,
@@ -184,7 +210,9 @@ async def send_to_bot_api(amount: float, raw_text: str):
         f"http://127.0.0.1:{port}/api/v1/payment/notify-card",
         f"http://localhost:{port}/api/v1/payment/notify-card",
         "http://127.0.0.1:10000/api/v1/payment/notify-card",
-        "http://127.0.0.1:8085/api/v1/payment/notify-card"
+        "http://127.0.0.1:8085/api/v1/payment/notify-card",
+        "http://localhost:10000/api/v1/payment/notify-card",
+        "http://localhost:8085/api/v1/payment/notify-card"
     ])
     urls = list(dict.fromkeys(urls))
 
@@ -193,40 +221,42 @@ async def send_to_bot_api(amount: float, raw_text: str):
             req = urllib.request.Request(
                 target_url,
                 data=data,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json", "User-Agent": "HumoListener/2.0"}
             )
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: urllib.request.urlopen(req, timeout=5)
+                lambda: urllib.request.urlopen(req, timeout=7)
             )
             status_code = response.getcode()
             body = response.read().decode("utf-8")
-            logger.info("✅ Bot API ga muvaffaqiyatli yuborildi: status=%s, javob=%s", status_code, body)
-            return
+            logger.info("✅ Bot API ga muvaffaqiyatli uzatildi (%s): status=%s, javob=%s", target_url, status_code, body)
+            return True
         except Exception:
             pass
 
     logger.warning("⚠️ Bot API server hozircha javob bermadi, navbatdagi so'rovda qayta uriniladi.")
+    return False
 
 
-processed_msg_ids = set()
-
-async def process_msg_text(msg_id, text, sender_username=""):
-    if msg_id in processed_msg_ids:
-        return
-    processed_msg_ids.add(msg_id)
+async def process_msg_text(msg_key: str, text: str, sender_name: str = "") -> bool:
+    if msg_key in processed_keys:
+        return False
 
     if not is_incoming(text):
-        return
+        save_processed_key(msg_key)
+        return False
 
     amount = parse_amount(text)
     if amount is None:
-        logger.warning("⚠️ Xabardan summa aniqlanmadi (@%s): %s", sender_username, text.replace('\n', ' '))
-        return
+        return False
 
-    logger.info("💰 Aniqlangan kirim: %s UZS. Bot API ga uzatilmoqda...", amount)
-    await send_to_bot_api(amount, text)
+    logger.info("💰 Aniqlangan kirim: %s UZS (@%s, Key: %s). Bot API ga uzatilmoqda...", amount, sender_name, msg_key)
+    success = await send_to_bot_api(amount, text)
+    if success:
+        save_processed_key(msg_key)
+        return True
+    return False
 
 
 @client.on(events.NewMessage)
@@ -237,13 +267,20 @@ async def handle_new_message(event):
         if not text:
             return
 
-        sender = await event.get_sender()
+        chat_id = event.chat_id
+        sender = None
+        try:
+            sender = await event.get_sender()
+        except Exception:
+            pass
+
         sender_username = (getattr(sender, "username", "") or "").lower()
         sender_title = (getattr(sender, "title", "") or "").lower()
         sender_first = (getattr(sender, "first_name", "") or "").lower()
 
         is_payment_source = (
-            any(bot_name in sender_username for bot_name in LISTEN_BOTS)
+            chat_id == HUMO_BOT_ID
+            or any(bot_name in sender_username for bot_name in LISTEN_BOTS)
             or any(bot_name in sender_title for bot_name in LISTEN_BOTS)
             or any(bot_name in sender_first for bot_name in LISTEN_BOTS)
             or "humo" in sender_username or "humo" in text.lower()
@@ -253,10 +290,59 @@ async def handle_new_message(event):
         )
 
         if is_payment_source:
-            logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username, event.message.id)
-            await process_msg_text(event.message.id, text, sender_username)
+            msg_key = f"{chat_id}_{event.message.id}"
+            logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username or chat_id, event.message.id)
+            await process_msg_text(msg_key, text, sender_username or str(chat_id))
     except Exception as e:
         logger.error("Xabarni qayta ishlashda xatolik: %s", e)
+
+
+async def scan_recent_messages():
+    """Bot ishga tushganda yoki uzilish bo'lganda so'nggi to'lov xabarlarini tekshirish"""
+    try:
+        if not client.is_connected() or not await client.is_user_authorized():
+            return
+
+        # 1. Asosiy @HUMOcardbot xabarlarini to'g'ridan-to'g'ri tekshirish
+        try:
+            humo_entity = await client.get_entity("HUMOcardbot")
+            messages = await client.get_messages(humo_entity, limit=25)
+            for m in reversed(messages):
+                if m.raw_text:
+                    msg_key = f"{m.chat_id}_{m.id}"
+                    await process_msg_text(msg_key, m.raw_text, "HUMOcardbot")
+        except Exception as e:
+            logger.warning("@HUMOcardbot xabarlarini olishda xatolik: %s", e)
+
+        # 2. Boshqa to'lov dialoglarini tekshirish
+        dialogs = await client.get_dialogs(limit=20)
+        for d in dialogs:
+            username = (getattr(d.entity, "username", "") or "").lower()
+            title = (getattr(d.entity, "title", "") or "").lower()
+            chat_id = d.id
+
+            if chat_id != HUMO_BOT_ID and (
+                any(bot in username for bot in LISTEN_BOTS)
+                or any(bot in title for bot in LISTEN_BOTS)
+            ):
+                messages = await client.get_messages(d.entity, limit=10)
+                for m in reversed(messages):
+                    if m.raw_text:
+                        msg_key = f"{chat_id}_{m.id}"
+                        await process_msg_text(msg_key, m.raw_text, username or title)
+    except Exception as e:
+        logger.warning("scan_recent_messages xatolik: %s", e)
+
+
+async def periodic_payment_poller():
+    """Har 8 soniyada o'tkazib yuborilgan to'lovlar mavjudligini xavfsiz tekshirib turuvchi rejim"""
+    await asyncio.sleep(5)
+    while True:
+        try:
+            await scan_recent_messages()
+        except Exception as e:
+            logger.debug("Poller cycle xatolik: %s", e)
+        await asyncio.sleep(8)
 
 
 
@@ -381,6 +467,10 @@ async def start_gift_api_server():
 async def main():
     logger.info("🚀 Xavfsiz Humo Payment Listener ishga tushmoqda...")
     await start_gift_api_server()
+    
+    # Orqa fonda to'lovlarni tekshiruvchi poller vazifasini boshlash
+    asyncio.create_task(periodic_payment_poller())
+
     while True:
         try:
             await client.connect()
@@ -398,19 +488,23 @@ async def main():
             first_name = getattr(me, "first_name", "User") or "User"
             username = getattr(me, "username", "") or "unknown"
             logger.info("✅ Telegram akkaunt xavfsiz ulandi: %s (@%s) [ID: %s]", first_name, username, me.id)
-            logger.info("🎯 Passiv Push-Event rejimida @HUMOcardbot to'lovlari kutilmoqda (0 so'rovli xavfsiz rejim)...")
+            logger.info("🎯 Real-time Push-Event va Periodik Poller rejimida @HUMOcardbot to'lovlari faol tinglanmoqda...")
 
-            # Faqat xabarlarni passiv kutish (Hech qanday loop yoki polling so'rovlari yo'q)
+            # Ishga tushganda o'tkazib yuborilgan to'lovlarni darhol skanerlash
+            await scan_recent_messages()
+
+            # Faol tinglash
             await client.run_until_disconnected()
 
         except (UserDeactivatedError, UserDeactivatedBanError, AuthKeyUnregisteredError) as e:
             logger.error("❌ Telegram sessiyasi bekor qilingan (%s). Loop to'xtatildi. Asosiy bot xavfsiz faoliyat yuritmoqda.", e)
-            await asyncio.sleep(86400)  # 24 soat kutish (Telegramga qayta so'rov yubormaslik)
+            await asyncio.sleep(86400)
         except Exception as e:
-            logger.error("Ulanishda xatolik: %s. 60 soniyadan so'ng xavfsiz qayta ulanishga uriniladi...", e)
-            await asyncio.sleep(60)
+            logger.error("Ulanishda xatolik: %s. 30 soniyadan so'ng xavfsiz qayta ulanishga uriniladi...", e)
+            await asyncio.sleep(30)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 

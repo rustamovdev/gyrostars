@@ -46,3 +46,5 @@ bin/
 ### Data & Local DB ###
 data/
 *.db
+__pycache__/
+*.session

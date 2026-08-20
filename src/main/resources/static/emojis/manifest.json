@@ -1,0 +1,34 @@
+{
+  "tab_stars": {
+    "type": "lottie",
+    "path": "emojis/tab_stars.json"
+  },
+  "5897501460509234625": {
+    "type": "lottie",
+    "path": "emojis/5897501460509234625.json"
+  },
+  "tab_premium": {
+    "type": "image",
+    "path": "emojis/tab_premium.webp"
+  },
+  "5938420017665152105": {
+    "type": "image",
+    "path": "emojis/5938420017665152105.webp"
+  },
+  "tab_gift": {
+    "type": "lottie",
+    "path": "emojis/tab_gift.json"
+  },
+  "5420255182887873220": {
+    "type": "lottie",
+    "path": "emojis/5420255182887873220.json"
+  },
+  "tab_nft": {
+    "type": "lottie",
+    "path": "emojis/tab_nft.json"
+  },
+  "5150158575271674966": {
+    "type": "lottie",
+    "path": "emojis/5150158575271674966.json"
+  }
+}

@@ -2,10 +2,14 @@ import http.server
 import json
 import os
 import urllib.parse
+import urllib.request
 import webbrowser
 
 PORT = 3000
 STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "src", "main", "resources", "static"))
+
+BOT_TOKEN = "8842520350:AAEUc7rb9S42abHVqyM0WU8sGRupEJkxmSU"
+EMOJI_CACHE = {}
 
 mock_user = {
     "userId": 5305539499,
@@ -59,6 +63,74 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
 
+        # Telegram Premium Emoji Proxy Endpoint
+        if path in ["/get-emoji-url", "/api/v1/emoji/get-url"]:
+            emoji_id = query.get("emoji_id", query.get("emojiId", [""]))[0]
+            if not emoji_id:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": False, "error": "emoji_id majburiy"}).encode("utf-8"))
+                return
+
+            if emoji_id in EMOJI_CACHE:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": True, "emoji_id": emoji_id, "url": EMOJI_CACHE[emoji_id], "cached": True}).encode("utf-8"))
+                return
+
+            try:
+                # 1. getCustomEmojiStickers
+                stickers_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getCustomEmojiStickers?custom_emoji_ids=[\"{emoji_id}\"]"
+                req = urllib.request.Request(stickers_url, headers={"User-Agent": "GyroStars-Bot/1.0"})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    sticker_data = json.loads(resp.read().decode("utf-8"))
+
+                if not sticker_data.get("ok") or not sticker_data.get("result"):
+                    self.send_response(404)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"ok": False, "error": "Emoji topilmadi"}).encode("utf-8"))
+                    return
+
+                file_id = sticker_data["result"][0]["file_id"]
+
+                # 2. getFile
+                file_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
+                req = urllib.request.Request(file_url, headers={"User-Agent": "GyroStars-Bot/1.0"})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    file_data = json.loads(resp.read().decode("utf-8"))
+
+                if not file_data.get("ok"):
+                    self.send_response(500)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"ok": False, "error": "Fayl yo'li olinmadi"}).encode("utf-8"))
+                    return
+
+                file_path = file_data["result"]["file_path"]
+                final_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+                EMOJI_CACHE[emoji_id] = final_url
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": True, "emoji_id": emoji_id, "url": final_url, "cached": False}).encode("utf-8"))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": False, "error": str(e)}).encode("utf-8"))
+                return
+
         if path == "/api/webapp/init":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -68,29 +140,28 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
                 "user": mock_user,
                 "card": {
                     "cardNumber": "9860 0866 0350 6261",
-                    "holderName": "S R",
+                    "holderName": "Sharipov Sh",
                     "methodName": "HUMO"
                 },
                 "prices": {
                     "starUnitPrice": 230,
                     "starPackages": {
-                        50: 12000, 100: 23000, 150: 34000, 250: 53000,
-                        350: 78000, 500: 110000, 750: 160000, 1000: 215000
+                        50: 11500, 100: 23000, 250: 57500, 500: 115000,
+                        1000: 230000, 2500: 575000
                     },
                     "premiumPackages": {
-                        1: 50000, 3: 170000, 6: 230000, 12: 300000
+                        1: {"title": "1 oy", "price": 45000, "discount": None, "popular": False, "desc": "Tezkor yetkazish"},
+                        3: {"title": "3 oy", "price": 180000, "discount": "Ommabop", "popular": True, "desc": "Eng ko'p tanlangan"},
+                        6: {"title": "6 oy", "price": 250000, "discount": "-15%", "popular": False, "desc": "Tejamkor"},
+                        12: {"title": "12 oy", "price": 400000, "discount": "-30%", "popular": False, "desc": "VIP Tarif"}
                     },
                     "pubgPackages": {
                         60: 11000, 325: 55000, 660: 110000, 1800: 275000,
                         3850: 545000, 8100: 1090000
+                    },
+                    "freefirePackages": {
+                        100: 15000, 310: 45000, 520: 75000, 1060: 150000, 2180: 300000
                     }
-                },
-                "stats": {
-                    "totalStars": 350,
-                    "totalSpent": 490000,
-                    "totalPurchases": 5,
-                    "goalTarget": 1200000,
-                    "goalProgress": 41
                 }
             }
             self.wfile.write(json.dumps(data).encode("utf-8"))
@@ -117,28 +188,6 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
                     "Jasur · 250 ⭐",
                     "Farrux · 100 ⭐"
                 ]
-            }
-            self.wfile.write(json.dumps(data).encode("utf-8"))
-            return
-
-        if path == "/api/webapp/history":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps(mock_history).encode("utf-8"))
-            return
-
-        if path == "/api/webapp/referral":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            data = {
-                "ok": True,
-                "link": f"https://t.me/GyroService_bot?start=ref_{mock_user['userId']}",
-                "count": 14,
-                "percent": 2
             }
             self.wfile.write(json.dumps(data).encode("utf-8"))
             return
@@ -179,66 +228,6 @@ class DevServerHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(resp).encode("utf-8"))
             return
 
-        if path == "/api/webapp/buy/stars":
-            amount = req_data.get("amount", 100)
-            price = amount * 230
-            if req_data.get("paymentMethod") == "balance":
-                if mock_user["balance"] >= price:
-                    mock_user["balance"] -= price
-                    resp = {
-                        "ok": True,
-                        "message": f"✅ {amount} Stars muvaffaqiyatli xarid qilindi!",
-                        "newBalance": mock_user["balance"]
-                    }
-                else:
-                    resp = {"ok": False, "error": "Balansda mablag' yetarli emas!"}
-            else:
-                resp = {
-                    "ok": True,
-                    "invoice": True,
-                    "orderId": 99881,
-                    "amount": price + 42,
-                    "cardNumber": "9860 0866 0350 6261",
-                    "holderName": "S R",
-                    "methodName": "HUMO"
-                }
-            self.wfile.write(json.dumps(resp).encode("utf-8"))
-            return
-
-        if path == "/api/webapp/buy/premium":
-            months = req_data.get("months", 3)
-            if months == 1:
-                resp = {
-                    "ok": True,
-                    "redirectAdmin": True,
-                    "adminUrl": "https://t.me/stalkerbek?text=Salom!%20Men%201%20oylik%20Telegram%20Premium%20sotib%20olmoqchiman.",
-                    "message": "1 oylik Telegram Premium adminga (@stalkerbek) ulanish orqali amalga oshiriladi."
-                }
-            else:
-                price = 170000 if months == 3 else (230000 if months == 6 else 300000)
-                if req_data.get("paymentMethod") == "balance":
-                    if mock_user["balance"] >= price:
-                        mock_user["balance"] -= price
-                        resp = {
-                            "ok": True,
-                            "message": f"✅ {months} oylik Telegram Premium muvaffaqiyatli xarid qilindi!",
-                            "newBalance": mock_user["balance"]
-                        }
-                    else:
-                        resp = {"ok": False, "error": "Balansda mablag' yetarli emas!"}
-                else:
-                    resp = {
-                        "ok": True,
-                        "invoice": True,
-                        "orderId": 99882,
-                        "amount": price + 67,
-                        "cardNumber": "9860 0866 0350 6261",
-                        "holderName": "S R",
-                        "methodName": "HUMO"
-                    }
-            self.wfile.write(json.dumps(resp).encode("utf-8"))
-            return
-
         resp = {"ok": True, "message": "Buyurtma qabul qilindi"}
         self.wfile.write(json.dumps(resp).encode("utf-8"))
 
@@ -248,7 +237,7 @@ def main():
         sys.stdout.reconfigure(encoding='utf-8')
     except Exception:
         pass
-    server = http.server.HTTPServer(("127.0.0.1", PORT), DevServerHandler)
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), DevServerHandler)
     url = f"http://localhost:{PORT}?userId=5305539499&username=Admin&name=Admin"
     print(f"[*] GyroStars WebApp Dev Server ishga tushdi: {url}")
     print(f"[*] Static Directory: {STATIC_DIR}")

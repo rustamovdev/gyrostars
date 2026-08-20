@@ -103,6 +103,16 @@ public class StartScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
+        // Row 0: WebApp ochish (Eng tepasida)
+        InlineKeyboardRow webAppRow = new InlineKeyboardRow();
+        webAppRow.add(StyledInlineButton.styledBuilder()
+                .text("WebAppni ochish")
+                .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars-bot.onrender.com/index.html"))
+                .style("primary")
+                .iconCustomEmojiId("5296770844448561710")
+                .build());
+        keyboard.add(webAppRow);
+
         // Row 1: STARS (Full width)
         InlineKeyboardRow row1 = new InlineKeyboardRow();
         row1.add(StyledInlineButton.styledBuilder()

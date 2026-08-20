@@ -46,14 +46,14 @@ public class AutoPaymentService {
     }
 
     /**
-     * Foydalanuvchi uchun 10 daqiqalik avto-to'lov buyurtmasini yaratadi yoki mavjud faol buyurtmani qaytaradi.
+     * Foydalanuvchi uchun 15 daqiqalik avto-to'lov buyurtmasini yaratadi yoki mavjud faol buyurtmani qaytaradi.
      */
     @Transactional
     public DepositOrder createDepositOrder(Long userId, Long chatId, int baseAmount, PaymentCard card) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Aniq yaxlit summa (qo'shimcha so'mlarsiz)
-        int exactAmount = baseAmount;
+        // Har bir buyurtma uchun unikal summa (suffiks) yoki asosiy summa
+        int exactAmount = generateUniqueExactAmount(baseAmount);
 
         DepositOrder order = new DepositOrder();
         order.setOrderCode(generateOrderCode());
@@ -67,8 +67,8 @@ public class AutoPaymentService {
         }
         order.setStatus("PENDING");
         order.setCreatedAt(now);
-        // 10 daqiqalik aniq muddat beriladi
-        order.setExpiresAt(now.plusMinutes(10));
+        // 15 daqiqalik qulay muddat beriladi
+        order.setExpiresAt(now.plusMinutes(15));
 
         return depositOrderRepository.save(order);
     }
@@ -96,7 +96,7 @@ public class AutoPaymentService {
     }
 
     /**
-     * Har 30 soniyada muddati (10 daqiqa) o'tgan buyurtmalarni avtomatik bekor qiladi.
+     * Har 30 soniyada muddati (15 daqiqa) o'tgan buyurtmalarni avtomatik bekor qiladi.
      */
     @Scheduled(fixedDelay = 30000)
     @Transactional
@@ -112,7 +112,11 @@ public class AutoPaymentService {
 
     private int generateUniqueExactAmount(int baseAmount) {
         LocalDateTime now = LocalDateTime.now();
-        // 1..99 oralig'ida unikal suffiks tanlaymiz
+        // Agar ayni shu summada boshqa faol PENDING buyurtma bo'lmasa, bazaviy summaning o'zini beramiz
+        if (!depositOrderRepository.existsByExactAmountAndStatusAndExpiresAtAfter(baseAmount, "PENDING", now)) {
+            return baseAmount;
+        }
+        // Agar ayni shu summada boshqa buyurtma bo'lsa, adashmaslik uchun 1..99 oralig'ida unikal suffiks tanlaymiz
         for (int i = 0; i < 50; i++) {
             int suffix = ThreadLocalRandom.current().nextInt(1, 99);
             int candidate = baseAmount + suffix;
@@ -132,7 +136,7 @@ public class AutoPaymentService {
         log.info("Processing incoming card payment: {} UZS. Raw text: {}", amount, rawText);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime recentThreshold = now.minusHours(2);
+        LocalDateTime recentThreshold = now.minusHours(4);
         Map<String, Object> response = new HashMap<>();
 
         // 1. Exact amount bo'yicha faol (PENDING) buyurtmani qidirish
@@ -156,11 +160,33 @@ public class AutoPaymentService {
                     .findTopByBaseAmountAndStatusOrderByIdDesc(amount, "PENDING");
         }
 
-        // 5. Kichik farq (suffiks) bilan PENDING buyurtmani qidirish (+/- 99 so'm)
+        // 4. Kichik farq (suffiks) bilan PENDING buyurtmani qidirish (+/- 99 so'm)
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
                     .findTopByStatusAndExpiresAtAfterAndExactAmountBetweenOrderByIdDesc(
                             "PENDING", now, Math.max(0, amount - 99), amount + 99);
+        }
+
+        // 5. Muddati o'tgan (EXPIRED) lekin oxirgi 4 soat ichida yaratilgan buyurtmani qidirish (Foydalanuvchi puli kuymasligi uchun)
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
+        }
+
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
+        }
+
+        // 6. Bekor qilingan (CANCELLED) lekin oxirgi 4 soat ichida yaratilgan buyurtmani qidirish
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "CANCELLED", recentThreshold);
+        }
+
+        if (orderOpt.isEmpty()) {
+            orderOpt = depositOrderRepository
+                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "CANCELLED", recentThreshold);
         }
 
         if (orderOpt.isPresent()) {

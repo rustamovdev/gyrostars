@@ -10,10 +10,20 @@ import java.util.Map;
 @Controller
 public class HomeController {
 
-    @GetMapping("/")
+    @GetMapping(value = "/", produces = "text/html")
+    public String indexHtml() {
+        return "forward:/index.html";
+    }
+
+    @GetMapping(value = "/", produces = "application/json")
     @ResponseBody
-    public ResponseEntity<?> index() {
+    public ResponseEntity<?> indexJson() {
         return ResponseEntity.ok(Map.of("status", "ONLINE", "service", "GyroStars Telegram Bot"));
+    }
+
+    @GetMapping({"/app", "/webapp"})
+    public String webApp() {
+        return "forward:/index.html";
     }
 
     @GetMapping("/api/status")

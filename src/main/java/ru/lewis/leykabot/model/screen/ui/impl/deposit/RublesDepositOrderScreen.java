@@ -81,7 +81,7 @@ public class RublesDepositOrderScreen extends AbstractScreen {
                     screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
                 } else if ("EXPIRED".equals(current.getStatus()) || (current.getExpiresAt() != null && current.getExpiresAt().isBefore(LocalDateTime.now()))) {
                     telegramService.sendMessageAuto(chatId,
-                            "⏰ <b>Ushbu to‘lov buyurtmasining 10 daqiqalik vaqti tugagan.</b>\n\nIltimos, yangi to‘lov buyurtmasi yarating.");
+                            "⏰ <b>Ushbu to‘lov buyurtmasining 15 daqiqalik vaqti tugagan.</b>\n\nIltimos, yangi to‘lov buyurtmasi yarating.");
                     screenManager.updateScreen(chatId, screenFactory.createStartScreen(chatId, userId));
                 } else if ("CANCELLED".equals(current.getStatus())) {
                     telegramService.sendMessageAuto(chatId, "🚫 <b>Ushbu buyurtma bekor qilingan.</b>");
@@ -152,7 +152,7 @@ public class RublesDepositOrderScreen extends AbstractScreen {
 
         String expireTimeStr = (depositOrder != null && depositOrder.getExpiresAt() != null)
                 ? depositOrder.getExpiresAt().format(DateTimeFormatter.ofPattern("HH:mm"))
-                : LocalDateTime.now().plusMinutes(10).format(DateTimeFormatter.ofPattern("HH:mm"));
+                : LocalDateTime.now().plusMinutes(15).format(DateTimeFormatter.ofPattern("HH:mm"));
 
         return "<b>To‘lov buyurtmasi yaratildi!</b>\n\n" +
                 "<b>Buyurtma:</b> <code>" + orderCode + "</code>\n" +
