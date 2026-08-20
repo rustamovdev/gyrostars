@@ -37,14 +37,47 @@ public class PaymentCardService {
 
     @PostConstruct
     public void init() {
-        if (paymentCardRepository.count() == 0) {
-            PaymentCard defaultCard = new PaymentCard();
-            defaultCard.setCardNumber("9860086603506261");
-            defaultCard.setHolderName("S R");
-            defaultCard.setMethodName("HUMO");
-            defaultCard.setActive(true);
-            paymentCardRepository.save(defaultCard);
-            log.info("Initialized default payment card with admin card 9860086603506261");
+        try {
+            // ID 2, 33, 65 va boshqa ortiqcha kartalarni bazadan butunlay o'chirish
+            List<Long> deleteIds = List.of(2L, 33L, 65L);
+            for (Long id : deleteIds) {
+                if (paymentCardRepository.existsById(id)) {
+                    paymentCardRepository.deleteById(id);
+                    log.info("🗑 Karta (ID: {}) butunlay tizimdan o'chirildi.", id);
+                }
+            }
+
+            // ID 1 dagi asosiy kartani tekshirish va yangilash
+            Optional<PaymentCard> card1Opt = paymentCardRepository.findById(1L);
+            if (card1Opt.isPresent()) {
+                PaymentCard card1 = card1Opt.get();
+                card1.setCardNumber("9860086603506261");
+                card1.setHolderName("Sharipov Sh");
+                card1.setMethodName("HUMO");
+                card1.setActive(true);
+                paymentCardRepository.save(card1);
+                log.info("✅ Asosiy karta (ID: 1, 9860086603506261 - Sharipov Sh) faollashtirildi.");
+            } else {
+                PaymentCard defaultCard = new PaymentCard();
+                defaultCard.setCardNumber("9860086603506261");
+                defaultCard.setHolderName("Sharipov Sh");
+                defaultCard.setMethodName("HUMO");
+                defaultCard.setActive(true);
+                paymentCardRepository.save(defaultCard);
+                log.info("✅ Yangi asosiy karta (9860086603506261 - Sharipov Sh) yaratildi.");
+            }
+
+            // Barcha qolgan boshqa kartalarni tozalash (faqat 9860086603506261 kartasi qolishi uchun)
+            List<PaymentCard> all = paymentCardRepository.findAll();
+            for (PaymentCard c : all) {
+                String cleanNum = c.getCardNumber() != null ? c.getCardNumber().replaceAll("\\s+", "") : "";
+                if (!"9860086603506261".equals(cleanNum)) {
+                    paymentCardRepository.delete(c);
+                    log.info("🗑 Ortiqcha karta o'chirildi: ID={}, Number={}", c.getId(), c.getCardNumber());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("⚠️ Karta sozlamalarini yangilashda xatolik: {}", e.getMessage());
         }
     }
 
