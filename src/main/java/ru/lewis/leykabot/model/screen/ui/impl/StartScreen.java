@@ -107,7 +107,7 @@ public class StartScreen extends AbstractScreen {
         InlineKeyboardRow webAppRow = new InlineKeyboardRow();
         webAppRow.add(StyledInlineButton.styledBuilder()
                 .text("WebAppni ochish")
-                .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars-bot.onrender.com/index.html"))
+                .webApp(new org.telegram.telegrambots.meta.api.objects.webapp.WebAppInfo("https://gyrostars.onrender.com/index.html"))
                 .style("primary")
                 .iconCustomEmojiId("5296770844448561710")
                 .build());
