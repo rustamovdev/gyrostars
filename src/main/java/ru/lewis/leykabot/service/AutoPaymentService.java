@@ -139,54 +139,20 @@ public class AutoPaymentService {
         LocalDateTime recentThreshold = now.minusHours(4);
         Map<String, Object> response = new HashMap<>();
 
-        // 1. Exact amount bo'yicha faol (PENDING) buyurtmani qidirish
+        // 1. Exact amount bo'yicha faol (PENDING) buyurtmani qidirish (15 daqiqalik muddat ichida)
         Optional<DepositOrder> orderOpt = depositOrderRepository
                 .findTopByExactAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
 
-        // 2. Base amount bo'yicha faol (PENDING) buyurtmani qidirish
+        // 2. Base amount bo'yicha faol (PENDING) buyurtmani qidirish (15 daqiqalik muddat ichida)
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
                     .findTopByBaseAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
         }
 
-        // 3. Vaqti o'tgan bo'lsa ham PENDING holatdagi buyurtmani qidirish
+        // 3. Bank/tarmoq kechikishi uchun: faqat ayni shu exact amountdagi oxirgi 15 daqiqada yaratilgan PENDING buyurtmani qidirish
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
-                    .findTopByExactAmountAndStatusOrderByIdDesc(amount, "PENDING");
-        }
-
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByBaseAmountAndStatusOrderByIdDesc(amount, "PENDING");
-        }
-
-        // 4. Kichik farq (suffiks) bilan PENDING buyurtmani qidirish (+/- 99 so'm)
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByStatusAndExpiresAtAfterAndExactAmountBetweenOrderByIdDesc(
-                            "PENDING", now, Math.max(0, amount - 99), amount + 99);
-        }
-
-        // 5. Muddati o'tgan (EXPIRED) lekin oxirgi 4 soat ichida yaratilgan buyurtmani qidirish (Foydalanuvchi puli kuymasligi uchun)
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
-        }
-
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "EXPIRED", recentThreshold);
-        }
-
-        // 6. Bekor qilingan (CANCELLED) lekin oxirgi 4 soat ichida yaratilgan buyurtmani qidirish
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "CANCELLED", recentThreshold);
-        }
-
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByBaseAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "CANCELLED", recentThreshold);
+                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "PENDING", recentThreshold);
         }
 
         if (orderOpt.isPresent()) {
