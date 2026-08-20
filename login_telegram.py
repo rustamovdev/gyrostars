@@ -12,6 +12,14 @@ SESSION_NAME = "humo_payment_session"
 
 
 async def main():
+    # Eski yaroqsiz sessiya fayllarini tozalash (xavfsiz yangidan kirish uchun)
+    for old_file in ["humo_payment_session.session", "humo_payment_session.session-journal"]:
+        if os.path.exists(old_file):
+            try:
+                os.remove(old_file)
+            except Exception:
+                pass
+
     phone = input("Telefon raqamingizni kiriting (+998... formatida): ").strip()
     client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
     await client.connect()
