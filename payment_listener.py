@@ -222,6 +222,7 @@ async def process_msg_text(msg_id, text, sender_username=""):
 
     amount = parse_amount(text)
     if amount is None:
+        logger.warning("⚠️ Xabardan summa aniqlanmadi (@%s): %s", sender_username, text.replace('\n', ' '))
         return
 
     logger.info("💰 Aniqlangan kirim: %s UZS. Bot API ga uzatilmoqda...", amount)
