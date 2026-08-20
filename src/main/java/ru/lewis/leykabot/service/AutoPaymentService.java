@@ -251,8 +251,8 @@ public class AutoPaymentService {
             return response;
         }
 
-        // Mos buyurtma topilmadi - Adminga xabar berish
-        notifyAdminsUnmatchedPayment(amount, rawText);
+        // Mos buyurtma topilmadi - ortiqcha xabarnoma yuborilmaydi (faqat loglanadi)
+        log.info("ℹ️ Buyurtmasiz to'lov tushdi (amount={}, rawText={}), adminlarga xabar yuborilmadi.", amount, rawText);
 
         response.put("ok", true);
         response.put("matched", false);
