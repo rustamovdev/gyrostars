@@ -32,7 +32,22 @@ async def main():
 
     me = await client.get_me()
     print(f"\n✅ Muvaffaqiyatli ulandi: {me.first_name} (@{me.username}) [ID: {me.id}]")
-    print("Sessiya fayli 'humo_payment_session.session' saqlandi!")
+    print("📁 Sessiya fayli 'humo_payment_session.session' saqlandi!")
+
+    try:
+        from telethon.sessions import StringSession
+        string_client = TelegramClient(StringSession(), API_ID, API_HASH)
+        await string_client.connect()
+        # sessiya ma'lumotlarini StringSession ga ko'chirish
+        session_str = StringSession.save(client.session)
+        print("\n" + "="*60)
+        print("🔑 RENDER UCHUN TG_SESSION_STRING (Nusxalab oling va Render Environment ga qo'ying):")
+        print("="*60)
+        print(session_str)
+        print("="*60 + "\n")
+    except Exception as ex:
+        pass
+
     await client.disconnect()
 
 

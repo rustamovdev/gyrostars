@@ -28,7 +28,11 @@ from telethon.errors import (
 API_ID = int(os.environ.get("TG_API_ID", "39467356"))
 API_HASH = os.environ.get("TG_API_HASH", "44a1a557b46f67a7b65861d97db7c8e0")
 
-LISTEN_BOTS = ["humocardbot", "humocard", "humobot", "hpay", "paynet"]
+LISTEN_BOTS = [
+    "humocardbot", "humocard", "humobot", "hpay", "paynet",
+    "payme", "click", "anorbank", "uzcard", "cardxabar", "cardxabarbot",
+    "sms", "bank", "p2p", "humo", "uzcardbot"
+]
 
 logging.basicConfig(
     level=logging.INFO,
