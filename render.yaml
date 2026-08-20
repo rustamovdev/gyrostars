@@ -24,7 +24,7 @@ services:
       - key: TG_API_HASH
         value: "44a1a557b46f67a7b65861d97db7c8e0"
       - key: TG_SESSION_STRING
-        sync: false
+        value: "1ApWapzMBu4yiDVjZpHwvBCQMFe_Txm0LeSj1jEHqcctWa7NY4Oc4Q_B9Rfp3Gps-pW4_QVB_j6P30AMMGCl8mV3AEnLBrE0oakZUhuA6Mj2-Ph1ygKpAXV6y1NyY22OdE8yDxDfatEBw_huQ4XjchWqaCeG0rFidt5e7dtqMhK_5ye8VF97Z2J0YeOtPorzAPx5fWqLdbrfCvE1CjqTWzPbA1n10RP3sf1D2b9l4V6QXa0QAgBZMZAYVTzsWPzOhmGZ69pi51gAqfkd1BGvT__94GxtfrWJ3TTpNYpNnjSNR0JuyyKyEZBXdXUixbjejrJfyS11yDIYRhU7BsuvnhhP6sWqZh7c="
       - key: FRAGMENT_API_URL
         value: "https://fragment-api.uz/api/v1"
       - key: FRAGMENT_API_KEY
