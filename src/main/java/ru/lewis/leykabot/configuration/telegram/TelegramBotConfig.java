@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties("telegram.bot")
 public class TelegramBotConfig {
-    private String token = "8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc";
+    private String token = "8842520350:AAEUc7rb9S42abHVqyM0WU8sGRupEJkxmSU";
     private String name = "leykabot";
 
     public String getName() {
@@ -25,7 +25,7 @@ public class TelegramBotConfig {
         if (token != null && !token.isBlank()) {
             return token.trim();
         }
-        return "8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc";
+        return "8842520350:AAEUc7rb9S42abHVqyM0WU8sGRupEJkxmSU";
     }
 
     public void setName(String name) {

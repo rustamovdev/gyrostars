@@ -4,7 +4,7 @@ telegram:
   log-channel-id: -1337
   log-channel-topic-id: 2
   bot:
-    token: '8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc'
+    token: '8842520350:AAEUc7rb9S42abHVqyM0WU8sGRupEJkxmSU'
     name: 'leykabot'
 
 dev-mode:

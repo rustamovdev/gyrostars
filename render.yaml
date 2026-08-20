@@ -18,7 +18,7 @@ services:
       - key: SPRING_DATASOURCE_PASSWORD
         value: "samirbek2010!"
       - key: TELEGRAM_BOT_TOKEN
-        value: "8683889683:AAHG_2tXauL8TBty_G3WNbXEMTXQihUXKqc"
+        value: "8842520350:AAEUc7rb9S42abHVqyM0WU8sGRupEJkxmSU"
       - key: TG_API_ID
         value: "39467356"
       - key: TG_API_HASH
