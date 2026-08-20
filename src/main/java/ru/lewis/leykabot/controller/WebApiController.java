@@ -2,12 +2,15 @@ package ru.lewis.leykabot.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.lewis.leykabot.model.database.entity.DepositOrder;
 import ru.lewis.leykabot.model.database.entity.PaymentCard;
 import ru.lewis.leykabot.model.database.entity.User;
 import ru.lewis.leykabot.repository.DepositOrderRepository;
+import ru.lewis.leykabot.repository.StarsTransactionRepository;
+import ru.lewis.leykabot.repository.TransactionRepository;
 import ru.lewis.leykabot.service.*;
 
 import java.time.LocalDateTime;
@@ -26,16 +29,22 @@ public class WebApiController {
     private final PaymentCardService paymentCardService;
     private final TelegramService telegramService;
     private final DepositOrderRepository depositOrderRepository;
+    private final TransactionRepository transactionRepository;
+    private final StarsTransactionRepository starsTransactionRepository;
     private final TransactionService transactionService;
 
     @GetMapping("/init")
     public ResponseEntity<?> init(@RequestParam(required = false, defaultValue = "0") Long userId) {
-        log.info("WebApp init request for userId={}", userId);
+        log.info("WebApp real init request for userId={}", userId);
 
         Map<String, Object> resp = new HashMap<>();
 
-        // 1. User info
+        // 1. Real User Info & Stats
         Map<String, Object> userMap = new HashMap<>();
+        long totalStars = 0;
+        long totalSpent = 0;
+        long purchasesCount = 0;
+
         if (userId > 0) {
             Optional<User> userOpt = userService.getUser(userId);
             String username = "User";
@@ -44,30 +53,39 @@ public class WebApiController {
                 if (u != null && !u.isBlank()) username = u;
             } catch (Exception ignored) {}
 
+            int balance = 0;
             if (userOpt.isPresent()) {
                 User u = userOpt.get();
-                userMap.put("userId", u.getTelegramId());
-                userMap.put("username", username);
-                userMap.put("fullName", username.startsWith("@") ? username : "@" + username);
-                userMap.put("balance", u.getBalance() != null ? u.getBalance() : 0);
-                userMap.put("verified", true);
-            } else {
-                userMap.put("userId", userId);
-                userMap.put("username", username);
-                userMap.put("fullName", "S R");
-                userMap.put("balance", 0);
-                userMap.put("verified", true);
+                balance = u.getBalance() != null ? u.getBalance() : 0;
             }
+
+            userMap.put("userId", userId);
+            userMap.put("username", username);
+            userMap.put("fullName", username.startsWith("@") ? username : "@" + username);
+            userMap.put("balance", balance);
+            userMap.put("verified", true);
+
+            try {
+                totalStars = starsTransactionRepository.sumStarsByTelegramId(userId);
+                totalSpent = Math.abs(transactionRepository.sumRublesByTelegramId(userId));
+                purchasesCount = depositOrderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                        .filter(o -> "PAID_AUTO".equals(o.getStatus()) || "PAID_MANUAL".equals(o.getStatus()))
+                        .count();
+            } catch (Exception ignored) {}
         } else {
-            userMap.put("userId", 8721841892L);
-            userMap.put("username", "Sharipov_Sh");
-            userMap.put("fullName", "S R");
+            userMap.put("userId", 0L);
+            userMap.put("username", "User");
+            userMap.put("fullName", "Foydalanuvchi");
             userMap.put("balance", 0);
             userMap.put("verified", true);
         }
+
+        userMap.put("totalStars", totalStars);
+        userMap.put("totalSpent", totalSpent);
+        userMap.put("purchasesCount", purchasesCount);
         resp.put("user", userMap);
 
-        // 2. Active payment card
+        // 2. Active Payment Card
         List<PaymentCard> activeCards = paymentCardService.getActiveCards();
         Map<String, Object> cardMap = new HashMap<>();
         if (!activeCards.isEmpty()) {
@@ -113,11 +131,11 @@ public class WebApiController {
 
         resp.put("prices", prices);
 
-        // 4. Recent user history
+        // 4. Real User History
         List<Map<String, Object>> histList = new ArrayList<>();
         if (userId > 0) {
             List<DepositOrder> userOrders = depositOrderRepository.findByUserIdOrderByCreatedAtDesc(userId);
-            for (DepositOrder o : userOrders.stream().limit(10).toList()) {
+            for (DepositOrder o : userOrders.stream().limit(15).toList()) {
                 Map<String, Object> h = new HashMap<>();
                 h.put("id", "ORD-" + o.getId());
                 h.put("type", "deposit");
@@ -129,13 +147,75 @@ public class WebApiController {
                 histList.add(h);
             }
         }
-        if (histList.isEmpty()) {
-            histList.add(Map.of("id", "ORD-101", "type", "stars", "title", "⭐ 100 Stars", "target", "@Sharipov_Sh", "amount", 23000, "status", "completed", "date", "Bugun 20:52"));
-            histList.add(Map.of("id", "ORD-102", "type", "premium", "title", "💎 3 Oylik Premium", "target", "@Sharipov_Sh", "amount", 180000, "status", "completed", "date", "Bugun 19:48"));
-        }
         resp.put("history", histList);
 
         return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<?> getTopUsers(@RequestParam(required = false, defaultValue = "today") String period,
+                                         @RequestParam(required = false, defaultValue = "0") Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime from = switch (period) {
+            case "week" -> now.minusDays(7);
+            case "month" -> now.minusDays(30);
+            default -> now.toLocalDate().atStartOfDay(); // today
+        };
+
+        List<Object[]> rawList = transactionRepository.findTopByRublesBetween(from, now, PageRequest.of(0, 10));
+        List<Map<String, Object>> result = new ArrayList<>();
+        int rank = 1;
+
+        for (Object[] row : rawList) {
+            Long tgId = ((Number) row[0]).longValue();
+            long total = ((Number) row[1]).longValue();
+
+            String name = "User";
+            try {
+                String u = telegramService.getUsernameByUserId(tgId);
+                if (u != null && !u.isBlank()) {
+                    name = u.startsWith("@") ? u : "@" + u;
+                } else {
+                    String strId = tgId.toString();
+                    name = strId.length() > 6 ? strId.substring(0, 4) + "***" : "ID: " + strId;
+                }
+            } catch (Exception ignored) {}
+
+            boolean isMe = (userId > 0 && tgId.equals(userId));
+            if (isMe) {
+                name += " (Siz)";
+            }
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("rank", rank);
+            item.put("name", name);
+            item.put("total", total);
+            item.put("isMe", isMe);
+            item.put("avatar", rank == 1 ? "👑" : (rank == 2 ? "⭐" : (rank == 3 ? "🔥" : "👤")));
+
+            result.add(item);
+            rank++;
+        }
+
+        return ResponseEntity.ok(Map.of("ok", true, "period", period, "top", result));
+    }
+
+    @PostMapping("/promocode")
+    public ResponseEntity<?> applyPromocode(@RequestBody Map<String, Object> req) {
+        Long userId = Long.parseLong(req.getOrDefault("userId", "0").toString());
+        String code = req.getOrDefault("code", "").toString().trim();
+
+        if (userId <= 0 || code.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Promokod yoki User ID kiritilmadi"));
+        }
+
+        boolean success = userService.activateCode(userId, code);
+        if (success) {
+            long newBal = userService.getBalance(userId).orElse(0);
+            return ResponseEntity.ok(Map.of("ok", true, "message", "Promokod muvaffaqiyatli faollashtirildi!", "newBalance", newBal));
+        } else {
+            return ResponseEntity.ok(Map.of("ok", false, "error", "Promokod topilmadi, muddati o'tgan yoki allaqachon ishlatilgan!"));
+        }
     }
 
     @PostMapping("/deposit")

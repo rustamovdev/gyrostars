@@ -1,6 +1,6 @@
 /**
  * GyroStars Telegram Mini App (WebApp)
- * Full Reactive UI Engine & Real-Time Spring Boot Backend Integration
+ * Full Reactive UI Engine & Real Database Integration (Zero Fake Data)
  */
 
 // -------------------------------------------------------------
@@ -8,11 +8,14 @@
 // -------------------------------------------------------------
 const STATE = {
   user: {
-    userId: 8721841892,
-    username: "Sharipov_Sh",
-    fullName: "S R",
+    userId: 0,
+    username: "",
+    fullName: "Foydalanuvchi",
     balance: 0,
-    verified: true
+    verified: true,
+    totalStars: 0,
+    totalSpent: 0,
+    purchasesCount: 0
   },
   card: {
     cardNumber: "9860 0866 0350 6261",
@@ -78,45 +81,16 @@ const STATE = {
   activeOrder: null,
   countdownInterval: null,
   
-  // History
-  history: [
-    { id: "ORD-9101", type: "stars", title: "⭐ 100 Stars", target: "@Sharipov_Sh", amount: 23000, status: "completed", date: "Bugun 20:52" },
-    { id: "ORD-9102", type: "premium", title: "💎 3 Oylik Premium", target: "@Sharipov_Sh", amount: 180000, status: "completed", date: "Bugun 19:48" },
-    { id: "ORD-9103", type: "deposit", title: "💳 Balans to'ldirish", target: "HUMO *6261", amount: 200000, status: "completed", date: "Bugun 18:56" },
-    { id: "ORD-9104", type: "pubg", title: "🎮 325 PUBG UC", target: "ID: 512348912", amount: 55000, status: "pending", date: "Kecha 14:15" }
-  ],
+  // Real History (Empty until loaded from backend)
+  history: [],
   
-  // Leaderboards
+  // Real Leaderboards (Empty until loaded from backend)
   topData: {
-    today: [
-      { rank: 1, name: "Shaxzod", total: 1250000, isMe: false, avatar: "👑" },
-      { rank: 2, name: "S R (Siz)", total: 490000, isMe: true, avatar: "⭐" },
-      { rank: 3, name: "Bekzod", total: 350000, isMe: false, avatar: "🔥" },
-      { rank: 4, name: "Jasur", total: 230000, isMe: false, avatar: "⚡" },
-      { rank: 5, name: "Farrux", total: 180000, isMe: false, avatar: "💎" },
-      { rank: 6, name: "Alisher", total: 120000, isMe: false, avatar: "🚀" }
-    ],
-    week: [
-      { rank: 1, name: "Jasur", total: 4850000, isMe: false, avatar: "👑" },
-      { rank: 2, name: "Shaxzod", total: 3450000, isMe: false, avatar: "🔥" },
-      { rank: 3, name: "S R (Siz)", total: 2190000, isMe: true, avatar: "⭐" },
-      { rank: 4, name: "Temur", total: 1800000, isMe: false, avatar: "⚡" }
-    ],
-    month: [
-      { rank: 1, name: "VIP Xaridor", total: 14500000, isMe: false, avatar: "👑" },
-      { rank: 2, name: "Shaxzod", total: 9800000, isMe: false, avatar: "🔥" },
-      { rank: 3, name: "S R (Siz)", total: 6490000, isMe: true, avatar: "⭐" }
-    ]
+    today: [],
+    week: [],
+    month: []
   },
-  
-  recentBuyers: [
-    "Shaxzod · 500 ⭐ xarid qildi",
-    "Admin · 3 oylik 💎 Premium oldi",
-    "Bekzod · 660 🎮 PUBG UC oldi",
-    "Jasur · 250 ⭐ xarid qildi",
-    "Farrux · 100 ⭐ xarid qildi",
-    "Rustam · 12 oylik 💎 VIP Premium oldi"
-  ]
+  isLoadingTop: false
 };
 
 // -------------------------------------------------------------
@@ -170,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
   parseUrlParams();
   fetchInitialData();
   renderApp();
-  startRecentBuyersTicker();
 });
 
 function initSplashScreen() {
@@ -214,7 +187,7 @@ function initTelegramSDK() {
     if (user) {
       STATE.user.userId = user.id;
       STATE.user.username = user.username || user.first_name || "User";
-      STATE.user.fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "S R";
+      STATE.user.fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "Foydalanuvchi";
       if (!STATE.starsUsername) STATE.starsUsername = user.username ? `@${user.username}` : "";
       if (!STATE.premiumUsername) STATE.premiumUsername = user.username ? `@${user.username}` : "";
     }
@@ -238,17 +211,38 @@ async function fetchInitialData() {
         STATE.user.balance = data.user.balance ?? STATE.user.balance;
         if (data.user.fullName) STATE.user.fullName = data.user.fullName;
         if (data.user.username) STATE.user.username = data.user.username;
+        if (data.user.totalStars !== undefined) STATE.user.totalStars = data.user.totalStars;
+        if (data.user.totalSpent !== undefined) STATE.user.totalSpent = data.user.totalSpent;
+        if (data.user.purchasesCount !== undefined) STATE.user.purchasesCount = data.user.purchasesCount;
       }
       if (data.card) STATE.card = data.card;
       if (data.prices) STATE.prices = { ...STATE.prices, ...data.prices };
-      if (data.history && data.history.length > 0) STATE.history = data.history;
+      if (data.history) STATE.history = data.history;
       updateHeader();
       if (STATE.activeTab === "home" || STATE.activeTab === "account") {
         renderActiveTab();
       }
     }
   } catch (e) {
-    console.log("Local standalone mode running:", e);
+    console.log("Fetch initial data error:", e);
+  }
+}
+
+async function fetchTopData(period) {
+  STATE.isLoadingTop = true;
+  try {
+    const res = await fetch(`/api/webapp/top?period=${period}&userId=${STATE.user.userId}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.top) {
+        STATE.topData[period] = data.top;
+      }
+    }
+  } catch (e) {
+    console.log("Fetch top error:", e);
+  } finally {
+    STATE.isLoadingTop = false;
+    if (STATE.activeTab === "top") renderActiveTab();
   }
 }
 
@@ -268,11 +262,11 @@ function updateHeader() {
   const balanceEl = document.getElementById("header-balance");
 
   if (avatarEl) {
-    const initials = (STATE.user.fullName || "S R").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+    const initials = (STATE.user.fullName || "SR").split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
     avatarEl.innerText = initials || "SR";
   }
-  if (nameEl) nameEl.innerText = STATE.user.fullName || "S R";
-  if (idEl) idEl.innerText = "ID: " + STATE.user.userId;
+  if (nameEl) nameEl.innerText = STATE.user.fullName || "Foydalanuvchi";
+  if (idEl) idEl.innerText = STATE.user.userId > 0 ? "ID: " + STATE.user.userId : "ID: —";
   if (balanceEl) balanceEl.innerText = formatNumber(STATE.user.balance) + " so'm";
 }
 
@@ -306,6 +300,9 @@ function switchTab(tabId) {
   STATE.activeTab = tabId;
   renderNavigation();
   renderActiveTab();
+  if (tabId === "top") {
+    fetchTopData(STATE.topPeriod);
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -507,8 +504,8 @@ function renderPremiumSubTab() {
         <div class="flex items-center gap-2">
           <span class="text-xl">🎟</span>
           <div>
-            <div class="text-xs font-extrabold text-white">Chiptalarim & Promokod</div>
-            <div class="text-[11px] text-purple-300">Har bir xarid uchun bonus oling</div>
+            <div class="text-xs font-extrabold text-white">Promokod kiritish</div>
+            <div class="text-[11px] text-purple-300">Promokodni faollashtiring va balans oling</div>
           </div>
         </div>
         <button onclick="openPromocodeModal()" class="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white rounded-xl text-xs font-bold transition-all">
@@ -711,10 +708,10 @@ function selectPaymentMethod(method) {
 }
 
 // -------------------------------------------------------------
-// 6. TAB 2: ТОП ПОЛЬЗОВАТЕЛЕЙ (LEADERBOARD)
+// 6. TAB 2: ТОП ПОЛЬЗОВАТЕЛЕЙ (REAL DATABASE LEADERBOARD)
 // -------------------------------------------------------------
 function renderTopTab() {
-  const users = STATE.topData[STATE.topPeriod] || STATE.topData.today;
+  const users = STATE.topData[STATE.topPeriod] || [];
   const top1 = users[0];
   const top2 = users[1];
   const top3 = users[2];
@@ -736,9 +733,9 @@ function renderTopTab() {
       <!-- Period Selector -->
       <div class="glass-card p-1.5 flex gap-1.5 rounded-2xl bg-slate-900/90">
         ${[
-          { id: "today", label: "Сегодня" },
-          { id: "week", label: "Неделя" },
-          { id: "month", label: "Месяц" }
+          { id: "today", label: "Bugun" },
+          { id: "week", label: "Haftalik" },
+          { id: "month", label: "Oylik" }
         ].map(p => `
           <button onclick="switchTopPeriod('${p.id}')"
                   class="flex-1 py-2 rounded-xl text-xs font-bold transition-all ${STATE.topPeriod === p.id ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30' : 'text-slate-400 hover:text-slate-200'}">
@@ -747,78 +744,81 @@ function renderTopTab() {
         `).join("")}
       </div>
 
-      <!-- Top Podium (1st, 2nd, 3rd) -->
-      <div class="grid grid-cols-3 gap-2 items-end pt-4 pb-2 px-1">
-        <!-- 2nd Place -->
-        ${top2 ? `
-          <div class="glass-card p-3 flex flex-col items-center text-center rounded-2xl border-slate-600 bg-slate-900/90 relative">
-            <span class="text-2xl -mt-5 mb-1">🥈</span>
-            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-black text-white border-2 border-slate-400">
-              ${top2.avatar || '2'}
-            </div>
-            <div class="text-xs font-extrabold text-white mt-1.5 truncate max-w-full">${top2.name}</div>
-            <div class="text-[11px] font-black text-blue-400 mt-0.5">${formatNumber(top2.total)}</div>
-            <span class="text-[9px] text-slate-400">so'm</span>
+      ${STATE.isLoadingTop ? `
+        <div class="glass-card p-8 flex flex-col items-center justify-center text-center space-y-2">
+          <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="text-xs text-slate-400">Reyting yuklanmoqda...</div>
+        </div>
+      ` : (users.length === 0 ? `
+        <div class="glass-card p-10 flex flex-col items-center justify-center text-center space-y-3 rounded-2xl">
+          <div class="w-12 h-12 flex items-center justify-center opacity-70">
+            ${renderEmoji('top', 'w-12 h-12')}
           </div>
-        ` : '<div></div>'}
-
-        <!-- 1st Place (Highest) -->
-        ${top1 ? `
-          <div class="glass-card p-3.5 flex flex-col items-center text-center rounded-2xl border-amber-500/60 bg-gradient-to-b from-amber-950/40 to-slate-900 relative shadow-lg shadow-amber-500/10">
-            <span class="text-3xl -mt-7 mb-1 animate-float">👑</span>
-            <div class="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-base font-black text-amber-300 border-2 border-amber-400">
-              ${top1.avatar || '1'}
-            </div>
-            <div class="text-xs font-black text-amber-300 mt-1.5 truncate max-w-full">${top1.name}</div>
-            <div class="text-xs font-black text-amber-400 mt-0.5">${formatNumber(top1.total)}</div>
-            <span class="text-[9px] text-slate-400">so'm</span>
-          </div>
-        ` : '<div></div>'}
-
-        <!-- 3rd Place -->
-        ${top3 ? `
-          <div class="glass-card p-3 flex flex-col items-center text-center rounded-2xl border-amber-700/60 bg-slate-900/90 relative">
-            <span class="text-2xl -mt-5 mb-1">🥉</span>
-            <div class="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center text-sm font-black text-amber-600 border-2 border-amber-700">
-              ${top3.avatar || '3'}
-            </div>
-            <div class="text-xs font-extrabold text-white mt-1.5 truncate max-w-full">${top3.name}</div>
-            <div class="text-[11px] font-black text-blue-400 mt-0.5">${formatNumber(top3.total)}</div>
-            <span class="text-[9px] text-slate-400">so'm</span>
-          </div>
-        ` : '<div></div>'}
-      </div>
-
-      <!-- Rest of Users List -->
-      <div class="glass-card p-3 space-y-2">
-        <h4 class="text-xs font-bold text-slate-400 px-2">Reyting jadvali</h4>
-        <div class="space-y-1.5">
-          ${rest.map(u => `
-            <div class="flex items-center justify-between p-2.5 rounded-xl ${u.isMe ? 'bg-blue-950/50 border border-blue-600/40' : 'bg-slate-900/60 border border-slate-800'}">
-              <div class="flex items-center gap-3">
-                <span class="w-5 text-center text-xs font-black text-slate-400">#${u.rank}</span>
-                <span class="text-base">${u.avatar || '👤'}</span>
-                <span class="text-xs font-bold ${u.isMe ? 'text-blue-300' : 'text-white'}">${u.name}</span>
+          <div class="text-sm font-bold text-white">Ushbu davrda xaridlar yo'q</div>
+          <p class="text-xs text-slate-400 max-w-xs">Ilk xaridni amalga oshiring va shohsupaning 1-o'rnini egallang!</p>
+        </div>
+      ` : `
+        <!-- Top Podium (1st, 2nd, 3rd) -->
+        <div class="grid grid-cols-3 gap-2 items-end pt-4 pb-2 px-1">
+          <!-- 2nd Place -->
+          ${top2 ? `
+            <div class="glass-card p-3 flex flex-col items-center text-center rounded-2xl border-slate-600 bg-slate-900/90 relative">
+              <span class="text-2xl -mt-5 mb-1">🥈</span>
+              <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-black text-white border-2 border-slate-400">
+                2
               </div>
-              <span class="text-xs font-black text-blue-400">${formatNumber(u.total)} so'm</span>
+              <div class="text-xs font-extrabold text-white mt-1.5 truncate max-w-full">${top2.name}</div>
+              <div class="text-[11px] font-black text-blue-400 mt-0.5">${formatNumber(top2.total)}</div>
+              <span class="text-[9px] text-slate-400">so'm</span>
             </div>
-          `).join("")}
-        </div>
-      </div>
+          ` : '<div></div>'}
 
-      <!-- Live Recent Buyers Ticker -->
-      <div class="glass-card p-3.5 space-y-2 bg-gradient-to-r from-slate-900 to-blue-950/30">
-        <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span>So'nggi faol xaridorlar</span>
+          <!-- 1st Place (Highest) -->
+          ${top1 ? `
+            <div class="glass-card p-3.5 flex flex-col items-center text-center rounded-2xl border-amber-500/60 bg-gradient-to-b from-amber-950/40 to-slate-900 relative shadow-lg shadow-amber-500/10">
+              <span class="text-3xl -mt-7 mb-1 animate-float">👑</span>
+              <div class="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-base font-black text-amber-300 border-2 border-amber-400">
+                1
+              </div>
+              <div class="text-xs font-black text-amber-300 mt-1.5 truncate max-w-full">${top1.name}</div>
+              <div class="text-xs font-black text-amber-400 mt-0.5">${formatNumber(top1.total)}</div>
+              <span class="text-[9px] text-slate-400">so'm</span>
+            </div>
+          ` : '<div></div>'}
+
+          <!-- 3rd Place -->
+          ${top3 ? `
+            <div class="glass-card p-3 flex flex-col items-center text-center rounded-2xl border-amber-700/60 bg-slate-900/90 relative">
+              <span class="text-2xl -mt-5 mb-1">🥉</span>
+              <div class="w-10 h-10 rounded-full bg-amber-900/30 flex items-center justify-center text-sm font-black text-amber-600 border-2 border-amber-700">
+                3
+              </div>
+              <div class="text-xs font-extrabold text-white mt-1.5 truncate max-w-full">${top3.name}</div>
+              <div class="text-[11px] font-black text-blue-400 mt-0.5">${formatNumber(top3.total)}</div>
+              <span class="text-[9px] text-slate-400">so'm</span>
+            </div>
+          ` : '<div></div>'}
         </div>
-        <div id="ticker-box" class="text-xs font-semibold text-slate-400 transition-all duration-500 py-1 px-2 bg-slate-900/80 rounded-lg border border-slate-800">
-          ${STATE.recentBuyers[0]}
-        </div>
-      </div>
+
+        ${rest.length > 0 ? `
+          <!-- Rest of Users List -->
+          <div class="glass-card p-3 space-y-2">
+            <h4 class="text-xs font-bold text-slate-400 px-2">Yetakchilar ro'yxati</h4>
+            <div class="space-y-1.5">
+              ${rest.map(u => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl ${u.isMe ? 'bg-blue-950/50 border border-blue-600/40' : 'bg-slate-900/60 border border-slate-800'}">
+                  <div class="flex items-center gap-3">
+                    <span class="w-5 text-center text-xs font-black text-slate-400">#${u.rank}</span>
+                    <span class="text-base">${u.avatar || '👤'}</span>
+                    <span class="text-xs font-bold ${u.isMe ? 'text-blue-300' : 'text-white'}">${u.name}</span>
+                  </div>
+                  <span class="text-xs font-black text-blue-400">${formatNumber(u.total)} so'm</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ''}
+      `)}
     </div>
   `;
 }
@@ -827,21 +827,7 @@ function switchTopPeriod(p) {
   triggerHaptic("selection");
   STATE.topPeriod = p;
   renderActiveTab();
-}
-
-function startRecentBuyersTicker() {
-  let idx = 0;
-  setInterval(() => {
-    const box = document.getElementById("ticker-box");
-    if (box && STATE.recentBuyers.length > 0) {
-      idx = (idx + 1) % STATE.recentBuyers.length;
-      box.style.opacity = 0;
-      setTimeout(() => {
-        box.innerText = STATE.recentBuyers[idx];
-        box.style.opacity = 1;
-      }, 250);
-    }
-  }, 3500);
+  fetchTopData(p);
 }
 
 // -------------------------------------------------------------
@@ -952,13 +938,9 @@ function renderFreeFireSection() {
 }
 
 // -------------------------------------------------------------
-// 8. TAB 4: АККАУНТ (MENING AKKAUNT)
+// 8. TAB 4: АККАУНТ (REAL STATS & BALANCE)
 // -------------------------------------------------------------
 function renderAccountTab() {
-  const goalTarget = 1200000;
-  const goalCurrent = 490000;
-  const goalPercent = Math.min(100, Math.round((goalCurrent / goalTarget) * 100));
-
   return `
     <div class="animate-fade-in space-y-4">
       <!-- Header Banner with Animated Account Emoji -->
@@ -972,7 +954,7 @@ function renderAccountTab() {
         </div>
       </div>
 
-      <!-- 4 Stat Cards Grid with Custom Animated Emojis -->
+      <!-- 4 Stat Cards Grid with Real Database Metrics -->
       <div class="grid grid-cols-2 gap-2.5">
         <!-- 1. Текущий баланс -->
         <div class="glass-card p-3.5 flex flex-col justify-between rounded-2xl">
@@ -989,25 +971,25 @@ function renderAccountTab() {
             <span class="text-xs text-slate-300 font-bold">Всего Stars</span>
             <div class="w-6 h-6 flex items-center justify-center">${renderEmoji('tab_stars', 'w-6 h-6')}</div>
           </div>
-          <div class="text-base font-black text-amber-400 mt-2">350 ⭐</div>
+          <div class="text-base font-black text-amber-400 mt-2">${formatNumber(STATE.user.totalStars || 0)} ⭐</div>
         </div>
 
         <!-- 3. Всего потрачено -->
         <div class="glass-card p-3.5 flex flex-col justify-between rounded-2xl">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-300 font-bold">Всеgo потрачено</span>
+            <span class="text-xs text-slate-300 font-bold">Всего потрачено</span>
             <div class="w-6 h-6 flex items-center justify-center">${renderEmoji('pay_card', 'w-6 h-6')}</div>
           </div>
-          <div class="text-base font-black text-blue-400 mt-2">490 000 so'm</div>
+          <div class="text-base font-black text-blue-400 mt-2">${formatNumber(STATE.user.totalSpent || 0)} so'm</div>
         </div>
 
-        <!-- 4. Количество покупок (Istoriya Pokupok Emoji) -->
+        <!-- 4. Количество покупок -->
         <div class="glass-card p-3.5 flex flex-col justify-between rounded-2xl">
           <div class="flex items-center justify-between">
             <span class="text-xs text-slate-300 font-bold">Количество покупок</span>
             <div class="w-6 h-6 flex items-center justify-center">${renderEmoji('purchase_history', 'w-6 h-6')}</div>
           </div>
-          <div class="text-base font-black text-purple-400 mt-2">5 ta xarid</div>
+          <div class="text-base font-black text-purple-400 mt-2">${formatNumber(STATE.user.purchasesCount || 0)} ta</div>
         </div>
       </div>
 
@@ -1015,24 +997,6 @@ function renderAccountTab() {
       <button onclick="openDepositModal()" class="btn-primary w-full py-4 text-sm font-black shadow-lg shadow-blue-600/30">
         <span>💳 Пополнить баланс</span>
       </button>
-
-      <!-- Goal Progress Card -->
-      <div class="glass-card p-4 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5 text-xs font-bold text-white">
-            <span>🎯</span>
-            <span>Ваша цель (VIP Status)</span>
-          </div>
-          <span class="text-xs font-black text-blue-400">${goalPercent}%</span>
-        </div>
-        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
-          <div class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full transition-all duration-500" style="width: ${goalPercent}%"></div>
-        </div>
-        <div class="flex justify-between text-[11px] text-slate-400">
-          <span>${formatNumber(goalCurrent)} so'm</span>
-          <span>${formatNumber(goalTarget)} so'm</span>
-        </div>
-      </div>
 
       <!-- Boost & Vote Card -->
       <div class="glass-card p-4 flex items-center justify-between bg-gradient-to-r from-blue-950/40 to-slate-900">
@@ -1049,12 +1013,12 @@ function renderAccountTab() {
       <!-- Referral Link Card -->
       <div class="glass-card p-4 space-y-2">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-300">Do'stlarni taklif qilish (2% doimiy bonus):</span>
+          <span class="text-xs font-bold text-slate-300">Do'stlarni taklif qilish (Har bir do'st uchun bonus):</span>
         </div>
         <div class="flex items-center gap-2">
-          <input type="text" readonly value="https://t.me/GyroService_bot?start=ref_${STATE.user.userId}"
+          <input type="text" readonly value="https://t.me/GyroService_bot?start=ref_${STATE.user.userId || ''}"
                  class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2.5 text-xs font-mono text-slate-300 outline-none">
-          <button onclick="copyToClipboard('https://t.me/GyroService_bot?start=ref_${STATE.user.userId}', 'Havola nusxalandi!')" 
+          <button onclick="copyToClipboard('https://t.me/GyroService_bot?start=ref_${STATE.user.userId || ''}', 'Havola nusxalandi!')" 
                   class="btn-secondary px-3 py-2.5 text-xs whitespace-nowrap">
             Nusxa
           </button>
@@ -1065,7 +1029,7 @@ function renderAccountTab() {
 }
 
 // -------------------------------------------------------------
-// 9. TAB 5: ИСТОРИЯ ТРАНЗАКЦИЙ (HISTORY)
+// 9. TAB 5: ИСТОРИЯ ТРАНЗАКЦИЙ (REAL DATABASE HISTORY)
 // -------------------------------------------------------------
 function renderHistoryTab() {
   const filtered = STATE.historyFilter === "all" 
@@ -1100,7 +1064,7 @@ function renderHistoryTab() {
         `).join("")}
       </div>
 
-      <!-- Transactions List -->
+      <!-- Real Transactions List -->
       ${filtered.length === 0 ? `
         <div class="glass-card p-10 flex flex-col items-center justify-center text-center space-y-3">
           <div class="w-14 h-14 mx-auto flex items-center justify-center animate-float">
@@ -1226,7 +1190,6 @@ async function handleOrderCheckout(orderData) {
       return;
     }
     
-    // Server bilan sinxronizatsiya
     try {
       const res = await fetch("/api/webapp/order", {
         method: "POST",
@@ -1308,7 +1271,6 @@ function openPaymentRuleModal(orderData) {
 async function proceedToPayAuto(orderData) {
   closeModal();
   
-  // Real backend or fallback unique order
   try {
     const res = await fetch("/api/webapp/deposit", {
       method: "POST",
@@ -1337,7 +1299,6 @@ async function proceedToPayAuto(orderData) {
     console.log("Deposit backend fallback:", e);
   }
 
-  // Fallback
   const suffix = Math.floor(Math.random() * 85) + 12;
   const exactAmount = orderData.amount + suffix;
   const orderId = "ORD-" + Math.floor(10000 + Math.random() * 90000);
@@ -1476,27 +1437,12 @@ async function checkPaymentStatus() {
     } catch (e) {}
   }
 
-  // Standalone fallback
   setTimeout(() => {
-    closeModal();
-    if (STATE.activeOrder) {
-      const ord = STATE.activeOrder;
-      if (ord.type === "deposit") {
-        STATE.user.balance += ord.baseAmount;
-      }
-      addHistoryItem({
-        id: ord.id,
-        type: ord.type,
-        title: ord.title,
-        target: ord.target,
-        amount: ord.baseAmount,
-        status: "completed",
-        date: "Hozir"
-      });
-      updateHeader();
-      triggerHaptic("success");
-      openSuccessModal(ord);
+    if (btn) {
+      btn.innerHTML = `<span>To'lovni tekshirish 🔄</span>`;
+      btn.disabled = false;
     }
+    showToast("To'lov qabul qilinmoqda, ozroq kuting...");
   }, 1400);
 }
 
@@ -1614,7 +1560,7 @@ function openPromocodeModal() {
         <span class="text-xl">🎟</span>
         <h3 class="text-base font-extrabold text-white">Promokodni faollashtirish</h3>
       </div>
-      <p class="text-xs text-slate-400">Promokodni kiriting va balansingizga bepul bonus oling (Sinash uchun: GYRO2026)</p>
+      <p class="text-xs text-slate-400">Promokodni kiriting va balansingizga bepul bonus oling</p>
 
       <input type="text" id="promo-input" placeholder="Kodni kiriting..." uppercase
              class="w-full bg-slate-900/90 border border-slate-700 focus:border-purple-500 rounded-xl px-4 py-3 text-sm font-mono font-bold text-white outline-none uppercase">
@@ -1628,20 +1574,42 @@ function openPromocodeModal() {
   modal.classList.add("active");
 }
 
-function applyPromocode() {
+async function applyPromocode() {
   const input = document.getElementById("promo-input");
   const code = (input?.value || "").trim().toUpperCase();
-  if (["GYRO2026", "VIP", "BONUS"].includes(code)) {
-    const bonus = 15000;
-    STATE.user.balance += bonus;
-    updateHeader();
-    closeModal();
-    triggerHaptic("success");
-    showToast(`🎉 Promokod faollashtirildi! +${formatNumber(bonus)} so'm qo'shildi.`);
-  } else {
-    triggerHaptic("error");
-    showToast("Noto'g'ri promokod yoki muddati o'tgan!");
+  if (!code) {
+    showToast("Iltimos, promokodni kiriting!");
+    return;
   }
+
+  try {
+    const res = await fetch("/api/webapp/promocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: STATE.user.userId,
+        code: code
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok) {
+        if (data.newBalance !== undefined) STATE.user.balance = data.newBalance;
+        updateHeader();
+        closeModal();
+        triggerHaptic("success");
+        showToast(`🎉 ${data.message || 'Promokod muvaffaqiyatli faollashtirildi!'}`);
+        return;
+      } else {
+        triggerHaptic("error");
+        showToast(data.error || "Noto'g'ri promokod!");
+        return;
+      }
+    }
+  } catch (e) {}
+
+  triggerHaptic("error");
+  showToast("Promokod tekshirishda xatolik yuz berdi!");
 }
 
 function closeModal() {
@@ -1661,7 +1629,7 @@ function addHistoryItem(item) {
 function fillMyUsername(targetType = 'stars') {
   triggerHaptic("selection");
   const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-  const rawUsername = (tgUser?.username || STATE.user.username || "Sharipov_Sh").replace(/^@/, "").trim();
+  const rawUsername = (tgUser?.username || STATE.user.username || "").replace(/^@/, "").trim();
   
   if (!rawUsername) {
     showToast("⚠️ Sizda Telegram username topilmadi!");
