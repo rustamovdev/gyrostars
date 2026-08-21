@@ -6,19 +6,18 @@
  * - Instant in-memory Lottie cache & selective DOM updates (No emoji flickering)
  */
 
-// -------------------------------------------------------------
-// 1. GLOBAL STATE
-// -------------------------------------------------------------
+const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "0.0.0.0");
+
 const STATE = {
   user: {
-    userId: 0,
-    username: "",
-    fullName: "Foydalanuvchi",
-    balance: 0,
+    userId: isLocalhost ? 999999 : 0,
+    username: isLocalhost ? "admin_local" : "",
+    fullName: isLocalhost ? "Admin (Localhost)" : "Foydalanuvchi",
+    balance: isLocalhost ? 999999999 : 0,
     verified: true,
-    totalStars: 0,
-    totalSpent: 0,
-    purchasesCount: 0
+    totalStars: isLocalhost ? 5000 : 0,
+    totalSpent: isLocalhost ? 1200000 : 0,
+    purchasesCount: isLocalhost ? 12 : 0
   },
   card: {
     cardNumber: "9860 0866 0350 6261",
@@ -240,12 +239,12 @@ async function fetchInitialData() {
     if (res.ok) {
       const data = await res.json();
       if (data.user) {
-        STATE.user.balance = data.user.balance ?? STATE.user.balance;
-        if (data.user.fullName) STATE.user.fullName = data.user.fullName;
-        if (data.user.username) STATE.user.username = data.user.username;
-        if (data.user.totalStars !== undefined) STATE.user.totalStars = data.user.totalStars;
-        if (data.user.totalSpent !== undefined) STATE.user.totalSpent = data.user.totalSpent;
-        if (data.user.purchasesCount !== undefined) STATE.user.purchasesCount = data.user.purchasesCount;
+        STATE.user.balance = isLocalhost ? 999999999 : (data.user.balance ?? STATE.user.balance);
+        if (data.user.fullName) STATE.user.fullName = isLocalhost ? "Admin (Localhost)" : data.user.fullName;
+        if (data.user.username) STATE.user.username = isLocalhost ? "admin_local" : data.user.username;
+        if (data.user.totalStars !== undefined) STATE.user.totalStars = isLocalhost ? 5000 : data.user.totalStars;
+        if (data.user.totalSpent !== undefined) STATE.user.totalSpent = isLocalhost ? 1200000 : data.user.totalSpent;
+        if (data.user.purchasesCount !== undefined) STATE.user.purchasesCount = isLocalhost ? 12 : data.user.purchasesCount;
       }
       if (data.card) STATE.card = data.card;
       if (data.prices) STATE.prices = { ...STATE.prices, ...data.prices };
@@ -1365,6 +1364,24 @@ async function handleOrderCheckout(orderData) {
 
     // Stars yoki xarid paytida katta animated emoji bilan loading chiqarish
     openOrderProcessingModal(orderData);
+
+    if (isLocalhost) {
+      setTimeout(() => {
+        const completedOrder = {
+          ...orderData,
+          id: "ORD-" + Math.floor(100000 + Math.random() * 900000),
+          status: "completed",
+          date: "Hozir",
+          paymentMethod: "balance"
+        };
+        addHistoryItem(completedOrder);
+        STATE.user.balance = 999999999;
+        updateHeader();
+        triggerHaptic("success");
+        openSuccessModal(completedOrder);
+      }, 1400);
+      return;
+    }
     
     try {
       const res = await fetch("/api/webapp/order", {

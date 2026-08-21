@@ -107,6 +107,8 @@ load_processed_keys()
 def normalize_uz_text(text: str) -> str:
     if not text:
         return ""
+    # Telegram markdown formatlarini (qalin **, qiya _, kod `, chiziq ~) tozalaymiz
+    text = text.replace("*", "").replace("_", "").replace("`", "").replace("~", "")
     for char in ["\u2018", "\u2019", "\u02bb", "`", "’", "‘", "ʻ", "'"]:
         text = text.replace(char, "'")
     return text.replace("\xa0", " ").strip()
@@ -115,7 +117,7 @@ def normalize_uz_text(text: str) -> str:
 def clean_uz_number(raw: str) -> float | None:
     if not raw:
         return None
-    raw = raw.strip().replace(" ", "").replace("\xa0", "").replace("`", "")
+    raw = raw.strip().replace(" ", "").replace("\xa0", "").replace("`", "").replace("*", "").replace("_", "")
     try:
         if "." in raw and "," in raw:
             if raw.find(".") < raw.find(","):
@@ -126,6 +128,8 @@ def clean_uz_number(raw: str) -> float | None:
             parts = raw.split(".")
             if len(parts[-1]) == 3:
                 raw = raw.replace(".", "")
+            elif len(parts[-1]) == 2:
+                pass
         elif "," in raw:
             parts = raw.split(",")
             if len(parts[-1]) == 3:
