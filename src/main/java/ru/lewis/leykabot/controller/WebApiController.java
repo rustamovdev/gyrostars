@@ -164,14 +164,14 @@ public class WebApiController {
     @GetMapping("/top")
     public ResponseEntity<?> getTopUsers(@RequestParam(required = false, defaultValue = "today") String period,
                                          @RequestParam(required = false, defaultValue = "0") Long userId) {
-        // Faqat bugungi kun (21-avgust) uchun @ssrustamov va @stalkerbek, ertadan boshlab avtomatik bazadan ishlaydi
+        // Faqat bugungi kun (21-avgust) uchun @ssrustamov (45 000) va @stalkerbek (18 000), ertadan boshlab avtomatik bazadan ishlaydi
         if ("today".equalsIgnoreCase(period) && LocalDate.now().isEqual(LocalDate.of(2026, 8, 21))) {
             List<Map<String, Object>> todayTop = new ArrayList<>();
 
             Map<String, Object> u1 = new HashMap<>();
             u1.put("rank", 1);
             u1.put("name", "@ssrustamov");
-            u1.put("total", 680000);
+            u1.put("total", 45000);
             u1.put("isMe", false);
             u1.put("avatar", "👑");
             todayTop.add(u1);
@@ -179,7 +179,7 @@ public class WebApiController {
             Map<String, Object> u2 = new HashMap<>();
             u2.put("rank", 2);
             u2.put("name", "@stalkerbek");
-            u2.put("total", 450000);
+            u2.put("total", 18000);
             u2.put("isMe", false);
             u2.put("avatar", "⭐");
             todayTop.add(u2);
