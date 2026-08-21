@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>GyroStars — Telegram Mini App</title>
   
   <!-- Telegram WebApp SDK -->
@@ -35,8 +38,8 @@
     }
   </script>
   
-  <!-- Custom App CSS -->
-  <link rel="stylesheet" href="css/app.css">
+  <!-- Custom App CSS with Cache Buster -->
+  <link rel="stylesheet" href="css/app.css?v=3.0.0">
 </head>
 <body class="bg-[#0B1120] text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
 
@@ -134,7 +137,7 @@
     </div>
   </div>
 
-  <!-- App Core JS -->
-  <script src="js/app.js"></script>
+  <!-- App Core JS with Cache Buster -->
+  <script src="js/app.js?v=3.0.0"></script>
 </body>
 </html>
