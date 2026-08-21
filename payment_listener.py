@@ -164,34 +164,31 @@ def parse_amount(text: str) -> float | None:
             if val:
                 return val
 
-    # 2. Balans (💰 yoki Balans / Qoldiq / Ostatok) qatorlarini olib tashlagan holda qidirish
-    clean_text = re.sub(r"(?:💰|balans|qoldiq|ostatok|dostupno)\s*[:\n\r\s\-]*[0-9\s.,]+\s*(?:uzs|so'?m|sum)?", "", text_norm, flags=re.IGNORECASE)
-
-    fallback_patterns = [
-        r"([0-9]{1,3}(?:[\s\xa0.][0-9]{3})*(?:,[0-9]{2})?)\s*(?:uzs|so'?m|sum)",
-        r"([0-9]{4,10})\s*(?:uzs|so'?m|sum)"
-    ]
-    for pat in fallback_patterns:
-        for m in re.finditer(pat, clean_text, re.IGNORECASE):
-            val = clean_uz_number(m.group(1))
-            if val:
-                return val
-
     return None
 
 
 def is_incoming(text: str) -> bool:
+    if not text:
+        return False
     lower = normalize_uz_text(text).lower()
+    
+    # 1. Chiqim / Xarajat / Yechildi so'zlari bor bo'lsa - rad etish
     negative_words = [
-        "chiqim", "spisanie", "yechildi", "otmenen",
+        "chiqim", "spisanie", "yechildi", "yechib olindi",
         "rad etildi", "yetarli emas", "blokirovka",
-        "xarajat", "otkazano", "oplata"
+        "xarajat", "otkazano"
     ]
     if any(neg in lower for neg in negative_words):
-        if any(pos in lower for pos in ["kirim", "popolnenie", "tushum", "zachisleno", "to'ldirish", "to'ldirildi", "➕"]):
-            return True
-        return False
-    return True
+        if not any(pos in lower for pos in ["kirim", "➕", "popolnenie", "zachisleno"]):
+            return False
+
+    # 2. Aniq kirim / to'ldirish belgisi bo'lishi SHART
+    positive_indicators = [
+        "➕", "+", "kirim", "popolnenie", "tushum", "zachisleno",
+        "to'ldirish", "to'ldirildi", "toldirildi", "qabul qilindi",
+        "tushdi", "kartangizga"
+    ]
+    return any(pos in lower for pos in positive_indicators)
 
 
 async def send_to_bot_api(amount: float, raw_text: str) -> bool:
@@ -248,10 +245,10 @@ async def process_msg_text(msg_key: str, text: str, sender_name: str = "") -> bo
         return False
 
     amount = parse_amount(text)
-    if amount is None:
+    if amount is None or amount < 500:
         return False
 
-    logger.info("💰 Aniqlangan kirim: %s UZS (@%s, Key: %s). Bot API ga uzatilmoqda...", amount, sender_name, msg_key)
+    logger.info("💰 Haqiqiy kirim to'lovi aniqlandi: %s UZS (@%s, Key: %s). Bot API ga uzatilmoqda...", amount, sender_name, msg_key)
     success = await send_to_bot_api(amount, text)
     if success:
         save_processed_key(msg_key)
@@ -275,30 +272,27 @@ async def handle_new_message(event):
             pass
 
         sender_username = (getattr(sender, "username", "") or "").lower()
-        sender_title = (getattr(sender, "title", "") or "").lower()
         sender_first = (getattr(sender, "first_name", "") or "").lower()
 
+        # Faqat rasmiy to'lov botlari va HUMO botidan xabarlarni qabul qilish (Oddiy userlar shaxsiy xabarlarini rad etish)
         is_payment_source = (
             chat_id == HUMO_BOT_ID
-            or any(bot_name in sender_username for bot_name in LISTEN_BOTS)
-            or any(bot_name in sender_title for bot_name in LISTEN_BOTS)
-            or any(bot_name in sender_first for bot_name in LISTEN_BOTS)
-            or "humo" in sender_username or "humo" in text.lower()
-            or "uzcard" in sender_username or "uzcard" in text.lower()
-            or "karta" in text.lower() or "card" in text.lower()
-            or event.is_private
+            or sender_username == "humocardbot"
+            or sender_username in LISTEN_BOTS
+            or any(bot_name == sender_username for bot_name in LISTEN_BOTS)
+            or (chat_id and str(chat_id) in LISTEN_BOTS)
         )
 
         if is_payment_source:
             msg_key = f"{chat_id}_{event.message.id}"
-            logger.info("📥 Yangi to'lov xabari olindi (@%s, ID: %s)", sender_username or chat_id, event.message.id)
+            logger.info("📥 To'lov manbasidan xabar olindi (@%s, ID: %s)", sender_username or chat_id, event.message.id)
             await process_msg_text(msg_key, text, sender_username or str(chat_id))
     except Exception as e:
         logger.error("Xabarni qayta ishlashda xatolik: %s", e)
 
 
 async def scan_recent_messages():
-    """Bot ishga tushganda yoki uzilish bo'lganda so'nggi to'lov xabarlarini tekshirish"""
+    """Bot ishga tushganda yoki uzilish bo'lganda faqat rasmiy to'lov botlarini tekshirish"""
     try:
         if not client.is_connected() or not await client.is_user_authorized():
             return
@@ -306,7 +300,7 @@ async def scan_recent_messages():
         # 1. Asosiy @HUMOcardbot xabarlarini to'g'ridan-to'g'ri tekshirish
         try:
             humo_entity = await client.get_entity("HUMOcardbot")
-            messages = await client.get_messages(humo_entity, limit=25)
+            messages = await client.get_messages(humo_entity, limit=20)
             for m in reversed(messages):
                 if m.raw_text:
                     msg_key = f"{m.chat_id}_{m.id}"
@@ -314,35 +308,31 @@ async def scan_recent_messages():
         except Exception as e:
             logger.warning("@HUMOcardbot xabarlarini olishda xatolik: %s", e)
 
-        # 2. Boshqa to'lov dialoglarini tekshirish
-        dialogs = await client.get_dialogs(limit=20)
+        # 2. Faqat LISTEN_BOTS ro'yxatidagi dialoglarni tekshirish
+        dialogs = await client.get_dialogs(limit=15)
         for d in dialogs:
             username = (getattr(d.entity, "username", "") or "").lower()
-            title = (getattr(d.entity, "title", "") or "").lower()
             chat_id = d.id
 
-            if chat_id != HUMO_BOT_ID and (
-                any(bot in username for bot in LISTEN_BOTS)
-                or any(bot in title for bot in LISTEN_BOTS)
-            ):
-                messages = await client.get_messages(d.entity, limit=10)
+            if chat_id != HUMO_BOT_ID and username in LISTEN_BOTS:
+                messages = await client.get_messages(d.entity, limit=5)
                 for m in reversed(messages):
                     if m.raw_text:
                         msg_key = f"{chat_id}_{m.id}"
-                        await process_msg_text(msg_key, m.raw_text, username or title)
+                        await process_msg_text(msg_key, m.raw_text, username)
     except Exception as e:
         logger.warning("scan_recent_messages xatolik: %s", e)
 
 
 async def periodic_payment_poller():
-    """Har 8 soniyada o'tkazib yuborilgan to'lovlar mavjudligini xavfsiz tekshirib turuvchi rejim"""
+    """Har 10 soniyada o'tkazib yuborilgan to'lovlar mavjudligini xavfsiz tekshirib turuvchi rejim"""
     await asyncio.sleep(5)
     while True:
         try:
             await scan_recent_messages()
         except Exception as e:
             logger.debug("Poller cycle xatolik: %s", e)
-        await asyncio.sleep(8)
+        await asyncio.sleep(10)
 
 
 

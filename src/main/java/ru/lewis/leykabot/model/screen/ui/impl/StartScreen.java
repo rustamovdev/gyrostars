@@ -92,9 +92,11 @@ public class StartScreen extends AbstractScreen {
 
         String formattedBalance = String.format("%,d", balance).replace(',', ' ');
 
-        String text = "<tg-emoji emoji-id=\"5436173070421238756\">👋</tg-emoji> Assalomu alaykum, " + username + "\n\n" +
+        String text = "<tg-emoji emoji-id=\"5436173070421238756\">👋</tg-emoji> Assalomu alaykum, " + username + "!\n\n" +
                 "<tg-emoji emoji-id=\"5436172829903068620\">🆔</tg-emoji> <b>User ID:</b> <code>" + userId + "</code>\n" +
-                "└ <tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm";
+                "└ <tg-emoji emoji-id=\"5436203328465838905\">💳</tg-emoji> <b>Balans:</b> " + formattedBalance + " so'm\n\n" +
+                "🛍 <b>Barcha xizmatlar (Stars, Premium, PUBG UC, Sovg'alar va Balans to'ldirish)</b> qulay <b>Mini App</b> orqali amalga oshiriladi.\n\n" +
+                "Ilovani ochish uchun quyidagi tugmani bosing 👇";
 
         return text + ";images/image.png";
     }
@@ -103,7 +105,7 @@ public class StartScreen extends AbstractScreen {
     protected InlineKeyboardMarkup getKeyboard() {
         List<InlineKeyboardRow> keyboard = new ArrayList<>();
 
-        // Row 0: WebApp ochish (Eng tepasida)
+        // Row 1: WebApp ochish (Asosiy tugma)
         InlineKeyboardRow webAppRow = new InlineKeyboardRow();
         webAppRow.add(StyledInlineButton.styledBuilder()
                 .text("WebAppni ochish")
@@ -113,79 +115,17 @@ public class StartScreen extends AbstractScreen {
                 .build());
         keyboard.add(webAppRow);
 
-        // Row 1: STARS (Full width)
-        InlineKeyboardRow row1 = new InlineKeyboardRow();
-        row1.add(StyledInlineButton.styledBuilder()
-                .text("STARS")
-                .callbackData("buy-stars")
-                .style("primary")
-                .iconCustomEmojiId("5985826831591281620")
-                .build());
-
-        // Row 2: PUBG UC DONAT QILISH
-        InlineKeyboardRow row2 = new InlineKeyboardRow();
-        row2.add(StyledInlineButton.styledBuilder()
-                .text("PUBG UC DONAT QILISH")
-                .callbackData("buy-pubg")
-                .style("primary")
-                .iconCustomEmojiId("5204252919565657978")
-                .build());
-
-        // Row 3: Premium (Full width)
-        InlineKeyboardRow row3 = new InlineKeyboardRow();
-        row3.add(StyledInlineButton.styledBuilder()
-                .text("Premium")
-                .callbackData("buy-premium")
-                .style("primary")
-                .iconCustomEmojiId("5938420017665152105")
-                .build());
-
-        // Row 4: Hisob to'ldirish & Kabinet
-        InlineKeyboardRow row4 = new InlineKeyboardRow();
-        row4.add(StyledInlineButton.styledBuilder()
-                .text("Hisob to‘ldirish")
-                .callbackData("deposit")
-                .style("success")
-                .iconCustomEmojiId("5890848474563352982")
-                .build());
-        row4.add(StyledInlineButton.styledBuilder()
-                .text("Kabinet")
-                .callbackData("profile")
-                .style("primary")
-                .iconCustomEmojiId("5256143829672672750")
-                .build());
-
-        // Row 5: Reyting & Yordam
-        InlineKeyboardRow row5 = new InlineKeyboardRow();
-        row5.add(StyledInlineButton.styledBuilder()
-                .text("Reyting")
-                .callbackData("top")
-                .style("primary")
-                .iconCustomEmojiId("5436201215341930329")
-                .build());
-        row5.add(StyledInlineButton.styledBuilder()
-                .text("Yordam")
+        // Row 2: Qo'llab-quvvatlash
+        InlineKeyboardRow supportRow = new InlineKeyboardRow();
+        supportRow.add(StyledInlineButton.styledBuilder()
+                .text("Qo‘llab-quvvatlash")
                 .callbackData("support")
                 .style("primary")
                 .iconCustomEmojiId("5436304616679580574")
                 .build());
+        keyboard.add(supportRow);
 
-        // Row 6: Referral (Full width with custom emoji)
-        InlineKeyboardRow row6 = new InlineKeyboardRow();
-        row6.add(StyledInlineButton.styledBuilder()
-                .text("Referral (Bonus olish)")
-                .callbackData("referral")
-                .style("success")
-                .iconCustomEmojiId("5271604874419647061")
-                .build());
-
-        keyboard.add(row1);
-        keyboard.add(row2);
-        keyboard.add(row3);
-        keyboard.add(row4);
-        keyboard.add(row5);
-        keyboard.add(row6);
-
+        // Admin bo'lsa - Admin Panel
         if (adminService.isAdmin(userId)) {
             InlineKeyboardRow adminRow = new InlineKeyboardRow();
             adminRow.add(StyledInlineButton.styledBuilder()

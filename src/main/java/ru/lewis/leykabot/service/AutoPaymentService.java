@@ -136,23 +136,16 @@ public class AutoPaymentService {
         log.info("Processing incoming card payment: {} UZS. Raw text: {}", amount, rawText);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime recentThreshold = now.minusHours(4);
         Map<String, Object> response = new HashMap<>();
 
-        // 1. Exact amount bo'yicha faol (PENDING) buyurtmani qidirish (15 daqiqalik muddat ichida)
+        // 1. Exact amount bo'yicha faol (PENDING va muddati tugamagan) buyurtmani qidirish
         Optional<DepositOrder> orderOpt = depositOrderRepository
                 .findTopByExactAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
 
-        // 2. Base amount bo'yicha faol (PENDING) buyurtmani qidirish (15 daqiqalik muddat ichida)
+        // 2. Base amount bo'yicha faol (PENDING va muddati tugamagan) buyurtmani qidirish
         if (orderOpt.isEmpty()) {
             orderOpt = depositOrderRepository
                     .findTopByBaseAmountAndStatusAndExpiresAtAfterOrderByIdDesc(amount, "PENDING", now);
-        }
-
-        // 3. Bank/tarmoq kechikishi uchun: faqat ayni shu exact amountdagi oxirgi 15 daqiqada yaratilgan PENDING buyurtmani qidirish
-        if (orderOpt.isEmpty()) {
-            orderOpt = depositOrderRepository
-                    .findTopByExactAmountAndStatusAndCreatedAtAfterOrderByIdDesc(amount, "PENDING", recentThreshold);
         }
 
         if (orderOpt.isPresent()) {

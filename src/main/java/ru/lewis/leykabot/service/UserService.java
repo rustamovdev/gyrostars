@@ -42,6 +42,16 @@ public class UserService {
                 .maximumSize(5_000)
                 .expireAfterWrite(Duration.ofMinutes(10))
                 .build();
+
+        try {
+            // Salbiy (manfiy) yoki null bo'lib qolgan barcha balanslarni 0 ga to'g'rilash
+            userRepository.findAll().forEach(u -> {
+                if (u.getBalance() == null || u.getBalance() < 0) {
+                    u.setBalance(Math.max(0, u.getBalance() != null ? u.getBalance() : 0));
+                    userRepository.save(u);
+                }
+            });
+        } catch (Exception ignored) {}
     }
 
     public void clearCache() {

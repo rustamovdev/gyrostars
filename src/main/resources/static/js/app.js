@@ -1248,6 +1248,7 @@ function submitStarsOrder() {
     title: `${count} Stars`,
     target: username,
     amount: price,
+    quantity: count,
     details: `${count} Stars • ${username}`
   });
 }
@@ -1273,6 +1274,7 @@ function submitPremiumOrder() {
     title: `${months} oylik Premium`,
     target: username,
     amount: price,
+    quantity: months,
     details: `${months} oylik Telegram Premium • ${username}`
   });
 }
@@ -1288,8 +1290,9 @@ function orderPubg(uc, price) {
   handleOrderCheckout({
     type: "pubg",
     title: `${uc} PUBG UC`,
-    target: `ID: ${playerId}`,
+    target: playerId,
     amount: price,
+    quantity: uc,
     details: `${uc} UC • Player ID: ${playerId}`
   });
 }
@@ -1301,6 +1304,8 @@ async function handleOrderCheckout(orderData) {
       openDepositModal(orderData.amount - STATE.user.balance);
       return;
     }
+
+    showToast("⏳ Buyurtma yuborilmoqda, iltimos kuting...");
     
     try {
       const res = await fetch("/api/webapp/order", {
@@ -1311,33 +1316,33 @@ async function handleOrderCheckout(orderData) {
           type: orderData.type,
           target: orderData.target,
           amount: orderData.amount,
+          quantity: orderData.quantity,
           paymentMethod: "balance"
         })
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.ok) {
-          if (data.newBalance !== undefined) {
-            STATE.user.balance = data.newBalance;
-          } else {
-            STATE.user.balance -= orderData.amount;
-          }
-          updateHeader();
-          addHistoryItem({
-            ...orderData,
-            id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-            status: "completed",
-            date: "Hozir"
-          });
-          triggerHaptic("success");
-          openSuccessModal(orderData);
-          return;
-        } else {
-          showToast(data.error || "Buyurtma berishda xatolik yuz berdi!");
-          return;
+      
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        if (data.newBalance !== undefined) {
+          STATE.user.balance = data.newBalance;
         }
+        updateHeader();
+        addHistoryItem({
+          ...orderData,
+          id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+          status: "completed",
+          date: "Hozir"
+        });
+        triggerHaptic("success");
+        openSuccessModal(orderData);
+        return;
+      } else {
+        triggerHaptic("error");
+        showToast(data.error || "Buyurtma berishda xatolik yuz berdi!");
+        return;
       }
     } catch (e) {
+      triggerHaptic("error");
       showToast("Server bilan aloqa uzildi!");
       return;
     }
