@@ -90,8 +90,16 @@ const EMOJI_FILES = {
   "tab_stars": "emojis/tab_stars.json",
   "tab_gift": "emojis/tab_gift.json",
   "tab_nft": "emojis/tab_nft.json",
-  "pay_card": "emojis/pay_card.json",
-  "pay_balance": "emojis/pay_balance.json",
+  "pay_card": "emojis/5296291032177085608.json",
+  "pay_balance": "emojis/5418248123195615000.json",
+  "5296291032177085608": "emojis/5296291032177085608.json",
+  "5418248123195615000": "emojis/5418248123195615000.json",
+  "5220007984888819706": "emojis/5220007984888819706.json",
+  "5999134744808262976": "emojis/5999134744808262976.json",
+  "5204021180310252946": "emojis/5204021180310252946.json",
+  "verified_badge": "emojis/5999134744808262976.json",
+  "verified_check": "emojis/5220007984888819706.json",
+  "loading_premium": "emojis/5204021180310252946.json",
   "purchase_history": "emojis/purchase_history.json",
   "loading_emoji": "emojis/loading_emoji.json"
 };
@@ -276,6 +284,7 @@ async function fetchTopData(period) {
 function updateHeader() {
   const avatarEl = document.getElementById("header-avatar");
   const nameEl = document.getElementById("header-name");
+  const badgeEl = document.getElementById("header-badge");
   const idEl = document.getElementById("header-id");
   const balanceEl = document.getElementById("header-balance");
 
@@ -284,6 +293,7 @@ function updateHeader() {
     avatarEl.innerText = initials || "SR";
   }
   if (nameEl) nameEl.innerText = STATE.user.fullName || "Foydalanuvchi";
+  if (badgeEl) badgeEl.innerHTML = renderEmoji("5999134744808262976", "w-4 h-4");
   if (idEl) idEl.innerText = STATE.user.userId > 0 ? "ID: " + STATE.user.userId : "ID: —";
   if (balanceEl) balanceEl.innerText = formatNumber(STATE.user.balance) + " so'm";
 }
@@ -361,6 +371,27 @@ function renderHomeTab() {
 
   return `
     <div class="animate-fade-in space-y-4">
+      <!-- Tournament News Boost Official Banner -->
+      <div class="glass-card p-3.5 flex items-center justify-between bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/50 border border-blue-500/30 shadow-lg">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 flex items-center justify-center">
+            ${renderEmoji('5220007984888819706', 'w-8 h-8')}
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-black text-white">Kanalimizga Boost bering</span>
+              <span class="text-[9px] bg-blue-500/20 text-blue-400 font-extrabold px-1.5 py-0.5 rounded border border-blue-500/30">Rasmiy</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Tournament News kanalini qo'llab-quvvatlang</p>
+          </div>
+        </div>
+        <a href="https://t.me/boost/tournament_news" target="_blank"
+           class="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-blue-600/30 flex items-center gap-1 active:scale-95">
+          <span>Boost</span>
+          <span>⚡</span>
+        </a>
+      </div>
+
       <!-- Top 4 Sub-Tabs Switcher -->
       <div class="glass-card p-1.5 flex gap-1.5 rounded-2xl bg-slate-900/90 shadow-lg">
         ${subTabs.map(sub => {
@@ -1114,14 +1145,23 @@ function renderAccountTab() {
         <span>💳 Пополнить баланс</span>
       </button>
 
-      <div class="glass-card p-4 flex items-center justify-between bg-gradient-to-r from-blue-950/40 to-slate-900">
-        <div>
-          <h4 class="text-xs font-bold text-white">Kanalimiz uchun ovoz bering</h4>
-          <p class="text-[11px] text-slate-400 mt-0.5">Telegram kanali rivojiga hissa qo'shing</p>
+      <div class="glass-card p-4 flex items-center justify-between bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/50 border border-blue-500/30">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 flex items-center justify-center">
+            ${renderEmoji('5220007984888819706', 'w-8 h-8')}
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h4 class="text-xs font-black text-white">Kanalimizga Boost bering</h4>
+              <span class="text-[9px] bg-blue-500/20 text-blue-400 font-extrabold px-1.5 py-0.5 rounded border border-blue-500/30">Rasmiy</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Tournament News kanali rivojiga hissa qo'shing</p>
+          </div>
         </div>
-        <a href="https://t.me/boost/GyroService_bot" target="_blank"
-           class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition-all shadow-md">
-          Boost ⚡
+        <a href="https://t.me/boost/tournament_news" target="_blank"
+           class="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-blue-600/30 flex items-center gap-1 active:scale-95">
+          <span>Boost</span>
+          <span>⚡</span>
         </a>
       </div>
 
@@ -1142,9 +1182,16 @@ function renderAccountTab() {
   `;
 }
 
-// -------------------------------------------------------------
-// 9. TAB 5: ИСТОРИЯ ТРАНЗАКЦИЙ (REAL DATABASE HISTORY)
-// -------------------------------------------------------------
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderHistoryTab() {
   const filtered = STATE.historyFilter === "all" 
     ? STATE.history 
@@ -1158,7 +1205,7 @@ function renderHistoryTab() {
         </div>
         <div>
           <h2 class="text-base font-extrabold text-white">История транзакций</h2>
-          <p class="text-xs text-slate-400">Barcha xaridlar va to'lovlar hisoboti</p>
+          <p class="text-xs text-slate-400">Barcha xaridlar va to'lovlar hisoboti (Chekni ko'rish uchun bosing)</p>
         </div>
       </div>
 
@@ -1194,15 +1241,26 @@ function renderHistoryTab() {
               : (isPending ? "bg-amber-950/60 border-amber-800/50 text-amber-400" : "bg-rose-950/60 border-rose-800/50 text-rose-400");
             const badgeText = isCompleted ? "Выполнено" : (isPending ? "Ожидание" : "Отменено");
 
+            const itemJson = JSON.stringify({
+              id: item.id || '',
+              title: item.title || '',
+              target: item.target || '',
+              amount: item.amount || 0,
+              date: item.date || '',
+              status: item.status || 'completed',
+              paymentMethod: item.type === 'deposit' ? 'card' : 'balance'
+            }).replace(/"/g, '&quot;');
+
             return `
-              <div class="glass-card p-3.5 flex items-center justify-between">
+              <div onclick="openSuccessModal(${itemJson})"
+                   class="glass-card-interactive p-3.5 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-lg border border-slate-700">
                     ${item.type === 'stars' ? renderEmoji('tab_stars', 'w-6 h-6') : (item.type === 'premium' ? renderEmoji('tab_premium', 'w-6 h-6') : (item.type === 'pubg' ? renderEmoji('pubg_uc', 'w-6 h-6') : '💳'))}
                   </div>
                   <div>
-                    <div class="text-xs font-extrabold text-white">${item.title}</div>
-                    <div class="text-[11px] text-slate-400 mt-0.5">${item.target} • ${item.date}</div>
+                    <div class="text-xs font-extrabold text-white">${escapeHtml(item.title)}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(item.target)} • ${escapeHtml(item.date)}</div>
                   </div>
                 </div>
                 <div class="text-right">
@@ -1305,7 +1363,8 @@ async function handleOrderCheckout(orderData) {
       return;
     }
 
-    showToast("⏳ Buyurtma yuborilmoqda, iltimos kuting...");
+    // Stars yoki xarid paytida katta animated emoji bilan loading chiqarish
+    openOrderProcessingModal(orderData);
     
     try {
       const res = await fetch("/api/webapp/order", {
@@ -1327,21 +1386,25 @@ async function handleOrderCheckout(orderData) {
           STATE.user.balance = data.newBalance;
         }
         updateHeader();
-        addHistoryItem({
+        const completedOrder = {
           ...orderData,
-          id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
+          id: "ORD-" + Math.floor(100000 + Math.random() * 900000),
           status: "completed",
-          date: "Hozir"
-        });
+          date: "Hozir",
+          paymentMethod: "balance"
+        };
+        addHistoryItem(completedOrder);
         triggerHaptic("success");
-        openSuccessModal(orderData);
+        openSuccessModal(completedOrder);
         return;
       } else {
+        closeModal();
         triggerHaptic("error");
         showToast(data.error || "Buyurtma berishda xatolik yuz berdi!");
         return;
       }
     } catch (e) {
+      closeModal();
       triggerHaptic("error");
       showToast("Server bilan aloqa uzildi!");
       return;
@@ -1350,6 +1413,38 @@ async function handleOrderCheckout(orderData) {
     // Karta orqali avto to'lov
     openPaymentRuleModal(orderData);
   }
+}
+
+function openOrderProcessingModal(orderData) {
+  const modal = document.getElementById("generic-modal");
+  const content = document.getElementById("modal-content");
+  if (!modal || !content) return;
+
+  triggerHaptic("medium");
+  content.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="space-y-5 text-center py-6">
+      <div class="w-28 h-28 mx-auto flex items-center justify-center relative">
+        <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl animate-pulse"></div>
+        ${renderEmoji('5204021180310252946', 'w-28 h-28 relative z-10')}
+      </div>
+      <div class="space-y-1.5">
+        <h3 class="text-lg font-black text-white">Buyurtmangiz bajarilmoqda...</h3>
+        <p class="text-xs text-slate-300">Telegram Fragment serveri orqali tezkor yetkazilmoqda, iltimos kuting.</p>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 text-xs text-blue-300 font-mono flex items-center justify-center gap-2">
+        <span class="font-bold text-white">${escapeHtml(orderData.title)}</span>
+        <span>•</span>
+        <span class="text-blue-400 font-bold">${escapeHtml(orderData.target)}</span>
+      </div>
+      <div class="flex items-center justify-center gap-2 text-xs font-black text-blue-400 animate-pulse">
+        <span class="inline-block animate-spin">⏳</span>
+        <span>Jarayon yakunlanmoqda...</span>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add("active");
 }
 
 // -------------------------------------------------------------
@@ -1646,39 +1741,92 @@ function openSuccessModal(orderData) {
   if (!modal || !content) return;
 
   triggerHaptic("success");
+  const orderId = orderData.id || ("ORD-" + Math.floor(100000 + Math.random() * 900000));
+  const orderDate = orderData.date === "Hozir" || !orderData.date 
+    ? new Date().toLocaleDateString('uz-UZ') + " " + new Date().toLocaleTimeString('uz-UZ', {hour: '2-digit', minute:'2-digit'})
+    : orderData.date;
+
+  const paymentMethodLabel = orderData.paymentMethod === 'balance' 
+    ? 'Balans orqali' 
+    : (orderData.target && orderData.target.includes('*') ? orderData.target : 'Bank Karta (HUMO)');
+
   content.innerHTML = `
     <div class="sheet-handle"></div>
     <div class="space-y-4 text-center py-2">
-      <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mx-auto border border-emerald-500/40 animate-float">
-        ✅
+      <!-- Receipt Top Icon -->
+      <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mx-auto border border-emerald-500/40 shadow-lg shadow-emerald-500/20 animate-float">
+        🧾
       </div>
       <div>
-        <h3 class="text-lg font-black text-white">Заказ создан!</h3>
-        <p class="text-xs text-slate-300 mt-1">To'lovingiz muvaffaqiyatli qabul qilindi.</p>
+        <span class="text-[10px] uppercase font-black tracking-widest text-emerald-400">Rasmiy Xarid Cheki</span>
+        <h3 class="text-base font-black text-white mt-0.5">${orderId}</h3>
       </div>
 
-      <div class="glass-card p-3.5 text-left text-xs space-y-1.5 bg-slate-900/80">
-        <div class="flex justify-between">
-          <span class="text-slate-400">Xizmat:</span>
-          <span class="font-bold text-white">${orderData.title}</span>
+      <!-- Receipt Content Box -->
+      <div class="glass-card p-4 text-left text-xs space-y-2.5 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-inner">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+          <span class="text-slate-400">Xizmat turi:</span>
+          <span class="font-black text-white text-sm">${escapeHtml(orderData.title)}</span>
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-400">Summa:</span>
-          <span class="font-black text-emerald-400">${formatNumber(orderData.amount)} so'm</span>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Qabul qiluvchi:</span>
+          <span class="font-bold text-blue-400 font-mono">${escapeHtml(orderData.target || STATE.user.username || 'Foydalanuvchi')}</span>
         </div>
-        <div class="flex justify-between">
-          <span class="text-slate-400">Holat:</span>
-          <span class="font-bold text-blue-400">Bajarildi ⚡</span>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">To'lov usuli:</span>
+          <span class="font-semibold text-slate-200">${paymentMethodLabel}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Sana va vaqt:</span>
+          <span class="font-mono text-slate-300">${orderDate}</span>
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+          <span class="text-slate-400">Jami to'landi:</span>
+          <span class="text-base font-black text-emerald-400">${formatNumber(orderData.amount)} so'm</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400">Yetkazish holati:</span>
+          <span class="font-black text-emerald-400 flex items-center gap-1">
+            <span>Muvaffaqiyatli</span>
+            <span>✅</span>
+          </span>
+        </div>
+
+        <!-- Official Verification Stamp with 5220007984888819706 -->
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-700/80 flex items-center justify-center gap-2 bg-emerald-500/10 py-2.5 px-3 rounded-xl border border-emerald-500/30 text-emerald-400">
+          <div class="w-6 h-6 flex items-center justify-center">
+            ${renderEmoji('5220007984888819706', 'w-6 h-6')}
+          </div>
+          <span class="text-xs font-black uppercase tracking-wider">Tasdiqlangan Rasmiy Chek</span>
         </div>
       </div>
 
-      <button onclick="closeModal()" class="btn-primary w-full py-3.5 text-xs font-black shadow-lg shadow-blue-600/30">
-        Yopish / Asosiyga qaytish
-      </button>
+      <div class="pt-1 flex gap-2">
+        <button onclick="closeModal()" class="btn-primary flex-1 py-3 text-xs font-black shadow-lg shadow-blue-600/30">
+          Yopish
+        </button>
+        <button onclick="shareReceipt('${orderId}', '${escapeHtml(orderData.title)}', '${escapeHtml(orderData.target)}', '${orderData.amount}')" 
+                class="btn-secondary px-4 py-3 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95">
+          <span>Ulashish</span>
+          <span>📤</span>
+        </button>
+      </div>
     </div>
   `;
 
   modal.classList.add("active");
+}
+
+function shareReceipt(orderId, title, target, amount) {
+  triggerHaptic("selection");
+  const text = `🧾 GyroStars Xarid Cheki (${orderId})\n\n📦 Xizmat: ${title}\n👤 Qabul qiluvchi: ${target}\n💰 Summa: ${formatNumber(amount)} so'm\n✅ Holat: Muvaffaqiyatli yetkazildi`;
+  
+  if (window.Telegram?.WebApp?.openTelegramLink) {
+    const url = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/GyroService_bot')}&text=${encodeURIComponent(text)}`;
+    window.Telegram.WebApp.openTelegramLink(url);
+  } else {
+    copyToClipboard(text, "Chek ma'lumotlari nusxalandi!");
+  }
 }
 
 function openPromocodeModal() {
